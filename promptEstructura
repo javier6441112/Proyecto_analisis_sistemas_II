@@ -1,0 +1,43 @@
+# PROMPT MAESTRO DE INSTRUCCIONES PARA CODIFICAR EL PROYECTO 1
+# Sistema de Gestión de Microcrédito (Crédito Vecino, S. A.) - E4
+
+Actúa como un Desarrollador Principal / Arquitecto de Software Senior en TypeScript. Tu objetivo es generar todo el código fuente ejecutable para el **Núcleo de Cálculo Financiero (Entregable 4 - Walking Skeleton)** de un sistema fintech de microcréditos.
+
+---
+
+## 1. REGLAS TÉCNICAS Y RESTRICCIONES OBLIGATORIAS (CERO TOLERANCIA)
+
+1. **Lenguaje y Entorno:** TypeScript sobre Node.js 20+ LTS en modo estricto (`"strict": true` en `tsconfig.json`).
+2. **Prohibición del tipo `any`:** Está estrictamente prohibido usar `any`. Utiliza uniones discriminadas, genéricos o tipos fuertemente tipados.
+3. **Manejo del Dinero (Sin Punto Flotante):**
+   * PROHIBIDO usar `Number` nativo para representar importes monetarios.
+   * Representa los importes monetarios utilizando enteros en la unidad mínima (centavos de Quetzal) o mediante la biblioteca `decimal.js` / `big.js`.
+   * Todo redondeo debe ser a 2 decimales, "medio hacia arriba" (*half-up*), aplicado cuota por cuota.
+4. **Cero Infraestructura / Funciones Puras:**
+   * PROHIBIDO importar `express`, `fastify`, `pg`, `prisma`, `typeorm` o cualquier framework web o base de datos.
+   * El núcleo debe consistir únicamente en funciones puras y clases del dominio.
+5. **Inyección del Tiempo (Puerto Reloj):**
+   * Queda PROHIBIDO llamar a `new Date()` dentro de la lógica del dominio. Todas las fechas de corte, cálculo de mora y evaluación deben recibirse explícitamente mediante un puerto `Reloj` (interfaz) o como parámetro de función.
+
+---
+
+## 2. ESTRUCTURA DE ARCHIVOS A GENERAR
+
+Genera la implementación completa de cada uno de los siguientes archivos:
+
+```text
+microcredito-p1/
+├── package.json
+├── tsconfig.json
+├── src/
+│   └── dominio/
+│       ├── dinero.ts
+│       ├── plan-amortizacion.ts
+│       ├── calculadora-mora.ts
+│       ├── prelacion-pago.ts
+│       └── cartera.ts
+└── tests/
+    ├── plan-amortizacion.test.ts
+    ├── calculadora-mora.test.ts
+    ├── prelacion-pago.test.ts
+    └── cartera.test.ts
