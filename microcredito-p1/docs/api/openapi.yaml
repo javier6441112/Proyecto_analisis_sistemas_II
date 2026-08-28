@@ -1025,11 +1025,11 @@ components:
             - valor
             - moneda
           additionalProperties: false
-          description: Importe positivo en quetzales expresado como texto
+          description: Monto solicitado entre Q1,000.00 y Q25,000.00
         numeroCuotas:
           type: integer
-          minimum: 1
-          maximum: 360
+          minimum: 3
+          maximum: 24
       required:
         - clienteId
         - montoSolicitado
@@ -1062,11 +1062,11 @@ components:
             - valor
             - moneda
           additionalProperties: false
-          description: Importe positivo en quetzales expresado como texto
+          description: Monto solicitado entre Q1,000.00 y Q25,000.00
         numeroCuotas:
           type: integer
-          minimum: 1
-          maximum: 360
+          minimum: 3
+          maximum: 24
         estado:
           type: string
           enum:

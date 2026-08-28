@@ -22,7 +22,12 @@ describe('contratos Zod del SGMC', () => {
 
   it('acepta una solicitud de credito valida y rechaza cuotas invalidas', () => {
     expect(SolicitarCreditoRequestSchema.safeParse({ clienteId: 'CLI-001', montoSolicitado: { valor: '10000.00', moneda: 'GTQ' }, numeroCuotas: 12 }).success).toBe(true);
-    expect(SolicitarCreditoRequestSchema.safeParse({ clienteId: 'CLI-001', montoSolicitado: { valor: '10000.00', moneda: 'GTQ' }, numeroCuotas: 0 }).success).toBe(false);
+    expect(SolicitarCreditoRequestSchema.safeParse({ clienteId: 'CLI-001', montoSolicitado: { valor: '1000.00', moneda: 'GTQ' }, numeroCuotas: 3 }).success).toBe(true);
+    expect(SolicitarCreditoRequestSchema.safeParse({ clienteId: 'CLI-001', montoSolicitado: { valor: '25000.00', moneda: 'GTQ' }, numeroCuotas: 24 }).success).toBe(true);
+    expect(SolicitarCreditoRequestSchema.safeParse({ clienteId: 'CLI-001', montoSolicitado: { valor: '10000.00', moneda: 'GTQ' }, numeroCuotas: 2 }).success).toBe(false);
+    expect(SolicitarCreditoRequestSchema.safeParse({ clienteId: 'CLI-001', montoSolicitado: { valor: '10000.00', moneda: 'GTQ' }, numeroCuotas: 25 }).success).toBe(false);
+    expect(SolicitarCreditoRequestSchema.safeParse({ clienteId: 'CLI-001', montoSolicitado: { valor: '999.99', moneda: 'GTQ' }, numeroCuotas: 12 }).success).toBe(false);
+    expect(SolicitarCreditoRequestSchema.safeParse({ clienteId: 'CLI-001', montoSolicitado: { valor: '25000.01', moneda: 'GTQ' }, numeroCuotas: 12 }).success).toBe(false);
     expect(SolicitudCreditoResponseSchema.safeParse({ id: 'SOL-001', clienteId: 'CLI-001', montoSolicitado: { valor: '10000.00', moneda: 'GTQ' }, numeroCuotas: 12, estado: 'solicitada', solicitadaEn: '2026-08-27' }).success).toBe(true);
   });
 
