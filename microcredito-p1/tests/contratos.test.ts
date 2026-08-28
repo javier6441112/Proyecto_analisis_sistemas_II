@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ClienteResponseSchema, RegistrarClienteRequestSchema } from '../src/contratos/clientes.js';
 import { CarteraEnRiesgoQuerySchema, CarteraEnRiesgoResponseSchema } from '../src/contratos/cartera.js';
 import { PagoRegistradoSchema, RegistrarPagoRequestSchema } from '../src/contratos/pagos.js';
 
@@ -10,6 +11,12 @@ const pagoValido = {
 };
 
 describe('contratos Zod del SGMC', () => {
+  it('acepta un cliente valido y rechaza datos incompletos', () => {
+    expect(RegistrarClienteRequestSchema.safeParse({ nombre: 'Ana Lopez', identificacion: 'DPI-1234567890101' }).success).toBe(true);
+    expect(RegistrarClienteRequestSchema.safeParse({ nombre: '', identificacion: 'DPI-123' }).success).toBe(false);
+    expect(ClienteResponseSchema.safeParse({ id: 'CLI-001', nombre: 'Ana Lopez', identificacion: 'DPI-1234567890101' }).success).toBe(true);
+  });
+
   it('acepta un pago valido y rechaza importes no positivos', () => {
     expect(RegistrarPagoRequestSchema.safeParse(pagoValido).success).toBe(true);
     expect(RegistrarPagoRequestSchema.safeParse({ ...pagoValido, monto: { valor: '0.00', moneda: 'GTQ' } }).success).toBe(false);
