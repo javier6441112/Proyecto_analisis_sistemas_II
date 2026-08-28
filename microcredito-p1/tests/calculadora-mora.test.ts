@@ -34,5 +34,6 @@ describe('calculadora de mora', () => {
     expect(politica.version).toBe('1.0');
     expect(politica.tasaMoratoriaAnual.toFixed(2)).toBe('0.24');
     expect(() => crearPoliticaCredito({ id: 'POL-002', version: '1.0', vigenteDesde: '2026-08-01', autor: 'comite', tasaOrdinariaMensual: '-0.01', tasaMoratoriaAnual: '0.24', baseDias: 360 })).toThrow(/ordinaria/);
+    expect(() => crearPoliticaCredito({ id: 'POL-003', version: '1.0', vigenteDesde: 'no-fecha', autor: 'comite', tasaOrdinariaMensual: '0.03', tasaMoratoriaAnual: '0.24', baseDias: 360 })).toThrow(/vigencia/);
   });
 });

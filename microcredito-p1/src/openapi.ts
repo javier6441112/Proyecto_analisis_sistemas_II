@@ -203,7 +203,7 @@ export const documentoOpenAPI = {
             content: {
               'application/json': {
                 schema: { $ref: '#/components/schemas/CierreResponse' },
-                example: { periodo: '2026-08', fechaCorte: '2026-08-22', carteraActiva: { valor: '800000.00', moneda: 'GTQ' }, saldoEnRiesgo: { valor: '56000.00', moneda: 'GTQ' }, incobrable: { valor: '15000.00', moneda: 'GTQ' } },
+                example: { periodo: '2026-08', fechaCorte: '2026-08-22', carteraActiva: { valor: '800000.00', moneda: 'GTQ' }, saldoEnRiesgo: { valor: '56000.00', moneda: 'GTQ' }, incobrable: { valor: '15000.00', moneda: 'GTQ' }, recuperaciones: [{ concepto: 'capital', monto: { valor: '12000.00', moneda: 'GTQ' } }], interesesDevengados: { valor: '24000.00', moneda: 'GTQ' }, porTramo: [{ tramo: 'MORA_2', cantidadCreditos: 3, saldoCapital: { valor: '56000.00', moneda: 'GTQ' } }], provisiones: { valor: '15000.00', moneda: 'GTQ' }, creditosActivos: 42, proximosVencimientos: [{ creditoId: 'C-004', fecha: '2026-08-31', monto: { valor: '1004.62', moneda: 'GTQ' } }], montoDeclaradoIncobrableEnElPeriodo: { valor: '8000.00', moneda: 'GTQ' } },
               },
             },
           },
@@ -212,7 +212,7 @@ export const documentoOpenAPI = {
             content: {
               'application/json': {
                 schema: { $ref: '#/components/schemas/CierreResponse' },
-                example: { periodo: '2026-08', fechaCorte: '2026-08-22', carteraActiva: { valor: '800000.00', moneda: 'GTQ' }, saldoEnRiesgo: { valor: '56000.00', moneda: 'GTQ' }, incobrable: { valor: '15000.00', moneda: 'GTQ' } },
+                example: { periodo: '2026-08', fechaCorte: '2026-08-22', carteraActiva: { valor: '800000.00', moneda: 'GTQ' }, saldoEnRiesgo: { valor: '56000.00', moneda: 'GTQ' }, incobrable: { valor: '15000.00', moneda: 'GTQ' }, recuperaciones: [{ concepto: 'capital', monto: { valor: '12000.00', moneda: 'GTQ' } }], interesesDevengados: { valor: '24000.00', moneda: 'GTQ' }, porTramo: [{ tramo: 'MORA_2', cantidadCreditos: 3, saldoCapital: { valor: '56000.00', moneda: 'GTQ' } }], provisiones: { valor: '15000.00', moneda: 'GTQ' }, creditosActivos: 42, proximosVencimientos: [{ creditoId: 'C-004', fecha: '2026-08-31', monto: { valor: '1004.62', moneda: 'GTQ' } }], montoDeclaradoIncobrableEnElPeriodo: { valor: '8000.00', moneda: 'GTQ' } },
               },
             },
           },
