@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ClienteResponseSchema, RegistrarClienteRequestSchema } from '../src/contratos/clientes.js';
 import { CarteraEnRiesgoQuerySchema, CarteraEnRiesgoResponseSchema } from '../src/contratos/cartera.js';
 import { CreditoResponseSchema, DesembolsarCreditoRequestSchema } from '../src/contratos/creditos.js';
+import { CierreResponseSchema, GenerarCierreRequestSchema } from '../src/contratos/cierres.js';
 import { PagoRegistradoSchema, RegistrarPagoRequestSchema } from '../src/contratos/pagos.js';
 import { SolicitarCreditoRequestSchema, SolicitudCreditoResponseSchema } from '../src/contratos/solicitudes.js';
 
@@ -29,6 +30,12 @@ describe('contratos Zod del SGMC', () => {
     expect(DesembolsarCreditoRequestSchema.safeParse({ solicitudId: 'SOL-001', clienteId: 'CLI-001', capital: { valor: '10000.00', moneda: 'GTQ' }, fechaDesembolso: '2026-08-27' }).success).toBe(true);
     expect(CreditoResponseSchema.safeParse({ id: 'C-004', solicitudId: 'SOL-001', clienteId: 'CLI-001', capital: { valor: '10000.00', moneda: 'GTQ' }, estado: 'vigente', diasAtraso: 0, desembolsadoEn: '2026-08-27' }).success).toBe(true);
     expect(CreditoResponseSchema.safeParse({ id: 'C-004', solicitudId: 'SOL-001', clienteId: 'CLI-001', capital: { valor: '10000.00', moneda: 'GTQ' }, estado: 'vigente', diasAtraso: -1, desembolsadoEn: '2026-08-27' }).success).toBe(false);
+  });
+
+  it('acepta un cierre mensual valido y rechaza periodos incorrectos', () => {
+    expect(GenerarCierreRequestSchema.safeParse({ periodo: '2026-08', fechaCorte: '2026-08-22' }).success).toBe(true);
+    expect(GenerarCierreRequestSchema.safeParse({ periodo: '2026-13', fechaCorte: '2026-08-22' }).success).toBe(false);
+    expect(CierreResponseSchema.safeParse({ periodo: '2026-08', fechaCorte: '2026-08-22', carteraActiva: { valor: '800000.00', moneda: 'GTQ' }, saldoEnRiesgo: { valor: '56000.00', moneda: 'GTQ' }, incobrable: { valor: '15000.00', moneda: 'GTQ' } }).success).toBe(true);
   });
 
   it('acepta un pago valido y rechaza importes no positivos', () => {
