@@ -51,3 +51,25 @@ C4Container
 ```
 
 La arquitectura es un monolito modular con frontera hexagonal: el dominio no depende de HTTP, base de datos ni reloj del sistema. El walking skeleton actual es `calculo` y las funciones de `src/dominio`.
+
+## Componentes del nucleo financiero y de cartera
+
+```mermaid
+C4Component
+    title Nucleo financiero y de cartera - Componentes
+
+    Container_Boundary(dominio, "Modulo de dominio") {
+        Component(dinero, "Dinero", "src/dominio/dinero.ts", "Representa importes monetarios con Decimal y moneda GTQ")
+        Component(plan, "Generador de plan de amortizacion", "src/dominio/plan-amortizacion.ts", "Genera cuotas del sistema frances y redondea importes")
+        Component(mora, "Calculadora de mora", "src/dominio/calculadora-mora.ts", "Calcula dias de atraso, tramo e interes moratorio")
+        Component(prelacion, "Aplicador de prelacion", "src/dominio/prelacion-pago.ts", "Distribuye pagos entre gastos, intereses y capital")
+        Component(cartera, "Resumen de cartera", "src/dominio/cartera.ts", "Calcula cartera activa, saldo en riesgo e incobrables")
+    }
+
+    Rel(plan, dinero, "Usa para calcular y redondear importes")
+    Rel(mora, dinero, "Usa para calcular interes moratorio")
+    Rel(prelacion, dinero, "Usa para distribuir importes")
+    Rel(cartera, dinero, "Usa para acumular saldos")
+```
+
+El componente `Dinero` es el valor compartido del dominio; los demas componentes dependen de el y no conocen detalles de transporte o persistencia. La implementacion actual cubre calculo financiero, mora, prelacion de pagos y resumen de cartera como componentes independientes.
