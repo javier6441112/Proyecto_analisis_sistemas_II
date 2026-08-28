@@ -56,20 +56,20 @@ La arquitectura es un monolito modular con frontera hexagonal: el dominio no dep
 
 ```mermaid
 C4Component
-    title Nucleo financiero y de cartera - Componentes
+    title Aplicacion SGMC - Componentes del nucleo de dominio
 
-    Container_Boundary(dominio, "Modulo de dominio") {
-        Component(dinero, "Dinero", "src/dominio/dinero.ts", "Representa importes monetarios con Decimal y moneda GTQ")
-        Component(plan, "Generador de plan de amortizacion", "src/dominio/plan-amortizacion.ts", "Genera cuotas del sistema frances y redondea importes")
-        Component(mora, "Calculadora de mora", "src/dominio/calculadora-mora.ts", "Calcula dias de atraso, tramo e interes moratorio")
-        Component(prelacion, "Aplicador de prelacion", "src/dominio/prelacion-pago.ts", "Distribuye pagos entre gastos, intereses y capital")
-        Component(cartera, "Resumen de cartera", "src/dominio/cartera.ts", "Calcula cartera activa, saldo en riesgo e incobrables")
+    Container_Boundary(sgmc, "Aplicacion SGMC - Nucleo de dominio") {
+        Component(dinero, "Dinero", "TypeScript / decimal.js", "Representa importes exactos en GTQ o USD")
+        Component(plan, "Plan de amortizacion", "TypeScript", "Genera las cuotas del sistema frances y ajusta la ultima cuota")
+        Component(mora, "Calculadora de mora", "TypeScript / date-fns", "Calcula dias de atraso, tramo e interes moratorio")
+        Component(prelacion, "Prelacion de pagos", "TypeScript", "Aplica pagos a gastos, mora, interes corriente y capital")
+        Component(cartera, "Cartera en riesgo", "TypeScript", "Calcula cartera activa, saldo en riesgo e incobrables")
     }
 
-    Rel(plan, dinero, "Usa para calcular y redondear importes")
-    Rel(mora, dinero, "Usa para calcular interes moratorio")
-    Rel(prelacion, dinero, "Usa para distribuir importes")
-    Rel(cartera, dinero, "Usa para acumular saldos")
+    Rel(plan, dinero, "Calcula y redondea importes")
+    Rel(mora, dinero, "Calcula interes moratorio")
+    Rel(prelacion, dinero, "Distribuye importes")
+    Rel(cartera, dinero, "Acumula saldos")
 ```
 
 El componente `Dinero` es el valor compartido del dominio; los demas componentes dependen de el y no conocen detalles de transporte o persistencia. La implementacion actual cubre calculo financiero, mora, prelacion de pagos y resumen de cartera como componentes independientes.
