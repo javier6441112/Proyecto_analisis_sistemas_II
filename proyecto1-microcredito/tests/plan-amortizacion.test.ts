@@ -19,7 +19,9 @@ describe('plan de amortizacion francesa', () => {
       ['1922.32', '1004.62', '57.67', '946.95', '975.37'],
       ['975.37', '1004.63', '29.26', '975.37', '0.00'],
     ];
+    expect(plan.cuotas).toHaveLength(12);
     expect(plan.cuotas.map((cuota) => [cuota.saldoInicial.formato(), cuota.pago.formato(), cuota.interes.formato(), cuota.amortizacion.formato(), cuota.saldoFinal.formato()])).toEqual(esperadas);
     expect(plan.cuotas.reduce((total, cuota) => total.sumar(cuota.amortizacion), Dinero.cero()).formato()).toBe('10000.00');
+    expect(plan.cuotas.at(-1)?.saldoFinal.formato()).toBe('0.00');
   });
 });
