@@ -1,11 +1,11 @@
 # Resultados de pruebas - Proyecto 1 Microcredito
 
 Fecha de ejecucion: 26/08/2026
-Ruta del proyecto: `proyecto1-microcredito`
+Ruta del proyecto: `microcredito-p1`
 
 ## Como repetir la ejecucion
 
-Desde PowerShell, ubicado en la carpeta `proyecto1-microcredito`:
+Desde PowerShell, ubicado en la carpeta `microcredito-p1`:
 
 ```powershell
 npm install
@@ -13,7 +13,7 @@ npm test
 npm run build
 ```
 
-Es importante ejecutar los comandos dentro de `proyecto1-microcredito`, porque el repositorio padre tiene otra configuracion de Node y TypeScript.
+Es importante ejecutar los comandos dentro de `microcredito-p1`, porque el repositorio padre tiene otra configuracion de Node y TypeScript.
 
 ## Resultado real de la ejecucion
 
@@ -26,8 +26,8 @@ npm test
 Resultado:
 
 ```text
-Test Files  4 passed (4)
-Tests       7 passed (7)
+Test Files  5 passed (5)
+Tests       15 passed (15)
 ```
 
 Suites ejecutadas:
@@ -38,6 +38,7 @@ Suites ejecutadas:
 | `tests/calculadora-mora.test.ts` | 2 | PASO |
 | `tests/prelacion-pago.test.ts` | 2 | PASO |
 | `tests/cartera.test.ts` | 2 | PASO |
+| `tests/contratos.test.ts` | 8 | PASO |
 
 Comando de compilacion:
 
