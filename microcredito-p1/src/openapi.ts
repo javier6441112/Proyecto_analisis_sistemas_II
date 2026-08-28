@@ -3,7 +3,6 @@ import {
   CarteraEnRiesgoResponseSchema,
 } from './contratos/cartera.js';
 import {
-  ClienteIdSchema,
   ClienteResponseSchema,
   RegistrarClienteRequestSchema,
 } from './contratos/clientes.js';
@@ -347,7 +346,6 @@ export const documentoOpenAPI = {
       ProblemDetails: convertirAOpenAPI(ProblemDetailsSchema),
       CreditoId: convertirAOpenAPI(CreditoIdSchema),
       IdempotencyKey: convertirAOpenAPI(IdempotencyKeySchema),
-      ClienteId: convertirAOpenAPI(ClienteIdSchema),
       RegistrarClienteRequest: convertirAOpenAPI(RegistrarClienteRequestSchema, 'input'),
       ClienteResponse: convertirAOpenAPI(ClienteResponseSchema),
       GenerarCierreRequest: convertirAOpenAPI(GenerarCierreRequestSchema, 'input'),
