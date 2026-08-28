@@ -12,7 +12,249 @@ tags:
     description: Registro de pagos y saldos
   - name: Cierres e indicadores
     description: Cartera en riesgo y cierres
+  - name: Clientes y originacion
+    description: Clientes, solicitudes y desembolsos
 paths:
+  /clientes:
+    post:
+      tags:
+        - Clientes y originacion
+      operationId: registrarCliente
+      summary: Registra un cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistrarClienteRequest"
+            example:
+              nombre: Ana Lopez
+              identificacion: DPI-1234567890101
+      responses:
+        "201":
+          description: Cliente registrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClienteResponse"
+              example:
+                id: CLI-001
+                nombre: Ana Lopez
+                identificacion: DPI-1234567890101
+        "400":
+          description: Revise los datos enviados para registrar el cliente.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/400
+                title: Datos de cliente invalidos
+                status: 400
+                detail: Revise los datos enviados para registrar el cliente.
+                instance: /v1/clientes
+                traceId: tr-20260822-000731
+        "409":
+          description: La identificacion ya esta registrada.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/409
+                title: Cliente duplicado
+                status: 409
+                detail: La identificacion ya esta registrada.
+                instance: /v1/clientes
+                traceId: tr-20260822-000731
+  /solicitudes-credito:
+    post:
+      tags:
+        - Clientes y originacion
+      operationId: solicitarCredito
+      summary: Registra una solicitud de credito
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SolicitarCreditoRequest"
+            example:
+              clienteId: CLI-001
+              montoSolicitado:
+                valor: "10000.00"
+                moneda: GTQ
+              numeroCuotas: 12
+      responses:
+        "201":
+          description: Solicitud de credito registrada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SolicitudCreditoResponse"
+              example:
+                id: SOL-001
+                clienteId: CLI-001
+                montoSolicitado:
+                  valor: "10000.00"
+                  moneda: GTQ
+                numeroCuotas: 12
+                estado: solicitada
+                solicitadaEn: 2026-08-27
+        "400":
+          description: Revise los datos enviados para solicitar el credito.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/400
+                title: Solicitud invalida
+                status: 400
+                detail: Revise los datos enviados para solicitar el credito.
+                instance: /v1/solicitudes-credito
+                traceId: tr-20260822-000731
+        "404":
+          description: No existe un cliente con el identificador CLI-001.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/404
+                title: Cliente no encontrado
+                status: 404
+                detail: No existe un cliente con el identificador CLI-001.
+                instance: /v1/solicitudes-credito
+                traceId: tr-20260822-000731
+  /creditos/{creditoId}/desembolso:
+    post:
+      tags:
+        - Clientes y originacion
+      operationId: desembolsarCredito
+      summary: Desembolsa un credito aprobado
+      parameters:
+        - name: creditoId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CreditoId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DesembolsarCreditoRequest"
+            example:
+              solicitudId: SOL-001
+              clienteId: CLI-001
+              capital:
+                valor: "10000.00"
+                moneda: GTQ
+              fechaDesembolso: 2026-08-27
+      responses:
+        "201":
+          description: Credito desembolsado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreditoResponse"
+              example:
+                id: C-004
+                solicitudId: SOL-001
+                clienteId: CLI-001
+                capital:
+                  valor: "10000.00"
+                  moneda: GTQ
+                estado: vigente
+                diasAtraso: 0
+                desembolsadoEn: 2026-08-27
+        "404":
+          description: No existe la solicitud SOL-001.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/404
+                title: Solicitud no encontrada
+                status: 404
+                detail: No existe la solicitud SOL-001.
+                instance: /v1/creditos/C-004/desembolso
+                traceId: tr-20260822-000731
+        "422":
+          description: La solicitud no esta aprobada.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/422
+                title: Credito no puede desembolsarse
+                status: 422
+                detail: La solicitud no esta aprobada.
+                instance: /v1/creditos/C-004/desembolso
+                traceId: tr-20260822-000731
+  /cierres:
+    post:
+      tags:
+        - Cierres e indicadores
+      operationId: generarCierre
+      summary: Genera un cierre mensual
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerarCierreRequest"
+            example:
+              periodo: 2026-08
+              fechaCorte: 2026-08-22
+      responses:
+        "201":
+          description: Cierre mensual generado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CierreResponse"
+              example:
+                periodo: 2026-08
+                fechaCorte: 2026-08-22
+                carteraActiva:
+                  valor: "800000.00"
+                  moneda: GTQ
+                saldoEnRiesgo:
+                  valor: "56000.00"
+                  moneda: GTQ
+                incobrable:
+                  valor: "15000.00"
+                  moneda: GTQ
+        "400":
+          description: Revise el periodo y la fecha de corte.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/400
+                title: Parametros de cierre invalidos
+                status: 400
+                detail: Revise el periodo y la fecha de corte.
+                instance: /v1/cierres
+                traceId: tr-20260822-000731
+        "409":
+          description: El cierre del periodo 2026-08 ya existe.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/409
+                title: Cierre ya generado
+                status: 409
+                detail: El cierre del periodo 2026-08 ya existe.
+                instance: /v1/cierres
+                traceId: tr-20260822-000731
   /creditos/{creditoId}/pagos:
     post:
       tags:
@@ -316,6 +558,228 @@ components:
       format: uuid
       pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
       description: Clave UUID para evitar registrar dos veces el mismo pago
+    ClienteId:
+      type: string
+      pattern: ^CLI-\d{3,8}$
+      description: Identificador del cliente
+    RegistrarClienteRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        identificacion:
+          type: string
+          minLength: 1
+          maxLength: 30
+      required:
+        - nombre
+        - identificacion
+      additionalProperties: false
+      description: Datos para registrar un cliente
+    ClienteResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^CLI-\d{3,8}$
+          description: Identificador del cliente
+        nombre:
+          type: string
+        identificacion:
+          type: string
+      required:
+        - id
+        - nombre
+        - identificacion
+      additionalProperties: false
+      description: Cliente registrado en el sistema
+    GenerarCierreRequest:
+      type: object
+      properties:
+        periodo:
+          type: string
+          pattern: ^\d{4}-(0[1-9]|1[0-2])$
+          description: Periodo mensual del cierre
+        fechaCorte:
+          type: string
+          format: date
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+          description: Fecha calendario en formato AAAA-MM-DD
+      required:
+        - periodo
+        - fechaCorte
+      additionalProperties: false
+      description: Datos para generar un cierre mensual
+    CierreResponse:
+      type: object
+      properties:
+        periodo:
+          type: string
+          pattern: ^\d{4}-(0[1-9]|1[0-2])$
+          description: Periodo mensual del cierre
+        fechaCorte:
+          type: string
+          format: date
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+          description: Fecha calendario en formato AAAA-MM-DD
+        carteraActiva:
+          type: object
+          properties:
+            valor:
+              type: string
+              pattern: ^\d{1,13}\.\d{2}$
+              description: Importe no negativo con exactamente dos decimales
+            moneda:
+              type: string
+              enum:
+                - GTQ
+          required:
+            - valor
+            - moneda
+          additionalProperties: false
+          description: Importe en quetzales expresado como texto para evitar punto flotante
+        saldoEnRiesgo:
+          type: object
+          properties:
+            valor:
+              type: string
+              pattern: ^\d{1,13}\.\d{2}$
+              description: Importe no negativo con exactamente dos decimales
+            moneda:
+              type: string
+              enum:
+                - GTQ
+          required:
+            - valor
+            - moneda
+          additionalProperties: false
+          description: Importe en quetzales expresado como texto para evitar punto flotante
+        incobrable:
+          type: object
+          properties:
+            valor:
+              type: string
+              pattern: ^\d{1,13}\.\d{2}$
+              description: Importe no negativo con exactamente dos decimales
+            moneda:
+              type: string
+              enum:
+                - GTQ
+          required:
+            - valor
+            - moneda
+          additionalProperties: false
+          description: Importe en quetzales expresado como texto para evitar punto flotante
+      required:
+        - periodo
+        - fechaCorte
+        - carteraActiva
+        - saldoEnRiesgo
+        - incobrable
+      additionalProperties: false
+      description: Cierre mensual de cartera
+    DesembolsarCreditoRequest:
+      type: object
+      properties:
+        solicitudId:
+          type: string
+          pattern: ^SOL-\d{3,8}$
+          description: Identificador de la solicitud de credito
+        clienteId:
+          type: string
+          pattern: ^CLI-\d{3,8}$
+          description: Identificador del cliente
+        capital:
+          type: object
+          properties:
+            valor:
+              type: string
+              pattern: ^\d{1,13}\.\d{2}$
+              description: Importe mayor que cero con exactamente dos decimales
+            moneda:
+              type: string
+              enum:
+                - GTQ
+          required:
+            - valor
+            - moneda
+          additionalProperties: false
+          description: Importe positivo en quetzales expresado como texto
+        fechaDesembolso:
+          type: string
+          format: date
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+          description: Fecha calendario en formato AAAA-MM-DD
+      required:
+        - solicitudId
+        - clienteId
+        - capital
+        - fechaDesembolso
+      additionalProperties: false
+      description: Datos para desembolsar un credito aprobado
+    CreditoResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^C-\d{3,8}$
+          description: Identificador del credito
+        solicitudId:
+          type: string
+          pattern: ^SOL-\d{3,8}$
+          description: Identificador de la solicitud de credito
+        clienteId:
+          type: string
+          pattern: ^CLI-\d{3,8}$
+          description: Identificador del cliente
+        capital:
+          type: object
+          properties:
+            valor:
+              type: string
+              pattern: ^\d{1,13}\.\d{2}$
+              description: Importe mayor que cero con exactamente dos decimales
+            moneda:
+              type: string
+              enum:
+                - GTQ
+          required:
+            - valor
+            - moneda
+          additionalProperties: false
+          description: Importe positivo en quetzales expresado como texto
+        estado:
+          type: string
+          enum:
+            - aprobado
+            - desembolsado
+            - vigente
+            - en_mora
+            - reestructurado
+            - cancelado
+            - incobrable
+          description: Estado operativo del credito
+        diasAtraso:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        desembolsadoEn:
+          type: string
+          format: date
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+          description: Fecha calendario en formato AAAA-MM-DD
+      required:
+        - id
+        - solicitudId
+        - clienteId
+        - capital
+        - estado
+        - diasAtraso
+        - desembolsadoEn
+      additionalProperties: false
+      description: Credito desembolsado
     RegistrarPagoRequest:
       type: object
       properties:
@@ -543,6 +1007,91 @@ components:
         - reproducido
       additionalProperties: false
       description: Resultado de registrar y aplicar un pago
+    SolicitarCreditoRequest:
+      type: object
+      properties:
+        clienteId:
+          type: string
+          pattern: ^CLI-\d{3,8}$
+          description: Identificador del cliente
+        montoSolicitado:
+          type: object
+          properties:
+            valor:
+              type: string
+              pattern: ^\d{1,13}\.\d{2}$
+              description: Importe mayor que cero con exactamente dos decimales
+            moneda:
+              type: string
+              enum:
+                - GTQ
+          required:
+            - valor
+            - moneda
+          additionalProperties: false
+          description: Importe positivo en quetzales expresado como texto
+        numeroCuotas:
+          type: integer
+          minimum: 1
+          maximum: 360
+      required:
+        - clienteId
+        - montoSolicitado
+        - numeroCuotas
+      additionalProperties: false
+      description: Datos para solicitar un credito
+    SolicitudCreditoResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^SOL-\d{3,8}$
+          description: Identificador de la solicitud de credito
+        clienteId:
+          type: string
+          pattern: ^CLI-\d{3,8}$
+          description: Identificador del cliente
+        montoSolicitado:
+          type: object
+          properties:
+            valor:
+              type: string
+              pattern: ^\d{1,13}\.\d{2}$
+              description: Importe mayor que cero con exactamente dos decimales
+            moneda:
+              type: string
+              enum:
+                - GTQ
+          required:
+            - valor
+            - moneda
+          additionalProperties: false
+          description: Importe positivo en quetzales expresado como texto
+        numeroCuotas:
+          type: integer
+          minimum: 1
+          maximum: 360
+        estado:
+          type: string
+          enum:
+            - solicitada
+            - aprobada
+            - rechazada
+          description: Estado de la solicitud de credito
+        solicitadaEn:
+          type: string
+          format: date
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+          description: Fecha calendario en formato AAAA-MM-DD
+      required:
+        - id
+        - clienteId
+        - montoSolicitado
+        - numeroCuotas
+        - estado
+        - solicitadaEn
+      additionalProperties: false
+      description: Solicitud de credito registrada
     CarteraEnRiesgoResponse:
       type: object
       properties:

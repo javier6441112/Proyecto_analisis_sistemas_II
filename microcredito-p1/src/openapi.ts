@@ -3,9 +3,26 @@ import {
   CarteraEnRiesgoResponseSchema,
 } from './contratos/cartera.js';
 import {
+  ClienteIdSchema,
+  ClienteResponseSchema,
+  RegistrarClienteRequestSchema,
+} from './contratos/clientes.js';
+import {
+  CierreResponseSchema,
+  GenerarCierreRequestSchema,
+} from './contratos/cierres.js';
+import {
+  CreditoResponseSchema,
+  DesembolsarCreditoRequestSchema,
+} from './contratos/creditos.js';
+import {
   PagoRegistradoSchema,
   RegistrarPagoRequestSchema,
 } from './contratos/pagos.js';
+import {
+  SolicitarCreditoRequestSchema,
+  SolicitudCreditoResponseSchema,
+} from './contratos/solicitudes.js';
 import {
   CreditoIdSchema,
   IdempotencyKeySchema,
@@ -111,8 +128,128 @@ export const documentoOpenAPI = {
   tags: [
     { name: 'Cartera y cobros', description: 'Registro de pagos y saldos' },
     { name: 'Cierres e indicadores', description: 'Cartera en riesgo y cierres' },
+    { name: 'Clientes y originacion', description: 'Clientes, solicitudes y desembolsos' },
   ],
   paths: {
+    '/clientes': {
+      post: {
+        tags: ['Clientes y originacion'],
+        operationId: 'registrarCliente',
+        summary: 'Registra un cliente',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/RegistrarClienteRequest' },
+              example: { nombre: 'Ana Lopez', identificacion: 'DPI-1234567890101' },
+            },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Cliente registrado.',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ClienteResponse' },
+                example: { id: 'CLI-001', nombre: 'Ana Lopez', identificacion: 'DPI-1234567890101' },
+              },
+            },
+          },
+          '400': problemResponse(400, 'Datos de cliente invalidos', 'Revise los datos enviados para registrar el cliente.', '/v1/clientes'),
+          '409': problemResponse(409, 'Cliente duplicado', 'La identificacion ya esta registrada.', '/v1/clientes'),
+        },
+      },
+    },
+    '/solicitudes-credito': {
+      post: {
+        tags: ['Clientes y originacion'],
+        operationId: 'solicitarCredito',
+        summary: 'Registra una solicitud de credito',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/SolicitarCreditoRequest' },
+              example: { clienteId: 'CLI-001', montoSolicitado: { valor: '10000.00', moneda: 'GTQ' }, numeroCuotas: 12 },
+            },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Solicitud de credito registrada.',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/SolicitudCreditoResponse' },
+                example: { id: 'SOL-001', clienteId: 'CLI-001', montoSolicitado: { valor: '10000.00', moneda: 'GTQ' }, numeroCuotas: 12, estado: 'solicitada', solicitadaEn: '2026-08-27' },
+              },
+            },
+          },
+          '400': problemResponse(400, 'Solicitud invalida', 'Revise los datos enviados para solicitar el credito.', '/v1/solicitudes-credito'),
+          '404': problemResponse(404, 'Cliente no encontrado', 'No existe un cliente con el identificador CLI-001.', '/v1/solicitudes-credito'),
+        },
+      },
+    },
+    '/creditos/{creditoId}/desembolso': {
+      post: {
+        tags: ['Clientes y originacion'],
+        operationId: 'desembolsarCredito',
+        summary: 'Desembolsa un credito aprobado',
+        parameters: [
+          { name: 'creditoId', in: 'path', required: true, schema: { $ref: '#/components/schemas/CreditoId' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/DesembolsarCreditoRequest' },
+              example: { solicitudId: 'SOL-001', clienteId: 'CLI-001', capital: { valor: '10000.00', moneda: 'GTQ' }, fechaDesembolso: '2026-08-27' },
+            },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Credito desembolsado.',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/CreditoResponse' },
+                example: { id: 'C-004', solicitudId: 'SOL-001', clienteId: 'CLI-001', capital: { valor: '10000.00', moneda: 'GTQ' }, estado: 'vigente', diasAtraso: 0, desembolsadoEn: '2026-08-27' },
+              },
+            },
+          },
+          '404': problemResponse(404, 'Solicitud no encontrada', 'No existe la solicitud SOL-001.', '/v1/creditos/C-004/desembolso'),
+          '422': problemResponse(422, 'Credito no puede desembolsarse', 'La solicitud no esta aprobada.', '/v1/creditos/C-004/desembolso'),
+        },
+      },
+    },
+    '/cierres': {
+      post: {
+        tags: ['Cierres e indicadores'],
+        operationId: 'generarCierre',
+        summary: 'Genera un cierre mensual',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/GenerarCierreRequest' },
+              example: { periodo: '2026-08', fechaCorte: '2026-08-22' },
+            },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Cierre mensual generado.',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/CierreResponse' },
+                example: { periodo: '2026-08', fechaCorte: '2026-08-22', carteraActiva: { valor: '800000.00', moneda: 'GTQ' }, saldoEnRiesgo: { valor: '56000.00', moneda: 'GTQ' }, incobrable: { valor: '15000.00', moneda: 'GTQ' } },
+              },
+            },
+          },
+          '400': problemResponse(400, 'Parametros de cierre invalidos', 'Revise el periodo y la fecha de corte.', '/v1/cierres'),
+          '409': problemResponse(409, 'Cierre ya generado', 'El cierre del periodo 2026-08 ya existe.', '/v1/cierres'),
+        },
+      },
+    },
     '/creditos/{creditoId}/pagos': {
       post: {
         tags: ['Cartera y cobros'],
@@ -210,8 +347,17 @@ export const documentoOpenAPI = {
       ProblemDetails: convertirAOpenAPI(ProblemDetailsSchema),
       CreditoId: convertirAOpenAPI(CreditoIdSchema),
       IdempotencyKey: convertirAOpenAPI(IdempotencyKeySchema),
+      ClienteId: convertirAOpenAPI(ClienteIdSchema),
+      RegistrarClienteRequest: convertirAOpenAPI(RegistrarClienteRequestSchema, 'input'),
+      ClienteResponse: convertirAOpenAPI(ClienteResponseSchema),
+      GenerarCierreRequest: convertirAOpenAPI(GenerarCierreRequestSchema, 'input'),
+      CierreResponse: convertirAOpenAPI(CierreResponseSchema),
+      DesembolsarCreditoRequest: convertirAOpenAPI(DesembolsarCreditoRequestSchema, 'input'),
+      CreditoResponse: convertirAOpenAPI(CreditoResponseSchema),
       RegistrarPagoRequest: convertirAOpenAPI(RegistrarPagoRequestSchema, 'input'),
       PagoRegistrado: convertirAOpenAPI(PagoRegistradoSchema),
+      SolicitarCreditoRequest: convertirAOpenAPI(SolicitarCreditoRequestSchema, 'input'),
+      SolicitudCreditoResponse: convertirAOpenAPI(SolicitudCreditoResponseSchema),
       CarteraEnRiesgoResponse: convertirAOpenAPI(CarteraEnRiesgoResponseSchema),
     },
   },
