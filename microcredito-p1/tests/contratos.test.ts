@@ -5,6 +5,7 @@ import { CreditoResponseSchema, DesembolsarCreditoRequestSchema } from '../src/c
 import { CierreResponseSchema, GenerarCierreRequestSchema } from '../src/contratos/cierres.js';
 import { PagoRegistradoSchema, RegistrarPagoRequestSchema } from '../src/contratos/pagos.js';
 import { SolicitarCreditoRequestSchema, SolicitudCreditoResponseSchema } from '../src/contratos/solicitudes.js';
+import { documentoOpenAPI } from '../src/openapi.js';
 
 const pagoValido = {
   monto: { valor: '1011.88', moneda: 'GTQ' },
@@ -41,6 +42,10 @@ describe('contratos Zod del SGMC', () => {
     expect(GenerarCierreRequestSchema.safeParse({ periodo: '2026-08', fechaCorte: '2026-08-22' }).success).toBe(true);
     expect(GenerarCierreRequestSchema.safeParse({ periodo: '2026-13', fechaCorte: '2026-08-22' }).success).toBe(false);
     expect(CierreResponseSchema.safeParse({ periodo: '2026-08', fechaCorte: '2026-08-22', carteraActiva: { valor: '800000.00', moneda: 'GTQ' }, saldoEnRiesgo: { valor: '56000.00', moneda: 'GTQ' }, incobrable: { valor: '15000.00', moneda: 'GTQ' } }).success).toBe(true);
+    const respuestasCierre = documentoOpenAPI.paths['/cierres'].post.responses;
+    expect(respuestasCierre['201'].description).toBe('Cierre mensual generado.');
+    expect(respuestasCierre['200'].description).toBe('Cierre mensual existente reproducido sin duplicarlo.');
+    expect('409' in respuestasCierre).toBe(false);
   });
 
   it('acepta un pago valido y rechaza importes no positivos', () => {

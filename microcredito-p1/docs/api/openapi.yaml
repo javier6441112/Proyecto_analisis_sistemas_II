@@ -211,6 +211,24 @@ paths:
               periodo: 2026-08
               fechaCorte: 2026-08-22
       responses:
+        "200":
+          description: Cierre mensual existente reproducido sin duplicarlo.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CierreResponse"
+              example:
+                periodo: 2026-08
+                fechaCorte: 2026-08-22
+                carteraActiva:
+                  valor: "800000.00"
+                  moneda: GTQ
+                saldoEnRiesgo:
+                  valor: "56000.00"
+                  moneda: GTQ
+                incobrable:
+                  valor: "15000.00"
+                  moneda: GTQ
         "201":
           description: Cierre mensual generado.
           content:
@@ -240,19 +258,6 @@ paths:
                 title: Parametros de cierre invalidos
                 status: 400
                 detail: Revise el periodo y la fecha de corte.
-                instance: /v1/cierres
-                traceId: tr-20260822-000731
-        "409":
-          description: El cierre del periodo 2026-08 ya existe.
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetails"
-              example:
-                type: https://api.creditovecino.gt/problems/409
-                title: Cierre ya generado
-                status: 409
-                detail: El cierre del periodo 2026-08 ya existe.
                 instance: /v1/cierres
                 traceId: tr-20260822-000731
   /creditos/{creditoId}/pagos:

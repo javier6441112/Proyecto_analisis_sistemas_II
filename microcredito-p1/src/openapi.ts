@@ -244,8 +244,16 @@ export const documentoOpenAPI = {
               },
             },
           },
+          '200': {
+            description: 'Cierre mensual existente reproducido sin duplicarlo.',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/CierreResponse' },
+                example: { periodo: '2026-08', fechaCorte: '2026-08-22', carteraActiva: { valor: '800000.00', moneda: 'GTQ' }, saldoEnRiesgo: { valor: '56000.00', moneda: 'GTQ' }, incobrable: { valor: '15000.00', moneda: 'GTQ' } },
+              },
+            },
+          },
           '400': problemResponse(400, 'Parametros de cierre invalidos', 'Revise el periodo y la fecha de corte.', '/v1/cierres'),
-          '409': problemResponse(409, 'Cierre ya generado', 'El cierre del periodo 2026-08 ya existe.', '/v1/cierres'),
         },
       },
     },
