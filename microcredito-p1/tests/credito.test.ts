@@ -2,15 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { Credito, type ContextoTransicionCredito } from '../src/dominio/credito.js';
 import { Dinero } from '../src/dominio/dinero.js';
 import type { Adeudo } from '../src/dominio/prelacion-pago.js';
+import { crearPoliticaCredito } from '../src/dominio/politica-credito.js';
 
 describe('ciclo de vida de credito', () => {
   const contexto = (fecha: string, usuario: string, motivo: string): ContextoTransicionCredito => ({ fecha: new Date(fecha), usuario, motivo });
   const fechaPrueba = contexto('2026-08-28T10:00:00-06:00', 'sistema', 'Transicion de prueba');
+  const politica = crearPoliticaCredito({ id: 'POL-001', version: '1.0', vigenteDesde: '2026-08-01', autor: 'comite', tasaOrdinariaMensual: '0.03', tasaMoratoriaAnual: '0.24', baseDias: 360 });
   const adeudo = (capital: string): Adeudo => ({ gastos: Dinero.cero(), interesMoratorio: Dinero.de('7.26'), interesCorriente: Dinero.de('278.86'), capital: Dinero.de(capital) });
   const adeudoSinIntereses = (capital: string): Adeudo => ({ gastos: Dinero.cero(), interesMoratorio: Dinero.cero(), interesCorriente: Dinero.cero(), capital: Dinero.de(capital) });
 
   const creditoDesembolsado = (): Credito => {
-    const credito = Credito.solicitado('C-004', Dinero.de('10000.00'));
+    const credito = Credito.solicitado('C-004', Dinero.de('10000.00'), politica);
     credito.aprobar(contexto('2026-08-25T10:00:00-06:00', 'comite', 'Cumple politica'));
     credito.desembolsar(contexto('2026-08-26T10:00:00-06:00', 'tesoreria', 'Capital entregado'));
     credito.activar(contexto('2026-08-26T10:01:00-06:00', 'sistema', 'Credito habilitado'));
@@ -24,7 +26,7 @@ describe('ciclo de vida de credito', () => {
     expect(credito.estado).toBe('EN_MORA');
     expect(credito.tramoMora).toBe('MORA_2');
 
-    const pagoParcial = credito.registrarPago(Dinero.de('500.00'), 10, Dinero.de('500.00'), adeudo('10000.00'), fechaPrueba);
+    const pagoParcial = credito.registrarPago(Dinero.de('500.00'), 10, Dinero.de('500.00'), adeudo('725.76'), fechaPrueba);
     expect(pagoParcial.tipo).toBe('APLICACION');
     expect(pagoParcial.tipo === 'APLICACION' && pagoParcial.aplicado.interesMoratorio.formato()).toBe('7.26');
     expect(pagoParcial.tipo === 'APLICACION' && pagoParcial.aplicado.interesCorriente.formato()).toBe('278.86');
@@ -33,20 +35,32 @@ describe('ciclo de vida de credito', () => {
     expect(credito.tramoMora).toBe('MORA_1');
     expect(credito.diasAtraso).toBe(10);
 
-    const pagoFinal = credito.registrarPago(Dinero.de('500.00'), 0, Dinero.cero(), adeudo('9786.12'), fechaPrueba);
+    const pagoFinal = credito.registrarPago(Dinero.de('500.00'), 0, Dinero.cero(), adeudoSinIntereses('500.00'), fechaPrueba);
     expect(pagoFinal.tipo).toBe('APLICACION');
     expect(credito.estado).toBe('VIGENTE');
     expect(credito.saldoVencido.esCero()).toBe(true);
-    expect(credito.saldoCapital.formato()).toBe('9572.24');
+    expect(credito.saldoCapital.formato()).toBe('9286.12');
   });
 
   it('calcula el saldo de capital internamente y no acepta saldos falsificados', () => {
     const credito = creditoDesembolsado();
 
+    expect(credito.politica).toBe(politica);
     credito.registrarPago(Dinero.de('1.00'), 0, Dinero.cero(), adeudoSinIntereses('10000.00'), fechaPrueba);
 
     expect(credito.saldoCapital.formato()).toBe('9999.00');
-    expect(credito.estado).toBe('VIGENTE');
+    expect(credito.estado).toBe('EN_MORA');
+  });
+
+  it('aplica excedente a cuotas futuras sin convertirlo en capital de la cuota', () => {
+    const credito = creditoDesembolsado();
+    const resultado = credito.registrarPago(Dinero.de('3000.00'), 0, Dinero.cero(), adeudo('725.76'), fechaPrueba, 'cuotas_futuras');
+
+    expect(resultado.tipo).toBe('APLICACION');
+    expect(resultado.tipo === 'APLICACION' && resultado.aplicado.capital.formato()).toBe('725.76');
+    expect(resultado.tipo === 'APLICACION' && resultado.excedente?.destino).toBe('cuotas_futuras');
+    expect(resultado.tipo === 'APLICACION' && resultado.excedente?.saldoExcedente.formato()).toBe('1988.12');
+    expect(credito.saldoCapital.formato()).toBe('9274.24');
   });
 
   it('regresa a vigente cuando actualizarMora recibe cero dias', () => {
@@ -68,7 +82,7 @@ describe('ciclo de vida de credito', () => {
   });
 
   it('rechaza pagos para creditos solicitados y rechazados', () => {
-    const solicitado = Credito.solicitado('C-005', Dinero.de('5000.00'));
+    const solicitado = Credito.solicitado('C-005', Dinero.de('5000.00'), politica);
     expect(() => solicitado.registrarPago(Dinero.de('100.00'), 0, Dinero.cero(), adeudo('5000.00'), fechaPrueba)).toThrow(/Pago rechazado/);
 
     solicitado.rechazar(fechaPrueba);
@@ -97,7 +111,7 @@ describe('ciclo de vida de credito', () => {
   });
 
   it('pasa por desembolsado, registra historial y conserva marca de reestructuracion', () => {
-    const credito = Credito.solicitado('C-006', Dinero.de('5000.00'));
+    const credito = Credito.solicitado('C-006', Dinero.de('5000.00'), politica);
     credito.aprobar(contexto('2026-08-25T10:00:00-06:00', 'comite', 'Politica cumplida'));
     credito.desembolsar(contexto('2026-08-26T10:00:00-06:00', 'tesoreria', 'Capital entregado'));
     expect(credito.estado).toBe('DESEMBOLSADO');
@@ -119,7 +133,7 @@ describe('ciclo de vida de credito', () => {
     const credito = creditoDesembolsado();
     credito.actualizarMora(10, Dinero.de('100.00'), fechaPrueba);
     credito.reestructurar(fechaPrueba);
-    credito.registrarPago(Dinero.de('100.00'), 0, Dinero.cero(), adeudo('5000.00'), fechaPrueba);
+    credito.registrarPago(Dinero.de('100.00'), 0, Dinero.cero(), adeudoSinIntereses('100.00'), fechaPrueba);
 
     expect(credito.estado).toBe('VIGENTE');
     expect(credito.fueReestructurado).toBe(true);
@@ -131,7 +145,7 @@ describe('ciclo de vida de credito', () => {
     expect(credito.estado).toBe('CANCELADO');
     expect(() => credito.actualizarMora(1, Dinero.de('1.00'), fechaPrueba)).toThrow(/Transicion invalida/);
 
-    const anulado = Credito.solicitado('C-007', Dinero.de('1000.00'));
+    const anulado = Credito.solicitado('C-007', Dinero.de('1000.00'), politica);
     anulado.aprobar(fechaPrueba);
     anulado.anular(fechaPrueba);
     expect(() => anulado.registrarPago(Dinero.de('10.00'), 0, Dinero.cero(), adeudo('1000.00'), fechaPrueba)).toThrow(/Pago rechazado/);

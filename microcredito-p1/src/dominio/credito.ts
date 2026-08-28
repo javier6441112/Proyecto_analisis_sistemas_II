@@ -138,13 +138,13 @@ abstract class EstadoActivo extends EstadoBase {
     contexto: ContextoTransicionCredito,
   ): AplicacionPagoCredito {
     credito.validarPago(monto, dias, saldo);
-    const resultadoAplicacion = aplicarPago(monto, { ...adeudo, capital: credito.saldoCapital });
+    const resultadoAplicacion = aplicarPago(monto, adeudo);
     credito.actualizarSaldoCapital(resultadoAplicacion.aplicado.capital);
     credito.actualizarSaldos(dias, saldo);
     const excedente = resultadoAplicacion.remanente.esCero() ? undefined : aplicarExcedente(resultadoAplicacion.remanente, credito.saldoCapital, destino);
     if (excedente) credito.actualizarSaldoCapital(excedente.montoAplicado);
     if (credito.saldoCapital.esCero()) credito.cambiarEstado(new EstadoCancelado(), contexto);
-    else if (dias === 0) {
+    else if (dias === 0 && resultadoAplicacion.cuotaSaldada) {
       credito.reactivarInteresCorriente();
       credito.cambiarEstado(new EstadoVigente(), contexto);
     }
@@ -205,12 +205,12 @@ export class Credito {
   private readonly transiciones: RegistroTransicionCredito[] = [];
   private reestructuradoHistorico = false;
 
-  private constructor(public readonly id: string, public readonly capital: Dinero, public readonly politica?: PoliticaCredito) {
+  private constructor(public readonly id: string, public readonly capital: Dinero, public readonly politica: PoliticaCredito) {
     this._saldoVencido = Dinero.cero(capital.moneda);
     this._saldoCapital = capital;
   }
 
-  static solicitado(id: string, capital: Dinero, politica?: PoliticaCredito): Credito {
+  static solicitado(id: string, capital: Dinero, politica: PoliticaCredito): Credito {
     if (!id) throw new Error('El credito debe tener identificador');
     if (capital.esCero() || capital.valor.isNegative()) throw new Error('El capital debe ser positivo');
     return new Credito(id, capital, politica);
@@ -256,7 +256,7 @@ export class Credito {
   actualizarSaldos(dias: number, saldo: Dinero): void {
     this._diasAtraso = dias;
     this._saldoVencido = saldo;
-    this._interesCorrienteSuspendido = dias > 90;
+    if (dias > 90) this._interesCorrienteSuspendido = true;
   }
   actualizarSaldoCapital(capitalAplicado: Dinero): void {
     this._saldoCapital = this._saldoCapital.restar(capitalAplicado);
