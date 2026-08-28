@@ -18,6 +18,10 @@ npm test
 
 ## Operaciones
 
+- `POST /clientes`: registra un cliente.
+- `POST /solicitudes-credito`: registra una solicitud de credito.
+- `POST /creditos/{creditoId}/desembolso`: desembolsa un credito aprobado.
+- `POST /cierres`: genera o reproduce un cierre diario o mensual de cartera.
 - `POST /creditos/{creditoId}/pagos`: registra pagos con `Idempotency-Key` obligatorio y desglose de prelacion.
 - `GET /cartera-riesgo?fechaCorte=AAAA-MM-DD`: calcula cartera en riesgo con fecha de corte obligatoria.
 
