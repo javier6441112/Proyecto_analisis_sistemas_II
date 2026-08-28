@@ -1,0 +1,22 @@
+# Dependencias instaladas, en la raiz o en subproyectos
+node_modules/
+
+# Salidas generadas por TypeScript y las pruebas
+dist/
+coverage/
+*.tsbuildinfo
+
+# Archivos locales y secretos
+.env
+.env.*
+!.env.example
+
+# Logs de npm y del sistema
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Archivos del sistema operativo y del editor
+.DS_Store
+Thumbs.db
