@@ -10,6 +10,12 @@ export interface Cuota {
   saldoFinal: Dinero;
 }
 
+export function calcularTasaEfectivaAnual(tasaMensual: string | Decimal): Decimal {
+  const tasa = new Decimal(tasaMensual);
+  if (!tasa.isFinite() || tasa.isNegative()) throw new Error('La tasa mensual debe ser finita y no negativa');
+  return new Decimal(1).plus(tasa).pow(12).minus(1);
+}
+
 export interface PlanAmortizacion {
   capital: Dinero;
   cuotas: readonly Cuota[];

@@ -1,4 +1,6 @@
 import { Dinero } from './dinero.js';
+import { clasificarMora, type TramoMora } from './calculadora-mora.js';
+import { aplicarPago } from './prelacion-pago.js';
 
 export type EstadoCredito =
   | 'SOLICITADO'
@@ -12,14 +14,18 @@ export type EstadoCredito =
   | 'ANULADO'
   | 'INCOBRABLE';
 
-export type TramoMora = 'AL_DIA' | 'MORA_1' | 'MORA_2' | 'MORA_3' | 'VENCIDO';
-
 export interface RegistroTransicionCredito {
   fecha: Date;
-  usuarioOProceso: string;
+  usuario: string;
   motivo: string;
   estadoAnterior: EstadoCredito;
   estadoNuevo: EstadoCredito;
+}
+
+export interface ContextoTransicionCredito {
+  fecha: Date;
+  usuario: string;
+  motivo: string;
 }
 
 export interface RecuperacionCredito {
@@ -37,7 +43,7 @@ export interface AplicacionPagoCredito {
 
 export type ResultadoPago = AplicacionPagoCredito | RecuperacionCredito;
 
-type Accion = (credito: Credito, usuario: string, motivo: string) => void;
+type Accion = (credito: Credito, contexto: ContextoTransicionCredito) => void;
 
 interface EstadoCreditoState {
   readonly nombre: EstadoCredito;
@@ -46,8 +52,8 @@ interface EstadoCreditoState {
   anular: Accion;
   desembolsar: Accion;
   activar: Accion;
-  actualizarMora: (credito: Credito, dias: number, saldo: Dinero, usuario: string, motivo: string) => void;
-  registrarPago: (credito: Credito, monto: Dinero, dias: number, saldo: Dinero, capital: Dinero, usuario: string, motivo: string) => ResultadoPago;
+  actualizarMora: (credito: Credito, dias: number, saldo: Dinero, contexto: ContextoTransicionCredito) => void;
+  registrarPago: (credito: Credito, monto: Dinero, dias: number, saldo: Dinero, contexto: ContextoTransicionCredito) => ResultadoPago;
   reestructurar: Accion;
   regularizar: Accion;
   cancelar: Accion;
@@ -57,17 +63,17 @@ interface EstadoCreditoState {
 abstract class EstadoBase implements EstadoCreditoState {
   abstract readonly nombre: EstadoCredito;
 
-  aprobar(_credito: Credito, _usuario: string, _motivo: string): void { this.invalida('aprobar'); }
-  rechazar(_credito: Credito, _usuario: string, _motivo: string): void { this.invalida('rechazar'); }
-  anular(_credito: Credito, _usuario: string, _motivo: string): void { this.invalida('anular'); }
-  desembolsar(_credito: Credito, _usuario: string, _motivo: string): void { this.invalida('desembolsar'); }
-  activar(_credito: Credito, _usuario: string, _motivo: string): void { this.invalida('activar'); }
-  actualizarMora(_credito: Credito, _dias: number, _saldo: Dinero, _usuario: string, _motivo: string): void { this.invalida('actualizarMora'); }
-  registrarPago(_credito: Credito, _monto: Dinero, _dias: number, _saldo: Dinero, _capital: Dinero, _usuario: string, _motivo: string): ResultadoPago { throw new Error(`Pago rechazado: el credito esta ${this.nombre}`); }
-  reestructurar(_credito: Credito, _usuario: string, _motivo: string): void { this.invalida('reestructurar'); }
-  regularizar(_credito: Credito, _usuario: string, _motivo: string): void { this.invalida('regularizar'); }
-  cancelar(_credito: Credito, _usuario: string, _motivo: string): void { this.invalida('cancelar'); }
-  declararIncobrable(_credito: Credito, _usuario: string, _motivo: string): void { this.invalida('declararIncobrable'); }
+  aprobar(_credito: Credito, _contexto: ContextoTransicionCredito): void { this.invalida('aprobar'); }
+  rechazar(_credito: Credito, _contexto: ContextoTransicionCredito): void { this.invalida('rechazar'); }
+  anular(_credito: Credito, _contexto: ContextoTransicionCredito): void { this.invalida('anular'); }
+  desembolsar(_credito: Credito, _contexto: ContextoTransicionCredito): void { this.invalida('desembolsar'); }
+  activar(_credito: Credito, _contexto: ContextoTransicionCredito): void { this.invalida('activar'); }
+  actualizarMora(_credito: Credito, _dias: number, _saldo: Dinero, _contexto: ContextoTransicionCredito): void { this.invalida('actualizarMora'); }
+  registrarPago(_credito: Credito, _monto: Dinero, _dias: number, _saldo: Dinero, _contexto: ContextoTransicionCredito): ResultadoPago { throw new Error(`Pago rechazado: el credito esta ${this.nombre}`); }
+  reestructurar(_credito: Credito, _contexto: ContextoTransicionCredito): void { this.invalida('reestructurar'); }
+  regularizar(_credito: Credito, _contexto: ContextoTransicionCredito): void { this.invalida('regularizar'); }
+  cancelar(_credito: Credito, _contexto: ContextoTransicionCredito): void { this.invalida('cancelar'); }
+  declararIncobrable(_credito: Credito, _contexto: ContextoTransicionCredito): void { this.invalida('declararIncobrable'); }
 
   private invalida(accion: string): never {
     throw new Error(`Transicion invalida desde ${this.nombre}: ${accion}`);
@@ -77,21 +83,21 @@ abstract class EstadoBase implements EstadoCreditoState {
 class EstadoSolicitado extends EstadoBase {
   readonly nombre = 'SOLICITADO' as const;
 
-  aprobar(credito: Credito, usuario: string, motivo: string): void { credito.cambiarEstado(new EstadoAprobado(), usuario, motivo); }
-  rechazar(credito: Credito, usuario: string, motivo: string): void { credito.cambiarEstado(new EstadoRechazado(), usuario, motivo); }
+  aprobar(credito: Credito, contexto: ContextoTransicionCredito): void { credito.cambiarEstado(new EstadoAprobado(), contexto); }
+  rechazar(credito: Credito, contexto: ContextoTransicionCredito): void { credito.cambiarEstado(new EstadoRechazado(), contexto); }
 }
 
 class EstadoAprobado extends EstadoBase {
   readonly nombre = 'APROBADO' as const;
 
-  desembolsar(credito: Credito, usuario: string, motivo: string): void { credito.cambiarEstado(new EstadoDesembolsado(), usuario, motivo); }
-  anular(credito: Credito, usuario: string, motivo: string): void { credito.cambiarEstado(new EstadoAnulado(), usuario, motivo); }
+  desembolsar(credito: Credito, contexto: ContextoTransicionCredito): void { credito.cambiarEstado(new EstadoDesembolsado(), contexto); }
+  anular(credito: Credito, contexto: ContextoTransicionCredito): void { credito.cambiarEstado(new EstadoAnulado(), contexto); }
 }
 
 class EstadoDesembolsado extends EstadoBase {
   readonly nombre = 'DESEMBOLSADO' as const;
 
-  activar(credito: Credito, usuario: string, motivo: string): void { credito.cambiarEstado(new EstadoVigente(), usuario, motivo); }
+  activar(credito: Credito, contexto: ContextoTransicionCredito): void { credito.cambiarEstado(new EstadoVigente(), contexto); }
 }
 
 class EstadoRechazado extends EstadoBase { readonly nombre = 'RECHAZADO' as const; }
@@ -101,19 +107,17 @@ class EstadoCancelado extends EstadoBase { readonly nombre = 'CANCELADO' as cons
 class EstadoIncobrable extends EstadoBase {
   readonly nombre = 'INCOBRABLE' as const;
 
-  registrarPago(credito: Credito, monto: Dinero): RecuperacionCredito {
+  registrarPago(credito: Credito, monto: Dinero, _dias: number, _saldo: Dinero, contexto: ContextoTransicionCredito): RecuperacionCredito {
+    credito.validarContexto(contexto);
     return { tipo: 'RECUPERACION', monto, creditoId: credito.id };
   }
 }
 
 abstract class EstadoActivo extends EstadoBase {
-  actualizarMora(credito: Credito, dias: number, saldo: Dinero, usuario: string, motivo: string): void {
+  actualizarMora(credito: Credito, dias: number, saldo: Dinero, contexto: ContextoTransicionCredito): void {
     credito.actualizarSaldos(dias, saldo);
-    if (dias > 120) {
-      credito.cambiarEstado(new EstadoIncobrable(), usuario, motivo);
-      return;
-    }
-    credito.cambiarEstado(new EstadoEnMora(), usuario, motivo);
+    if (dias === 0) credito.cambiarEstado(new EstadoVigente(), contexto);
+    else credito.cambiarEstado(new EstadoEnMora(), contexto);
   }
 
   registrarPago(
@@ -121,37 +125,62 @@ abstract class EstadoActivo extends EstadoBase {
     monto: Dinero,
     dias: number,
     saldo: Dinero,
-    capital: Dinero,
-    usuario: string,
-    motivo: string,
+    contexto: ContextoTransicionCredito,
   ): AplicacionPagoCredito {
-    credito.validarPago(monto, dias, saldo, capital);
+    credito.validarPago(monto, dias, saldo);
+    const resultadoAplicacion = aplicarPago(monto, {
+      gastos: Dinero.cero(monto.moneda),
+      interesMoratorio: Dinero.cero(monto.moneda),
+      interesCorriente: Dinero.cero(monto.moneda),
+      capital: credito.saldoCapital,
+    });
+    credito.actualizarSaldoCapital(resultadoAplicacion.aplicado.capital);
     credito.actualizarSaldos(dias, saldo);
-    if (capital.esCero()) credito.cambiarEstado(new EstadoCancelado(), usuario, motivo);
-    else if (dias === 0) credito.cambiarEstado(new EstadoVigente(), usuario, motivo);
-    else credito.cambiarEstado(new EstadoEnMora(), usuario, motivo);
+    if (credito.saldoCapital.esCero()) credito.cambiarEstado(new EstadoCancelado(), contexto);
+    else if (dias === 0) credito.cambiarEstado(new EstadoVigente(), contexto);
+    else credito.cambiarEstado(new EstadoEnMora(), contexto);
     return { tipo: 'APLICACION', monto, creditoId: credito.id, estado: credito.estado };
   }
 
-  reestructurar(credito: Credito, usuario: string, motivo: string): void {
-    credito.cambiarEstado(new EstadoReestructurado(), usuario, motivo);
-  }
-
-  declararIncobrable(credito: Credito, usuario: string, motivo: string): void {
+  declararIncobrable(credito: Credito, contexto: ContextoTransicionCredito): void {
     credito.validarIncobrable();
-    credito.cambiarEstado(new EstadoIncobrable(), usuario, motivo);
+    credito.cambiarEstado(new EstadoIncobrable(), contexto);
   }
 }
 
 class EstadoVigente extends EstadoActivo { readonly nombre = 'VIGENTE' as const; }
-class EstadoEnMora extends EstadoActivo { readonly nombre = 'EN_MORA' as const; }
+class EstadoEnMora extends EstadoActivo {
+  readonly nombre = 'EN_MORA' as const;
+
+  reestructurar(credito: Credito, contexto: ContextoTransicionCredito): void {
+    credito.cambiarEstado(new EstadoReestructurado(), contexto);
+  }
+}
 
 class EstadoReestructurado extends EstadoActivo {
   readonly nombre = 'REESTRUCTURADO' as const;
 
-  regularizar(credito: Credito, usuario: string, motivo: string): void {
+  actualizarMora(credito: Credito, dias: number, saldo: Dinero, contexto: ContextoTransicionCredito): void {
+    super.actualizarMora(credito, dias, saldo, contexto);
     credito.marcarReestructurado();
-    credito.cambiarEstado(new EstadoVigente(), usuario, motivo);
+  }
+
+  registrarPago(
+    credito: Credito,
+    monto: Dinero,
+    dias: number,
+    saldo: Dinero,
+    contexto: ContextoTransicionCredito,
+  ): AplicacionPagoCredito {
+    const resultado = super.registrarPago(credito, monto, dias, saldo, contexto);
+    credito.marcarReestructurado();
+    return resultado;
+  }
+
+  regularizar(credito: Credito, contexto: ContextoTransicionCredito): void {
+    credito.marcarReestructurado();
+    credito.reactivarInteresCorriente();
+    credito.cambiarEstado(new EstadoVigente(), contexto);
   }
 }
 
@@ -159,11 +188,14 @@ export class Credito {
   private estadoActual: EstadoCreditoState = new EstadoSolicitado();
   private _diasAtraso = 0;
   private _saldoVencido: Dinero;
+  private _saldoCapital: Dinero;
+  private _interesCorrienteSuspendido = false;
   private readonly transiciones: RegistroTransicionCredito[] = [];
   private reestructuradoHistorico = false;
 
   private constructor(public readonly id: string, public readonly capital: Dinero) {
     this._saldoVencido = Dinero.cero(capital.moneda);
+    this._saldoCapital = capital;
   }
 
   static solicitado(id: string, capital: Dinero): Credito {
@@ -175,57 +207,66 @@ export class Credito {
   get estado(): EstadoCredito { return this.estadoActual.nombre; }
   get diasAtraso(): number { return this._diasAtraso; }
   get saldoVencido(): Dinero { return this._saldoVencido; }
+  get saldoCapital(): Dinero { return this._saldoCapital; }
+  get interesCorrienteSuspendido(): boolean { return this._interesCorrienteSuspendido; }
   get tramoMora(): TramoMora { return Credito.tramoParaDias(this._diasAtraso); }
   get fueReestructurado(): boolean { return this.reestructuradoHistorico; }
-  get historial(): readonly RegistroTransicionCredito[] { return this.transiciones.map((item) => ({ ...item, fecha: new Date(item.fecha) })); }
+  get historial(): readonly RegistroTransicionCredito[] { return this.transiciones.map((item) => ({ ...item, fecha: new Date(item.fecha.getTime()) })); }
 
-  aprobar(usuario = 'sistema', motivo = 'Comite aprobo la solicitud'): void { this.estadoActual.aprobar(this, usuario, motivo); }
-  rechazar(usuario = 'sistema', motivo = 'Comite rechazo la solicitud'): void { this.estadoActual.rechazar(this, usuario, motivo); }
-  anular(usuario = 'sistema', motivo = 'Aprobacion expirada o cliente desiste'): void { this.estadoActual.anular(this, usuario, motivo); }
-  desembolsar(usuario = 'sistema', motivo = 'Capital entregado'): void { this.estadoActual.desembolsar(this, usuario, motivo); }
-  activar(usuario = 'sistema', motivo = 'Credito activado despues del desembolso'): void { this.estadoActual.activar(this, usuario, motivo); }
+  aprobar(contexto: ContextoTransicionCredito): void { this.estadoActual.aprobar(this, contexto); }
+  rechazar(contexto: ContextoTransicionCredito): void { this.estadoActual.rechazar(this, contexto); }
+  anular(contexto: ContextoTransicionCredito): void { this.estadoActual.anular(this, contexto); }
+  desembolsar(contexto: ContextoTransicionCredito): void { this.estadoActual.desembolsar(this, contexto); }
+  activar(contexto: ContextoTransicionCredito): void { this.estadoActual.activar(this, contexto); }
 
-  actualizarMora(dias: number, saldo: Dinero, usuario = 'sistema', motivo = 'Actualizacion de atraso'): void {
+  actualizarMora(dias: number, saldo: Dinero, contexto: ContextoTransicionCredito): void {
     this.validarDatosDeMora(dias, saldo);
-    this.estadoActual.actualizarMora(this, dias, saldo, usuario, motivo);
+    this.estadoActual.actualizarMora(this, dias, saldo, contexto);
   }
 
-  registrarPago(monto: Dinero, dias: number, saldo: Dinero, capital = this.capital, usuario = 'sistema', motivo = 'Pago recibido'): ResultadoPago {
+  registrarPago(monto: Dinero, dias: number, saldo: Dinero, contexto: ContextoTransicionCredito): ResultadoPago {
     if (monto.esCero() || monto.valor.isNegative()) throw new Error('El pago debe ser positivo');
-    return this.estadoActual.registrarPago(this, monto, dias, saldo, capital, usuario, motivo);
+    return this.estadoActual.registrarPago(this, monto, dias, saldo, contexto);
   }
 
-  reestructurar(usuario = 'comite', motivo = 'Nuevas condiciones autorizadas'): void { this.estadoActual.reestructurar(this, usuario, motivo); }
-  regularizar(usuario = 'sistema', motivo = 'Politica de regularizacion cumplida'): void { this.estadoActual.regularizar(this, usuario, motivo); }
-  cancelar(usuario = 'sistema', motivo = 'Saldo de capital agotado'): void { this.estadoActual.cancelar(this, usuario, motivo); }
-  declararIncobrable(usuario = 'sistema', motivo = 'Supera 120 dias sin arreglo'): void { this.estadoActual.declararIncobrable(this, usuario, motivo); }
+  reestructurar(contexto: ContextoTransicionCredito): void { this.estadoActual.reestructurar(this, contexto); }
+  regularizar(contexto: ContextoTransicionCredito): void { this.estadoActual.regularizar(this, contexto); }
+  cancelar(contexto: ContextoTransicionCredito): void { this.estadoActual.cancelar(this, contexto); }
+  declararIncobrable(contexto: ContextoTransicionCredito): void { this.estadoActual.declararIncobrable(this, contexto); }
 
-  cambiarEstado(estado: EstadoCreditoState, usuario: string, motivo: string): void {
+  cambiarEstado(estado: EstadoCreditoState, contexto: ContextoTransicionCredito): void {
+    this.validarContexto(contexto);
     const anterior = this.estado;
     this.estadoActual = estado;
-    this.transiciones.push({ fecha: new Date(), usuarioOProceso: usuario, motivo, estadoAnterior: anterior, estadoNuevo: estado.nombre });
+    this.transiciones.push({ ...contexto, fecha: new Date(contexto.fecha.getTime()), estadoAnterior: anterior, estadoNuevo: estado.nombre });
   }
 
-  actualizarSaldos(dias: number, saldo: Dinero): void { this._diasAtraso = dias; this._saldoVencido = saldo; }
+  actualizarSaldos(dias: number, saldo: Dinero): void {
+    this._diasAtraso = dias;
+    this._saldoVencido = saldo;
+    this._interesCorrienteSuspendido = dias > 90;
+  }
+  actualizarSaldoCapital(capitalAplicado: Dinero): void {
+    this._saldoCapital = this._saldoCapital.restar(capitalAplicado);
+  }
   marcarReestructurado(): void { this.reestructuradoHistorico = true; }
+  reactivarInteresCorriente(): void { this._interesCorrienteSuspendido = false; }
 
-  validarPago(monto: Dinero, dias: number, saldo: Dinero, capital: Dinero): void {
+  validarPago(monto: Dinero, dias: number, saldo: Dinero): void {
     this.validarDatosDeMora(dias, saldo);
-    if (monto.moneda !== this.capital.moneda || capital.moneda !== this.capital.moneda) throw new Error('El pago debe usar la moneda del credito');
-    if (capital.valor.isNegative()) throw new Error('El saldo de capital no puede ser negativo');
+    if (monto.moneda !== this.capital.moneda) throw new Error('El pago debe usar la moneda del credito');
+  }
+
+  validarContexto(contexto: ContextoTransicionCredito): void {
+    if (!(contexto.fecha instanceof Date) || Number.isNaN(contexto.fecha.getTime())) throw new Error('La fecha de transicion debe ser valida');
+    if (!contexto.usuario || !contexto.motivo) throw new Error('La transicion requiere usuario y motivo');
   }
 
   validarIncobrable(): void {
     if (this.estado !== 'EN_MORA' || this._diasAtraso <= 120) throw new Error('Solo un credito en mora con mas de 120 dias puede ser incobrable');
   }
 
-  static tramoParaDias(dias: number): TramoMora {
-    if (dias === 0) return 'AL_DIA';
-    if (dias <= 30) return 'MORA_1';
-    if (dias <= 60) return 'MORA_2';
-    if (dias <= 90) return 'MORA_3';
-    return 'VENCIDO';
-  }
+  static tramoParaDias(dias: number): TramoMora { return clasificarMora(dias); }
 
   private validarDatosDeMora(dias: number, saldo: Dinero): void {
     if (!Number.isInteger(dias) || dias < 0) throw new Error('Los dias de atraso deben ser enteros no negativos');
