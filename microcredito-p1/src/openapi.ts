@@ -117,7 +117,7 @@ const problemResponse = (
 });
 
 export const documentoOpenAPI = {
-  openapi: '3.0.3',
+  openapi: '3.1.0',
   info: {
     title: 'SGMC - API de Credito Vecino, S. A.',
     version: '1.0.0',

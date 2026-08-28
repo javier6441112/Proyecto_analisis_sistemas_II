@@ -15,6 +15,10 @@ const pagoValido = {
 };
 
 describe('contratos Zod del SGMC', () => {
+  it('publica el contrato como OpenAPI 3.1', () => {
+    expect(documentoOpenAPI.openapi).toBe('3.1.0');
+  });
+
   it('acepta un cliente valido y rechaza datos incompletos', () => {
     expect(RegistrarClienteRequestSchema.safeParse({ nombre: 'Ana Lopez', identificacion: 'DPI-1234567890101' }).success).toBe(true);
     expect(RegistrarClienteRequestSchema.safeParse({ nombre: '', identificacion: 'DPI-123' }).success).toBe(false);
