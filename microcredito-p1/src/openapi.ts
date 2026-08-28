@@ -28,46 +28,9 @@ import {
   ProblemDetailsSchema,
 } from './contratos/comunes.js';
 
-function adaptarSchemaOpenAPI30(valor: unknown): unknown {
-  if (Array.isArray(valor)) return valor.map(adaptarSchemaOpenAPI30);
-  if (valor === null || typeof valor !== 'object') return valor;
-
-  const entrada = valor as Record<string, unknown>;
-  const resultado: Record<string, unknown> = {};
-  for (const [clave, contenido] of Object.entries(entrada)) {
-    if (clave === '$schema' || clave === 'examples' || clave === 'const') continue;
-    resultado[clave] = adaptarSchemaOpenAPI30(contenido);
-  }
-
-  if ('const' in entrada) resultado.enum = [entrada.const];
-
-  const ramas = resultado.anyOf;
-  if (Array.isArray(ramas)) {
-    const ramaNula = ramas.find(
-      (rama) => rama !== null && typeof rama === 'object' && (rama as Record<string, unknown>).type === 'null',
-    );
-    if (ramaNula) {
-      const ramasNoNulas = ramas.filter((rama) => rama !== ramaNula);
-      if (ramasNoNulas.length === 1 && ramasNoNulas[0] !== null && typeof ramasNoNulas[0] === 'object') {
-        Object.assign(resultado, ramasNoNulas[0], { nullable: true });
-        delete resultado.anyOf;
-      } else {
-        resultado.anyOf = ramasNoNulas;
-        resultado.nullable = true;
-      }
-    }
-  }
-
-  if (resultado.type === 'null') {
-    delete resultado.type;
-    resultado.nullable = true;
-  }
-  return resultado;
-}
-
 function convertirAOpenAPI(schema: z.ZodType, io: 'input' | 'output' = 'output'): Record<string, unknown> {
   const jsonSchema = z.toJSONSchema(schema, { target: 'draft-2020-12', io });
-  return adaptarSchemaOpenAPI30(jsonSchema) as Record<string, unknown>;
+  return jsonSchema as Record<string, unknown>;
 }
 
 const referenciaPago = {

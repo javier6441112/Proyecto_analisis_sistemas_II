@@ -27,7 +27,7 @@ Resultado:
 
 ```text
 Test Files  6 passed (6)
-Tests       18 passed (18)
+Tests       19 passed (19)
 ```
 
 Suites ejecutadas:
@@ -38,7 +38,7 @@ Suites ejecutadas:
 | `tests/calculadora-mora.test.ts` | 2 | PASO |
 | `tests/prelacion-pago.test.ts` | 2 | PASO |
 | `tests/cartera.test.ts` | 2 | PASO |
-| `tests/contratos.test.ts` | 8 | PASO |
+| `tests/contratos.test.ts` | 9 | PASO |
 | `tests/credito.test.ts` | 3 | PASO |
 
 Comando de compilacion:

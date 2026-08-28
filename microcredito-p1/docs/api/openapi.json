@@ -773,6 +773,7 @@
   "components": {
     "schemas": {
       "ProblemDetails": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
           "type": {
@@ -825,17 +826,26 @@
         "description": "Cuerpo uniforme de error conforme a RFC 9457"
       },
       "CreditoId": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "string",
         "pattern": "^C-\\d{3,8}$",
-        "description": "Identificador del crédito"
+        "description": "Identificador del crédito",
+        "examples": [
+          "C-004"
+        ]
       },
       "IdempotencyKey": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "string",
         "format": "uuid",
         "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-        "description": "Clave UUID para evitar registrar dos veces el mismo pago"
+        "description": "Clave UUID para evitar registrar dos veces el mismo pago",
+        "examples": [
+          "5b0b9e2e-8a1f-4a5c-9c1e-0d6d1a1f9b3a"
+        ]
       },
       "RegistrarClienteRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
           "nombre": {
@@ -857,12 +867,16 @@
         "description": "Datos para registrar un cliente"
       },
       "ClienteResponse": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "pattern": "^CLI-\\d{3,8}$",
-            "description": "Identificador del cliente"
+            "description": "Identificador del cliente",
+            "examples": [
+              "CLI-001"
+            ]
           },
           "nombre": {
             "type": "string"
@@ -880,6 +894,7 @@
         "description": "Cliente registrado en el sistema"
       },
       "GenerarCierreRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
           "periodo": {
@@ -894,13 +909,20 @@
                 "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
               }
             ],
-            "description": "Periodo del cierre diario (AAAA-MM-DD) o mensual (AAAA-MM)"
+            "description": "Periodo del cierre diario (AAAA-MM-DD) o mensual (AAAA-MM)",
+            "examples": [
+              "2026-08-22",
+              "2026-08"
+            ]
           },
           "fechaCorte": {
             "type": "string",
             "format": "date",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
-            "description": "Fecha calendario en formato AAAA-MM-DD"
+            "description": "Fecha calendario en formato AAAA-MM-DD",
+            "examples": [
+              "2026-08-22"
+            ]
           }
         },
         "required": [
@@ -911,6 +933,7 @@
         "description": "Datos para generar un cierre diario o mensual"
       },
       "CierreResponse": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
           "periodo": {
@@ -925,13 +948,20 @@
                 "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
               }
             ],
-            "description": "Periodo del cierre diario (AAAA-MM-DD) o mensual (AAAA-MM)"
+            "description": "Periodo del cierre diario (AAAA-MM-DD) o mensual (AAAA-MM)",
+            "examples": [
+              "2026-08-22",
+              "2026-08"
+            ]
           },
           "fechaCorte": {
             "type": "string",
             "format": "date",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
-            "description": "Fecha calendario en formato AAAA-MM-DD"
+            "description": "Fecha calendario en formato AAAA-MM-DD",
+            "examples": [
+              "2026-08-22"
+            ]
           },
           "carteraActiva": {
             "type": "object",
@@ -939,13 +969,14 @@
               "valor": {
                 "type": "string",
                 "pattern": "^\\d{1,13}\\.\\d{2}$",
-                "description": "Importe no negativo con exactamente dos decimales"
+                "description": "Importe no negativo con exactamente dos decimales",
+                "examples": [
+                  "1004.62"
+                ]
               },
               "moneda": {
                 "type": "string",
-                "enum": [
-                  "GTQ"
-                ]
+                "const": "GTQ"
               }
             },
             "required": [
@@ -961,13 +992,14 @@
               "valor": {
                 "type": "string",
                 "pattern": "^\\d{1,13}\\.\\d{2}$",
-                "description": "Importe no negativo con exactamente dos decimales"
+                "description": "Importe no negativo con exactamente dos decimales",
+                "examples": [
+                  "1004.62"
+                ]
               },
               "moneda": {
                 "type": "string",
-                "enum": [
-                  "GTQ"
-                ]
+                "const": "GTQ"
               }
             },
             "required": [
@@ -983,13 +1015,14 @@
               "valor": {
                 "type": "string",
                 "pattern": "^\\d{1,13}\\.\\d{2}$",
-                "description": "Importe no negativo con exactamente dos decimales"
+                "description": "Importe no negativo con exactamente dos decimales",
+                "examples": [
+                  "1004.62"
+                ]
               },
               "moneda": {
                 "type": "string",
-                "enum": [
-                  "GTQ"
-                ]
+                "const": "GTQ"
               }
             },
             "required": [
@@ -1011,17 +1044,24 @@
         "description": "Cierre diario o mensual de cartera"
       },
       "DesembolsarCreditoRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
           "solicitudId": {
             "type": "string",
             "pattern": "^SOL-\\d{3,8}$",
-            "description": "Identificador de la solicitud de credito"
+            "description": "Identificador de la solicitud de credito",
+            "examples": [
+              "SOL-001"
+            ]
           },
           "clienteId": {
             "type": "string",
             "pattern": "^CLI-\\d{3,8}$",
-            "description": "Identificador del cliente"
+            "description": "Identificador del cliente",
+            "examples": [
+              "CLI-001"
+            ]
           },
           "capital": {
             "type": "object",
@@ -1029,13 +1069,14 @@
               "valor": {
                 "type": "string",
                 "pattern": "^\\d{1,13}\\.\\d{2}$",
-                "description": "Importe mayor que cero con exactamente dos decimales"
+                "description": "Importe mayor que cero con exactamente dos decimales",
+                "examples": [
+                  "1011.88"
+                ]
               },
               "moneda": {
                 "type": "string",
-                "enum": [
-                  "GTQ"
-                ]
+                "const": "GTQ"
               }
             },
             "required": [
@@ -1049,7 +1090,10 @@
             "type": "string",
             "format": "date",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
-            "description": "Fecha calendario en formato AAAA-MM-DD"
+            "description": "Fecha calendario en formato AAAA-MM-DD",
+            "examples": [
+              "2026-08-22"
+            ]
           }
         },
         "required": [
@@ -1062,22 +1106,32 @@
         "description": "Datos para desembolsar un credito aprobado"
       },
       "CreditoResponse": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "pattern": "^C-\\d{3,8}$",
-            "description": "Identificador del credito"
+            "description": "Identificador del credito",
+            "examples": [
+              "C-004"
+            ]
           },
           "solicitudId": {
             "type": "string",
             "pattern": "^SOL-\\d{3,8}$",
-            "description": "Identificador de la solicitud de credito"
+            "description": "Identificador de la solicitud de credito",
+            "examples": [
+              "SOL-001"
+            ]
           },
           "clienteId": {
             "type": "string",
             "pattern": "^CLI-\\d{3,8}$",
-            "description": "Identificador del cliente"
+            "description": "Identificador del cliente",
+            "examples": [
+              "CLI-001"
+            ]
           },
           "capital": {
             "type": "object",
@@ -1085,13 +1139,14 @@
               "valor": {
                 "type": "string",
                 "pattern": "^\\d{1,13}\\.\\d{2}$",
-                "description": "Importe mayor que cero con exactamente dos decimales"
+                "description": "Importe mayor que cero con exactamente dos decimales",
+                "examples": [
+                  "1011.88"
+                ]
               },
               "moneda": {
                 "type": "string",
-                "enum": [
-                  "GTQ"
-                ]
+                "const": "GTQ"
               }
             },
             "required": [
@@ -1123,7 +1178,10 @@
             "type": "string",
             "format": "date",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
-            "description": "Fecha calendario en formato AAAA-MM-DD"
+            "description": "Fecha calendario en formato AAAA-MM-DD",
+            "examples": [
+              "2026-08-22"
+            ]
           }
         },
         "required": [
@@ -1139,6 +1197,7 @@
         "description": "Credito desembolsado"
       },
       "RegistrarPagoRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
           "monto": {
@@ -1147,13 +1206,14 @@
               "valor": {
                 "type": "string",
                 "pattern": "^\\d{1,13}\\.\\d{2}$",
-                "description": "Importe mayor que cero con exactamente dos decimales"
+                "description": "Importe mayor que cero con exactamente dos decimales",
+                "examples": [
+                  "1011.88"
+                ]
               },
               "moneda": {
                 "type": "string",
-                "enum": [
-                  "GTQ"
-                ]
+                "const": "GTQ"
               }
             },
             "required": [
@@ -1167,7 +1227,10 @@
             "type": "string",
             "format": "date",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
-            "description": "Fecha calendario en formato AAAA-MM-DD"
+            "description": "Fecha calendario en formato AAAA-MM-DD",
+            "examples": [
+              "2026-08-22"
+            ]
           },
           "medio": {
             "type": "string",
@@ -1193,21 +1256,31 @@
         "description": "Datos para registrar un pago mayor que cero"
       },
       "PagoRegistrado": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
           "pagoId": {
-            "type": "string"
+            "type": "string",
+            "examples": [
+              "PG-2026-000731"
+            ]
           },
           "creditoId": {
             "type": "string",
             "pattern": "^C-\\d{3,8}$",
-            "description": "Identificador del crédito"
+            "description": "Identificador del crédito",
+            "examples": [
+              "C-004"
+            ]
           },
           "recibidoEn": {
             "type": "string",
             "format": "date-time",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
-            "description": "Fecha y hora ISO 8601 con zona horaria"
+            "description": "Fecha y hora ISO 8601 con zona horaria",
+            "examples": [
+              "2026-08-22T09:15:00-06:00"
+            ]
           },
           "montoRecibido": {
             "type": "object",
@@ -1215,13 +1288,14 @@
               "valor": {
                 "type": "string",
                 "pattern": "^\\d{1,13}\\.\\d{2}$",
-                "description": "Importe mayor que cero con exactamente dos decimales"
+                "description": "Importe mayor que cero con exactamente dos decimales",
+                "examples": [
+                  "1011.88"
+                ]
               },
               "moneda": {
                 "type": "string",
-                "enum": [
-                  "GTQ"
-                ]
+                "const": "GTQ"
               }
             },
             "required": [
@@ -1240,13 +1314,14 @@
                   "valor": {
                     "type": "string",
                     "pattern": "^\\d{1,13}\\.\\d{2}$",
-                    "description": "Importe no negativo con exactamente dos decimales"
+                    "description": "Importe no negativo con exactamente dos decimales",
+                    "examples": [
+                      "1004.62"
+                    ]
                   },
                   "moneda": {
                     "type": "string",
-                    "enum": [
-                      "GTQ"
-                    ]
+                    "const": "GTQ"
                   }
                 },
                 "required": [
@@ -1262,13 +1337,14 @@
                   "valor": {
                     "type": "string",
                     "pattern": "^\\d{1,13}\\.\\d{2}$",
-                    "description": "Importe no negativo con exactamente dos decimales"
+                    "description": "Importe no negativo con exactamente dos decimales",
+                    "examples": [
+                      "1004.62"
+                    ]
                   },
                   "moneda": {
                     "type": "string",
-                    "enum": [
-                      "GTQ"
-                    ]
+                    "const": "GTQ"
                   }
                 },
                 "required": [
@@ -1284,13 +1360,14 @@
                   "valor": {
                     "type": "string",
                     "pattern": "^\\d{1,13}\\.\\d{2}$",
-                    "description": "Importe no negativo con exactamente dos decimales"
+                    "description": "Importe no negativo con exactamente dos decimales",
+                    "examples": [
+                      "1004.62"
+                    ]
                   },
                   "moneda": {
                     "type": "string",
-                    "enum": [
-                      "GTQ"
-                    ]
+                    "const": "GTQ"
                   }
                 },
                 "required": [
@@ -1306,13 +1383,14 @@
                   "valor": {
                     "type": "string",
                     "pattern": "^\\d{1,13}\\.\\d{2}$",
-                    "description": "Importe no negativo con exactamente dos decimales"
+                    "description": "Importe no negativo con exactamente dos decimales",
+                    "examples": [
+                      "1004.62"
+                    ]
                   },
                   "moneda": {
                     "type": "string",
-                    "enum": [
-                      "GTQ"
-                    ]
+                    "const": "GTQ"
                   }
                 },
                 "required": [
@@ -1328,13 +1406,14 @@
                   "valor": {
                     "type": "string",
                     "pattern": "^\\d{1,13}\\.\\d{2}$",
-                    "description": "Importe no negativo con exactamente dos decimales"
+                    "description": "Importe no negativo con exactamente dos decimales",
+                    "examples": [
+                      "1004.62"
+                    ]
                   },
                   "moneda": {
                     "type": "string",
-                    "enum": [
-                      "GTQ"
-                    ]
+                    "const": "GTQ"
                   }
                 },
                 "required": [
@@ -1366,7 +1445,7 @@
                 "description": "Destino del excedente a favor del cliente"
               },
               {
-                "nullable": true
+                "type": "null"
               }
             ]
           },
@@ -1376,13 +1455,14 @@
               "valor": {
                 "type": "string",
                 "pattern": "^\\d{1,13}\\.\\d{2}$",
-                "description": "Importe no negativo con exactamente dos decimales"
+                "description": "Importe no negativo con exactamente dos decimales",
+                "examples": [
+                  "1004.62"
+                ]
               },
               "moneda": {
                 "type": "string",
-                "enum": [
-                  "GTQ"
-                ]
+                "const": "GTQ"
               }
             },
             "required": [
@@ -1438,12 +1518,16 @@
         "description": "Resultado de registrar y aplicar un pago"
       },
       "SolicitarCreditoRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
           "clienteId": {
             "type": "string",
             "pattern": "^CLI-\\d{3,8}$",
-            "description": "Identificador del cliente"
+            "description": "Identificador del cliente",
+            "examples": [
+              "CLI-001"
+            ]
           },
           "montoSolicitado": {
             "type": "object",
@@ -1451,13 +1535,14 @@
               "valor": {
                 "type": "string",
                 "pattern": "^\\d{1,13}\\.\\d{2}$",
-                "description": "Importe mayor que cero con exactamente dos decimales"
+                "description": "Importe mayor que cero con exactamente dos decimales",
+                "examples": [
+                  "1011.88"
+                ]
               },
               "moneda": {
                 "type": "string",
-                "enum": [
-                  "GTQ"
-                ]
+                "const": "GTQ"
               }
             },
             "required": [
@@ -1465,7 +1550,11 @@
               "moneda"
             ],
             "additionalProperties": false,
-            "description": "Monto solicitado entre Q1,000.00 y Q25,000.00"
+            "description": "Monto solicitado entre Q1,000.00 y Q25,000.00",
+            "examples": [
+              "1000.00",
+              "25000.00"
+            ]
           },
           "numeroCuotas": {
             "type": "integer",
@@ -1482,17 +1571,24 @@
         "description": "Datos para solicitar un credito"
       },
       "SolicitudCreditoResponse": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "pattern": "^SOL-\\d{3,8}$",
-            "description": "Identificador de la solicitud de credito"
+            "description": "Identificador de la solicitud de credito",
+            "examples": [
+              "SOL-001"
+            ]
           },
           "clienteId": {
             "type": "string",
             "pattern": "^CLI-\\d{3,8}$",
-            "description": "Identificador del cliente"
+            "description": "Identificador del cliente",
+            "examples": [
+              "CLI-001"
+            ]
           },
           "montoSolicitado": {
             "type": "object",
@@ -1500,13 +1596,14 @@
               "valor": {
                 "type": "string",
                 "pattern": "^\\d{1,13}\\.\\d{2}$",
-                "description": "Importe mayor que cero con exactamente dos decimales"
+                "description": "Importe mayor que cero con exactamente dos decimales",
+                "examples": [
+                  "1011.88"
+                ]
               },
               "moneda": {
                 "type": "string",
-                "enum": [
-                  "GTQ"
-                ]
+                "const": "GTQ"
               }
             },
             "required": [
@@ -1514,7 +1611,11 @@
               "moneda"
             ],
             "additionalProperties": false,
-            "description": "Monto solicitado entre Q1,000.00 y Q25,000.00"
+            "description": "Monto solicitado entre Q1,000.00 y Q25,000.00",
+            "examples": [
+              "1000.00",
+              "25000.00"
+            ]
           },
           "numeroCuotas": {
             "type": "integer",
@@ -1534,7 +1635,10 @@
             "type": "string",
             "format": "date",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
-            "description": "Fecha calendario en formato AAAA-MM-DD"
+            "description": "Fecha calendario en formato AAAA-MM-DD",
+            "examples": [
+              "2026-08-22"
+            ]
           }
         },
         "required": [
@@ -1549,13 +1653,17 @@
         "description": "Solicitud de credito registrada"
       },
       "CarteraEnRiesgoResponse": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
           "fechaCorte": {
             "type": "string",
             "format": "date",
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
-            "description": "Fecha calendario en formato AAAA-MM-DD"
+            "description": "Fecha calendario en formato AAAA-MM-DD",
+            "examples": [
+              "2026-08-22"
+            ]
           },
           "carteraActiva": {
             "type": "object",
@@ -1563,13 +1671,14 @@
               "valor": {
                 "type": "string",
                 "pattern": "^\\d{1,13}\\.\\d{2}$",
-                "description": "Importe no negativo con exactamente dos decimales"
+                "description": "Importe no negativo con exactamente dos decimales",
+                "examples": [
+                  "1004.62"
+                ]
               },
               "moneda": {
                 "type": "string",
-                "enum": [
-                  "GTQ"
-                ]
+                "const": "GTQ"
               }
             },
             "required": [
@@ -1585,13 +1694,14 @@
               "valor": {
                 "type": "string",
                 "pattern": "^\\d{1,13}\\.\\d{2}$",
-                "description": "Importe no negativo con exactamente dos decimales"
+                "description": "Importe no negativo con exactamente dos decimales",
+                "examples": [
+                  "1004.62"
+                ]
               },
               "moneda": {
                 "type": "string",
-                "enum": [
-                  "GTQ"
-                ]
+                "const": "GTQ"
               }
             },
             "required": [
@@ -1612,13 +1722,14 @@
               "valor": {
                 "type": "string",
                 "pattern": "^\\d{1,13}\\.\\d{2}$",
-                "description": "Importe no negativo con exactamente dos decimales"
+                "description": "Importe no negativo con exactamente dos decimales",
+                "examples": [
+                  "1004.62"
+                ]
               },
               "moneda": {
                 "type": "string",
-                "enum": [
-                  "GTQ"
-                ]
+                "const": "GTQ"
               }
             },
             "required": [
@@ -1655,13 +1766,14 @@
                     "valor": {
                       "type": "string",
                       "pattern": "^\\d{1,13}\\.\\d{2}$",
-                      "description": "Importe no negativo con exactamente dos decimales"
+                      "description": "Importe no negativo con exactamente dos decimales",
+                      "examples": [
+                        "1004.62"
+                      ]
                     },
                     "moneda": {
                       "type": "string",
-                      "enum": [
-                        "GTQ"
-                      ]
+                      "const": "GTQ"
                     }
                   },
                   "required": [
@@ -1694,13 +1806,14 @@
                   "valor": {
                     "type": "string",
                     "pattern": "^\\d{1,13}\\.\\d{2}$",
-                    "description": "Importe no negativo con exactamente dos decimales"
+                    "description": "Importe no negativo con exactamente dos decimales",
+                    "examples": [
+                      "1004.62"
+                    ]
                   },
                   "moneda": {
                     "type": "string",
-                    "enum": [
-                      "GTQ"
-                    ]
+                    "const": "GTQ"
                   }
                 },
                 "required": [

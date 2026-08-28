@@ -19,6 +19,13 @@ describe('contratos Zod del SGMC', () => {
     expect(documentoOpenAPI.openapi).toBe('3.1.0');
   });
 
+  it('conserva los tipos nulos de JSON Schema 2020-12', () => {
+    const pagoRegistrado = documentoOpenAPI.components.schemas.PagoRegistrado as { properties: Record<string, unknown> };
+    const destinoExcedente = pagoRegistrado.properties.destinoExcedente;
+    expect(destinoExcedente).toMatchObject({ anyOf: expect.arrayContaining([{ type: 'null' }]) });
+    expect(destinoExcedente).not.toHaveProperty('nullable');
+  });
+
   it('acepta un cliente valido y rechaza datos incompletos', () => {
     expect(RegistrarClienteRequestSchema.safeParse({ nombre: 'Ana Lopez', identificacion: 'DPI-1234567890101' }).success).toBe(true);
     expect(RegistrarClienteRequestSchema.safeParse({ nombre: '', identificacion: 'DPI-123' }).success).toBe(false);
