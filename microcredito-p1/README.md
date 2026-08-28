@@ -51,6 +51,7 @@ El comando `npm run build` es equivalente a `npm run typecheck`.
 - Clasificacion de tramos de mora.
 - Aplicacion de pagos por prelacion: gastos, mora, interes corriente y capital.
 - Calculo de cartera activa, saldo en riesgo e incobrables.
+- Ciclo de vida de credito con transiciones State, mora y recuperaciones de incobrables.
 - Validacion de contratos con Zod.
 - Generacion y validacion de documentos OpenAPI.
 
