@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Dinero } from '../src/dominio/dinero.js';
 import { resumirCartera, type CreditoCartera } from '../src/dominio/cartera.js';
+import { generarPlanFrances } from '../src/dominio/plan-amortizacion.js';
 
 const credito = (id: string, saldo: string, diasAtraso: number, estado: CreditoCartera['estado'] = 'VIGENTE'): CreditoCartera => ({ id, saldoCapital: Dinero.de(saldo), diasAtraso, estado });
 
@@ -25,5 +26,13 @@ describe('cartera en riesgo', () => {
     expect(resumen.carteraActiva.formato()).toBe('792000.00');
     expect(resumen.saldoEnRiesgo.formato()).toBe('48000.00');
     expect(resumen.porcentajeRiesgo.toFixed(4)).toBe('0.0606');
+  });
+
+  it('rechaza saldos y capitales negativos y mantiene riesgo entre cero y uno', () => {
+    expect(() => resumirCartera([credito('C-008', '-50', 0)])).toThrow(/saldo/);
+    expect(() => generarPlanFrances(Dinero.de('-1000'), '0.03', 12)).toThrow(/capital/);
+    const resumen = resumirCartera([credito('C-009', '100', 45)]);
+    expect(resumen.porcentajeRiesgo.greaterThanOrEqualTo(0)).toBe(true);
+    expect(resumen.porcentajeRiesgo.lessThanOrEqualTo(1)).toBe(true);
   });
 });

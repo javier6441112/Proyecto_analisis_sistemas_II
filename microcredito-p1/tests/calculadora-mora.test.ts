@@ -18,6 +18,17 @@ describe('calculadora de mora', () => {
     expect(clasificarMora(121)).toBe('VENCIDO');
   });
 
+  it('respeta todos los límites de tramos', () => {
+    expect(clasificarMora(30)).toBe('MORA_1');
+    expect(clasificarMora(31)).toBe('MORA_2');
+    expect(clasificarMora(60)).toBe('MORA_2');
+    expect(clasificarMora(61)).toBe('MORA_3');
+    expect(clasificarMora(90)).toBe('MORA_3');
+    expect(clasificarMora(91)).toBe('VENCIDO');
+    expect(clasificarMora(120)).toBe('VENCIDO');
+    expect(clasificarMora(121)).toBe('VENCIDO');
+  });
+
   it('rechaza tasas, capitales, fechas y bases invalidas', () => {
     expect(() => calcularMora(Dinero.de('10.00'), '2026-08-01', '2026-08-02', '-0.24')).toThrow(/tasa/);
     expect(() => calcularMora(Dinero.de('-10.00'), '2026-08-01', '2026-08-02', '0.24')).toThrow(/capital/);

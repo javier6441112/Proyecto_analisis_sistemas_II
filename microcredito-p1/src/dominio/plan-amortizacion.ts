@@ -26,9 +26,10 @@ export function generarPlanFrances(
   tasaMensual: string | Decimal,
   numeroCuotas: number,
 ): PlanAmortizacion {
+  if (capital.esCero() || capital.valor.isNegative()) throw new Error('El capital debe ser positivo');
   if (numeroCuotas < 1 || !Number.isInteger(numeroCuotas)) throw new Error('El numero de cuotas debe ser entero positivo');
   const tasa = new Decimal(tasaMensual);
-  if (tasa.isNegative()) throw new Error('La tasa no puede ser negativa');
+  if (!tasa.isFinite() || tasa.isNegative()) throw new Error('La tasa debe ser finita y no negativa');
 
   const factor = new Decimal(1).plus(tasa).pow(numeroCuotas);
   const pagoBase = tasa.isZero()

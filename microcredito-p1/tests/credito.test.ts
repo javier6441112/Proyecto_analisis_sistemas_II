@@ -46,10 +46,16 @@ describe('ciclo de vida de credito', () => {
     const credito = creditoDesembolsado();
 
     expect(credito.politica).toBe(politica);
-    credito.registrarPago(Dinero.de('1.00'), 0, Dinero.cero(), adeudoSinIntereses('10000.00'), fechaPrueba);
+    expect(() => credito.registrarPago(Dinero.de('1.00'), 0, Dinero.cero(), adeudoSinIntereses('10000.00'), fechaPrueba)).toThrow(/pago parcial/);
 
-    expect(credito.saldoCapital.formato()).toBe('9999.00');
-    expect(credito.estado).toBe('EN_MORA');
+    expect(credito.saldoCapital.formato()).toBe('10000.00');
+    expect(credito.estado).toBe('VIGENTE');
+  });
+
+  it('rechaza un adeudo de capital superior al saldo interno', () => {
+    const credito = creditoDesembolsado();
+    expect(() => credito.registrarPago(Dinero.de('500.00'), 1, Dinero.de('10.00'), adeudoSinIntereses('10001.00'), fechaPrueba)).toThrow(/superar/);
+    expect(credito.saldoCapital.formato()).toBe('10000.00');
   });
 
   it('aplica excedente a cuotas futuras sin convertirlo en capital de la cuota', () => {

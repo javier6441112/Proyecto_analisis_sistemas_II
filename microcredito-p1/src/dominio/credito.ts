@@ -124,7 +124,10 @@ abstract class EstadoActivo extends EstadoBase {
       credito.cambiarEstado(new EstadoIncobrable(), contexto);
       return;
     }
-    if (dias === 0) credito.cambiarEstado(new EstadoVigente(), contexto);
+    if (dias === 0) {
+      credito.reactivarInteresCorriente();
+      credito.cambiarEstado(new EstadoVigente(), contexto);
+    }
     else credito.cambiarEstado(new EstadoEnMora(), contexto);
   }
 
@@ -137,8 +140,9 @@ abstract class EstadoActivo extends EstadoBase {
     destino: DestinoExcedente,
     contexto: ContextoTransicionCredito,
   ): AplicacionPagoCredito {
-    credito.validarPago(monto, dias, saldo);
+    credito.validarPago(monto, dias, saldo, adeudo);
     const resultadoAplicacion = aplicarPago(monto, adeudo);
+    if (dias === 0 && !resultadoAplicacion.cuotaSaldada) throw new Error('Un pago parcial no puede dejar el credito con cero dias de atraso');
     credito.actualizarSaldoCapital(resultadoAplicacion.aplicado.capital);
     credito.actualizarSaldos(dias, saldo);
     const excedente = resultadoAplicacion.remanente.esCero() ? undefined : aplicarExcedente(resultadoAplicacion.remanente, credito.saldoCapital, destino);
@@ -259,14 +263,17 @@ export class Credito {
     if (dias > 90) this._interesCorrienteSuspendido = true;
   }
   actualizarSaldoCapital(capitalAplicado: Dinero): void {
-    this._saldoCapital = this._saldoCapital.restar(capitalAplicado);
+    const saldoResultante = this._saldoCapital.restar(capitalAplicado);
+    if (saldoResultante.valor.isNegative()) throw new Error('El saldo de capital no puede ser negativo');
+    this._saldoCapital = saldoResultante;
   }
   marcarReestructurado(): void { this.reestructuradoHistorico = true; }
   reactivarInteresCorriente(): void { this._interesCorrienteSuspendido = false; }
 
-  validarPago(monto: Dinero, dias: number, saldo: Dinero): void {
+  validarPago(monto: Dinero, dias: number, saldo: Dinero, adeudo: Adeudo): void {
     this.validarDatosDeMora(dias, saldo);
     if (monto.moneda !== this.capital.moneda) throw new Error('El pago debe usar la moneda del credito');
+    if (adeudo.capital.mayorQue(this._saldoCapital)) throw new Error('El capital adeudado no puede superar el saldo del credito');
   }
 
   validarContexto(contexto: ContextoTransicionCredito): void {
@@ -284,5 +291,7 @@ export class Credito {
     if (!Number.isInteger(dias) || dias < 0) throw new Error('Los dias de atraso deben ser enteros no negativos');
     if (saldo.moneda !== this.capital.moneda) throw new Error('El saldo vencido debe usar la moneda del credito');
     if (saldo.valor.isNegative()) throw new Error('El saldo vencido no puede ser negativo');
+    if (dias === 0 && !saldo.esCero()) throw new Error('Un credito al dia no puede tener saldo vencido');
+    if (dias > 0 && saldo.esCero()) throw new Error('Un credito en mora debe tener saldo vencido');
   }
 }

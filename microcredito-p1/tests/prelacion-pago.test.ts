@@ -18,6 +18,15 @@ describe('prelacion de pagos', () => {
     expect(resultado.cuotaSaldada).toBe(false);
   });
 
+  it('aplica exactamente una cuota de Q1,011.88', () => {
+    const resultado = aplicarPago(Dinero.de('1011.88'), adeudo);
+    expect(resultado.aplicado.interesMoratorio.formato()).toBe('7.26');
+    expect(resultado.aplicado.interesCorriente.formato()).toBe('278.86');
+    expect(resultado.aplicado.capital.formato()).toBe('725.76');
+    expect(resultado.cuotaSaldada).toBe(true);
+    expect(resultado.remanente.esCero()).toBe(true);
+  });
+
   it('deja el excedente a favor del cliente', () => {
     const resultado = aplicarPago(Dinero.de('3000'), adeudo);
     expect(resultado.cuotaSaldada).toBe(true);

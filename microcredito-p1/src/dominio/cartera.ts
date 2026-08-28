@@ -22,6 +22,9 @@ export function esCarteraEnRiesgo(credito: CreditoCartera): boolean {
 }
 
 export function resumirCartera(creditos: readonly CreditoCartera[]): ResumenCartera {
+  for (const credito of creditos) {
+    if (credito.saldoCapital.valor.isNegative()) throw new Error('El saldo de capital no puede ser negativo');
+  }
   const moneda = creditos[0]?.saldoCapital.moneda ?? 'GTQ';
   const activos = creditos.filter((credito) => credito.estado !== 'INCOBRABLE' && credito.estado !== 'CANCELADO');
   const carteraActiva = activos.reduce((total, credito) => total.sumar(credito.saldoCapital), Dinero.cero(moneda));

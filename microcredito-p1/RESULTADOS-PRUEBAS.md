@@ -27,7 +27,7 @@ Resultado:
 
 ```text
 Test Files  6 passed (6)
-Tests       33 passed (33)
+Tests       37 passed (37)
 ```
 
 Suites ejecutadas:
@@ -35,11 +35,11 @@ Suites ejecutadas:
 | Archivo | Pruebas | Resultado |
 |---|---:|---|
 | `tests/plan-amortizacion.test.ts` | 1 | PASO |
-| `tests/calculadora-mora.test.ts` | 5 | PASO |
-| `tests/prelacion-pago.test.ts` | 4 | PASO |
-| `tests/cartera.test.ts` | 2 | PASO |
+| `tests/calculadora-mora.test.ts` | 6 | PASO |
+| `tests/prelacion-pago.test.ts` | 5 | PASO |
+| `tests/cartera.test.ts` | 3 | PASO |
 | `tests/contratos.test.ts` | 9 | PASO |
-| `tests/credito.test.ts` | 12 | PASO |
+| `tests/credito.test.ts` | 13 | PASO |
 
 Comando de compilacion:
 
