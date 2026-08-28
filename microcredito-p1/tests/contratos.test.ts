@@ -40,7 +40,9 @@ describe('contratos Zod del SGMC', () => {
 
   it('acepta un cierre mensual valido y rechaza periodos incorrectos', () => {
     expect(GenerarCierreRequestSchema.safeParse({ periodo: '2026-08', fechaCorte: '2026-08-22' }).success).toBe(true);
+    expect(GenerarCierreRequestSchema.safeParse({ periodo: '2026-08-22', fechaCorte: '2026-08-22' }).success).toBe(true);
     expect(GenerarCierreRequestSchema.safeParse({ periodo: '2026-13', fechaCorte: '2026-08-22' }).success).toBe(false);
+    expect(GenerarCierreRequestSchema.safeParse({ periodo: '2026-08-32', fechaCorte: '2026-08-22' }).success).toBe(false);
     expect(CierreResponseSchema.safeParse({ periodo: '2026-08', fechaCorte: '2026-08-22', carteraActiva: { valor: '800000.00', moneda: 'GTQ' }, saldoEnRiesgo: { valor: '56000.00', moneda: 'GTQ' }, incobrable: { valor: '15000.00', moneda: 'GTQ' } }).success).toBe(true);
     const respuestasCierre = documentoOpenAPI.paths['/cierres'].post.responses;
     expect(respuestasCierre['201'].description).toBe('Cierre mensual generado.');

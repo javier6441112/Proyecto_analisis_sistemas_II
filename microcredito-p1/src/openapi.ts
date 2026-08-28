@@ -224,7 +224,7 @@ export const documentoOpenAPI = {
       post: {
         tags: ['Cierres e indicadores'],
         operationId: 'generarCierre',
-        summary: 'Genera un cierre mensual',
+        summary: 'Genera un cierre diario o mensual',
         requestBody: {
           required: true,
           content: {
