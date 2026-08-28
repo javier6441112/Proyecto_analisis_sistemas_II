@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ClienteResponseSchema, RegistrarClienteRequestSchema } from '../src/contratos/clientes.js';
 import { CarteraEnRiesgoQuerySchema, CarteraEnRiesgoResponseSchema } from '../src/contratos/cartera.js';
 import { PagoRegistradoSchema, RegistrarPagoRequestSchema } from '../src/contratos/pagos.js';
+import { SolicitarCreditoRequestSchema, SolicitudCreditoResponseSchema } from '../src/contratos/solicitudes.js';
 
 const pagoValido = {
   monto: { valor: '1011.88', moneda: 'GTQ' },
@@ -15,6 +16,12 @@ describe('contratos Zod del SGMC', () => {
     expect(RegistrarClienteRequestSchema.safeParse({ nombre: 'Ana Lopez', identificacion: 'DPI-1234567890101' }).success).toBe(true);
     expect(RegistrarClienteRequestSchema.safeParse({ nombre: '', identificacion: 'DPI-123' }).success).toBe(false);
     expect(ClienteResponseSchema.safeParse({ id: 'CLI-001', nombre: 'Ana Lopez', identificacion: 'DPI-1234567890101' }).success).toBe(true);
+  });
+
+  it('acepta una solicitud de credito valida y rechaza cuotas invalidas', () => {
+    expect(SolicitarCreditoRequestSchema.safeParse({ clienteId: 'CLI-001', montoSolicitado: { valor: '10000.00', moneda: 'GTQ' }, numeroCuotas: 12 }).success).toBe(true);
+    expect(SolicitarCreditoRequestSchema.safeParse({ clienteId: 'CLI-001', montoSolicitado: { valor: '10000.00', moneda: 'GTQ' }, numeroCuotas: 0 }).success).toBe(false);
+    expect(SolicitudCreditoResponseSchema.safeParse({ id: 'SOL-001', clienteId: 'CLI-001', montoSolicitado: { valor: '10000.00', moneda: 'GTQ' }, numeroCuotas: 12, estado: 'solicitada', solicitadaEn: '2026-08-27' }).success).toBe(true);
   });
 
   it('acepta un pago valido y rechaza importes no positivos', () => {
