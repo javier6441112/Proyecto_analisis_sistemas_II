@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ClienteResponseSchema, RegistrarClienteRequestSchema } from '../src/contratos/clientes.js';
 import { CarteraEnRiesgoQuerySchema, CarteraEnRiesgoResponseSchema } from '../src/contratos/cartera.js';
+import { CreditoResponseSchema, DesembolsarCreditoRequestSchema } from '../src/contratos/creditos.js';
 import { PagoRegistradoSchema, RegistrarPagoRequestSchema } from '../src/contratos/pagos.js';
 import { SolicitarCreditoRequestSchema, SolicitudCreditoResponseSchema } from '../src/contratos/solicitudes.js';
 
@@ -22,6 +23,12 @@ describe('contratos Zod del SGMC', () => {
     expect(SolicitarCreditoRequestSchema.safeParse({ clienteId: 'CLI-001', montoSolicitado: { valor: '10000.00', moneda: 'GTQ' }, numeroCuotas: 12 }).success).toBe(true);
     expect(SolicitarCreditoRequestSchema.safeParse({ clienteId: 'CLI-001', montoSolicitado: { valor: '10000.00', moneda: 'GTQ' }, numeroCuotas: 0 }).success).toBe(false);
     expect(SolicitudCreditoResponseSchema.safeParse({ id: 'SOL-001', clienteId: 'CLI-001', montoSolicitado: { valor: '10000.00', moneda: 'GTQ' }, numeroCuotas: 12, estado: 'solicitada', solicitadaEn: '2026-08-27' }).success).toBe(true);
+  });
+
+  it('acepta un desembolso valido y rechaza atrasos negativos', () => {
+    expect(DesembolsarCreditoRequestSchema.safeParse({ solicitudId: 'SOL-001', clienteId: 'CLI-001', capital: { valor: '10000.00', moneda: 'GTQ' }, fechaDesembolso: '2026-08-27' }).success).toBe(true);
+    expect(CreditoResponseSchema.safeParse({ id: 'C-004', solicitudId: 'SOL-001', clienteId: 'CLI-001', capital: { valor: '10000.00', moneda: 'GTQ' }, estado: 'vigente', diasAtraso: 0, desembolsadoEn: '2026-08-27' }).success).toBe(true);
+    expect(CreditoResponseSchema.safeParse({ id: 'C-004', solicitudId: 'SOL-001', clienteId: 'CLI-001', capital: { valor: '10000.00', moneda: 'GTQ' }, estado: 'vigente', diasAtraso: -1, desembolsadoEn: '2026-08-27' }).success).toBe(false);
   });
 
   it('acepta un pago valido y rechaza importes no positivos', () => {
