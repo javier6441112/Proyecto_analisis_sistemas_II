@@ -74,10 +74,13 @@ const referenciaPago = {
   reproducido: false,
 };
 
+const instanciaPago = (creditoId: string) => `/v1/creditos/${encodeURIComponent(creditoId)}/pagos`;
+
 const problemResponse = (
   status: number,
   title: string,
   detail: string,
+  instance: string,
   errores?: Array<{ campo: string; mensaje: string }>,
 ) => ({
   description: detail,
@@ -89,7 +92,7 @@ const problemResponse = (
         title,
         status,
         detail,
-        instance: '/v1/creditos/C-004/pagos',
+        instance,
         traceId: 'tr-20260822-000731',
         ...(errores ? { errores } : {}),
       },
@@ -154,11 +157,11 @@ export const documentoOpenAPI = {
             headers: { Location: { schema: { type: 'string' }, description: 'URI del pago creado' } },
             content: { 'application/json': { schema: { $ref: '#/components/schemas/PagoRegistrado' }, examples: { nuevo: { value: referenciaPago } } } },
           },
-          '404': problemResponse(404, 'Credito no encontrado', 'No existe un credito con el identificador C-004.'),
-          '409': problemResponse(409, 'Conflicto de idempotencia', 'La clave de idempotencia fue reutilizada con otro contenido.'),
-          '422': problemResponse(422, 'Credito no admite pagos', 'El credito no admite pagos en su estado actual.'),
-          '429': problemResponse(429, 'Limite de solicitudes excedido', 'Se excedio el limite de solicitudes. Intente nuevamente mas tarde.'),
-          '500': problemResponse(500, 'Error interno del servidor', 'Ocurrio un error no previsto al procesar la solicitud.'),
+          '404': problemResponse(404, 'Credito no encontrado', 'No existe un credito con el identificador C-004.', instanciaPago('C-004')),
+          '409': problemResponse(409, 'Conflicto de idempotencia', 'La clave de idempotencia fue reutilizada con otro contenido.', instanciaPago('C-004')),
+          '422': problemResponse(422, 'Credito no admite pagos', 'El credito no admite pagos en su estado actual.', instanciaPago('C-004')),
+          '429': problemResponse(429, 'Limite de solicitudes excedido', 'Se excedio el limite de solicitudes. Intente nuevamente mas tarde.', instanciaPago('C-004')),
+          '500': problemResponse(500, 'Error interno del servidor', 'Ocurrio un error no previsto al procesar la solicitud.', instanciaPago('C-004')),
         },
       },
     },
@@ -194,10 +197,10 @@ export const documentoOpenAPI = {
               },
             },
           },
-          '400': problemResponse(400, 'Parametros de consulta invalidos', 'Revise los parametros enviados en la consulta.', [
+          '400': problemResponse(400, 'Parametros de consulta invalidos', 'Revise los parametros enviados en la consulta.', '/v1/cartera-riesgo?fechaCorte=2026-08-22', [
             { campo: 'fechaCorte', mensaje: 'El campo es obligatorio y debe tener formato AAAA-MM-DD.' },
           ]),
-          '422': problemResponse(422, 'Fecha de corte fuera de rango', 'La fecha de corte esta fuera del rango permitido.'),
+          '422': problemResponse(422, 'Fecha de corte fuera de rango', 'La fecha de corte esta fuera del rango permitido.', '/v1/cartera-riesgo?fechaCorte=2026-08-22'),
         },
       },
     },

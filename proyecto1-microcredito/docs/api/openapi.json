@@ -377,7 +377,7 @@
                   "title": "Parametros de consulta invalidos",
                   "status": 400,
                   "detail": "Revise los parametros enviados en la consulta.",
-                  "instance": "/v1/creditos/C-004/pagos",
+                  "instance": "/v1/cartera-riesgo?fechaCorte=2026-08-22",
                   "traceId": "tr-20260822-000731",
                   "errores": [
                     {
@@ -401,7 +401,7 @@
                   "title": "Fecha de corte fuera de rango",
                   "status": 422,
                   "detail": "La fecha de corte esta fuera del rango permitido.",
-                  "instance": "/v1/creditos/C-004/pagos",
+                  "instance": "/v1/cartera-riesgo?fechaCorte=2026-08-22",
                   "traceId": "tr-20260822-000731"
                 }
               }
