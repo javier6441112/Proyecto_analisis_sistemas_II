@@ -124,35 +124,70 @@ paths:
                     diasAtraso: 0
                     reproducido: false
         "404":
-          description: El credito no existe.
+          description: No existe un credito con el identificador C-004.
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/404
+                title: Credito no encontrado
+                status: 404
+                detail: No existe un credito con el identificador C-004.
+                instance: /v1/creditos/C-004/pagos
+                traceId: tr-20260822-000731
         "409":
           description: La clave de idempotencia fue reutilizada con otro contenido.
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/409
+                title: Conflicto de idempotencia
+                status: 409
+                detail: La clave de idempotencia fue reutilizada con otro contenido.
+                instance: /v1/creditos/C-004/pagos
+                traceId: tr-20260822-000731
         "422":
           description: El credito no admite pagos en su estado actual.
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/422
+                title: Credito no admite pagos
+                status: 422
+                detail: El credito no admite pagos en su estado actual.
+                instance: /v1/creditos/C-004/pagos
+                traceId: tr-20260822-000731
         "429":
-          description: Se excedio el limite de solicitudes.
+          description: Se excedio el limite de solicitudes. Intente nuevamente mas tarde.
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/429
+                title: Limite de solicitudes excedido
+                status: 429
+                detail: Se excedio el limite de solicitudes. Intente nuevamente mas tarde.
+                instance: /v1/creditos/C-004/pagos
+                traceId: tr-20260822-000731
         "500":
-          description: Error no previsto del servidor.
+          description: Ocurrio un error no previsto al procesar la solicitud.
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/500
+                title: Error interno del servidor
+                status: 500
+                detail: Ocurrio un error no previsto al procesar la solicitud.
+                instance: /v1/creditos/C-004/pagos
+                traceId: tr-20260822-000731
   /cartera-riesgo:
     get:
       tags:
@@ -205,62 +240,36 @@ paths:
                         valor: "6000.00"
                         moneda: GTQ
         "400":
-          description: Parametros de consulta invalidos.
+          description: Revise los parametros enviados en la consulta.
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/400
+                title: Parametros de consulta invalidos
+                status: 400
+                detail: Revise los parametros enviados en la consulta.
+                instance: /v1/creditos/C-004/pagos
+                traceId: tr-20260822-000731
+                errores:
+                  - campo: fechaCorte
+                    mensaje: El campo es obligatorio y debe tener formato AAAA-MM-DD.
         "422":
           description: La fecha de corte esta fuera del rango permitido.
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+              example:
+                type: https://api.creditovecino.gt/problems/422
+                title: Fecha de corte fuera de rango
+                status: 422
+                detail: La fecha de corte esta fuera del rango permitido.
+                instance: /v1/creditos/C-004/pagos
+                traceId: tr-20260822-000731
 components:
   schemas:
-    Dinero:
-      type: object
-      properties:
-        valor:
-          type: string
-          pattern: ^\d{1,13}\.\d{2}$
-          description: Importe no negativo con exactamente dos decimales
-        moneda:
-          type: string
-          enum:
-            - GTQ
-      required:
-        - valor
-        - moneda
-      additionalProperties: false
-      description: Importe en quetzales expresado como texto para evitar punto flotante
-    DineroPositivo:
-      type: object
-      properties:
-        valor:
-          type: string
-          pattern: ^\d{1,13}\.\d{2}$
-          description: Importe mayor que cero con exactamente dos decimales
-        moneda:
-          type: string
-          enum:
-            - GTQ
-      required:
-        - valor
-        - moneda
-      additionalProperties: false
-      description: Importe positivo en quetzales expresado como texto
-    ErrorDetalle:
-      type: object
-      properties:
-        campo:
-          type: string
-        mensaje:
-          type: string
-      required:
-        - campo
-        - mensaje
-      additionalProperties: false
     ProblemDetails:
       type: object
       properties:
@@ -298,16 +307,6 @@ components:
         - status
       additionalProperties: false
       description: Cuerpo uniforme de error conforme a RFC 9457
-    FechaISO:
-      type: string
-      format: date
-      pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
-      description: Fecha calendario en formato AAAA-MM-DD
-    InstanteISO:
-      type: string
-      format: date-time
-      pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z|([+-](?:[01]\d|2[0-3]):[0-5]\d)))$
-      description: Fecha y hora ISO 8601 con zona horaria
     CreditoId:
       type: string
       pattern: ^C-\d{3,8}$
@@ -317,14 +316,6 @@ components:
       format: uuid
       pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
       description: Clave UUID para evitar registrar dos veces el mismo pago
-    MedioDePago:
-      type: string
-      enum:
-        - efectivo
-        - transferencia
-        - agente_bancario
-        - boleta_banco
-      description: Medio institucional de recepción del pago
     RegistrarPagoRequest:
       type: object
       properties:
@@ -366,133 +357,6 @@ components:
         - medio
       additionalProperties: false
       description: Datos para registrar un pago mayor que cero
-    AplicacionDelPago:
-      type: object
-      properties:
-        gastos:
-          type: object
-          properties:
-            valor:
-              type: string
-              pattern: ^\d{1,13}\.\d{2}$
-              description: Importe no negativo con exactamente dos decimales
-            moneda:
-              type: string
-              enum:
-                - GTQ
-          required:
-            - valor
-            - moneda
-          additionalProperties: false
-          description: Importe en quetzales expresado como texto para evitar punto flotante
-        interesMoratorio:
-          type: object
-          properties:
-            valor:
-              type: string
-              pattern: ^\d{1,13}\.\d{2}$
-              description: Importe no negativo con exactamente dos decimales
-            moneda:
-              type: string
-              enum:
-                - GTQ
-          required:
-            - valor
-            - moneda
-          additionalProperties: false
-          description: Importe en quetzales expresado como texto para evitar punto flotante
-        interesCorriente:
-          type: object
-          properties:
-            valor:
-              type: string
-              pattern: ^\d{1,13}\.\d{2}$
-              description: Importe no negativo con exactamente dos decimales
-            moneda:
-              type: string
-              enum:
-                - GTQ
-          required:
-            - valor
-            - moneda
-          additionalProperties: false
-          description: Importe en quetzales expresado como texto para evitar punto flotante
-        capital:
-          type: object
-          properties:
-            valor:
-              type: string
-              pattern: ^\d{1,13}\.\d{2}$
-              description: Importe no negativo con exactamente dos decimales
-            moneda:
-              type: string
-              enum:
-                - GTQ
-          required:
-            - valor
-            - moneda
-          additionalProperties: false
-          description: Importe en quetzales expresado como texto para evitar punto flotante
-        excedente:
-          type: object
-          properties:
-            valor:
-              type: string
-              pattern: ^\d{1,13}\.\d{2}$
-              description: Importe no negativo con exactamente dos decimales
-            moneda:
-              type: string
-              enum:
-                - GTQ
-          required:
-            - valor
-            - moneda
-          additionalProperties: false
-          description: Importe en quetzales expresado como texto para evitar punto flotante
-      required:
-        - gastos
-        - interesMoratorio
-        - interesCorriente
-        - capital
-        - excedente
-      additionalProperties: false
-      description: Desglose según la prelación de pagos
-    DestinoExcedente:
-      type: string
-      enum:
-        - amortizacion_capital
-        - cuotas_futuras
-      description: Destino del excedente a favor del cliente
-    TramoMora:
-      type: string
-      enum:
-        - ninguno
-        - mora_1
-        - mora_2
-        - mora_3
-        - vencido
-      description: Clasificación derivada de los días de atraso, no estado del crédito
-    EstadoCredito:
-      type: string
-      enum:
-        - solicitado
-        - aprobado
-        - desembolsado
-        - vigente
-        - en_mora
-        - reestructurado
-        - rechazado
-        - anulado
-        - cancelado
-        - incobrable
-      description: Estado del ciclo de vida completo del crédito
-    EstadoCreditoDespuesDePago:
-      type: string
-      enum:
-        - vigente
-        - en_mora
-        - reestructurado
-        - cancelado
     PagoRegistrado:
       type: object
       properties:
@@ -679,88 +543,6 @@ components:
         - reproducido
       additionalProperties: false
       description: Resultado de registrar y aplicar un pago
-    CarteraEnRiesgoQuery:
-      type: object
-      properties:
-        fechaCorte:
-          type: string
-          format: date
-          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
-          description: Fecha calendario en formato AAAA-MM-DD
-        incluirReestructurados:
-          default: true
-          description: El indicador oficial siempre incluye créditos reestructurados al día
-          type: boolean
-          enum:
-            - true
-      required:
-        - fechaCorte
-      additionalProperties: false
-      description: Parámetros para calcular cartera en riesgo
-    DetalleTramoCartera:
-      type: object
-      properties:
-        tramo:
-          type: string
-          enum:
-            - ninguno
-            - mora_1
-            - mora_2
-            - mora_3
-            - vencido
-          description: Clasificación derivada de los días de atraso, no estado del crédito
-        creditos:
-          type: integer
-          minimum: 0
-          maximum: 9007199254740991
-        saldoCapital:
-          type: object
-          properties:
-            valor:
-              type: string
-              pattern: ^\d{1,13}\.\d{2}$
-              description: Importe no negativo con exactamente dos decimales
-            moneda:
-              type: string
-              enum:
-                - GTQ
-          required:
-            - valor
-            - moneda
-          additionalProperties: false
-          description: Importe en quetzales expresado como texto para evitar punto flotante
-      required:
-        - tramo
-        - creditos
-        - saldoCapital
-      additionalProperties: false
-    ReestructuradosAlDia:
-      type: object
-      properties:
-        creditos:
-          type: integer
-          minimum: 0
-          maximum: 9007199254740991
-        saldoCapital:
-          type: object
-          properties:
-            valor:
-              type: string
-              pattern: ^\d{1,13}\.\d{2}$
-              description: Importe no negativo con exactamente dos decimales
-            moneda:
-              type: string
-              enum:
-                - GTQ
-          required:
-            - valor
-            - moneda
-          additionalProperties: false
-          description: Importe en quetzales expresado como texto para evitar punto flotante
-      required:
-        - creditos
-        - saldoCapital
-      additionalProperties: false
     CarteraEnRiesgoResponse:
       type: object
       properties:

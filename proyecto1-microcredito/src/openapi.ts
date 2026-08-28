@@ -1,28 +1,14 @@
 import { z } from 'zod';
 import {
-  CarteraEnRiesgoQuerySchema,
   CarteraEnRiesgoResponseSchema,
-  DetalleTramoCarteraSchema,
-  ReestructuradosAlDiaSchema,
 } from './contratos/cartera.js';
 import {
-  AplicacionDelPagoSchema,
-  DestinoExcedenteSchema,
-  EstadoCreditoDespuesDePagoSchema,
-  EstadoCreditoSchema,
-  MedioDePagoSchema,
   PagoRegistradoSchema,
   RegistrarPagoRequestSchema,
-  TramoMoraSchema,
 } from './contratos/pagos.js';
 import {
   CreditoIdSchema,
-  DineroPositivoSchema,
-  DineroSchema,
-  ErrorDetalleSchema,
-  FechaISOSchema,
   IdempotencyKeySchema,
-  InstanteISOSchema,
   ProblemDetailsSchema,
 } from './contratos/comunes.js';
 
@@ -88,11 +74,25 @@ const referenciaPago = {
   reproducido: false,
 };
 
-const problemResponse = (description: string) => ({
-  description,
+const problemResponse = (
+  status: number,
+  title: string,
+  detail: string,
+  errores?: Array<{ campo: string; mensaje: string }>,
+) => ({
+  description: detail,
   content: {
     'application/problem+json': {
       schema: { $ref: '#/components/schemas/ProblemDetails' },
+      example: {
+        type: `https://api.creditovecino.gt/problems/${status}`,
+        title,
+        status,
+        detail,
+        instance: '/v1/creditos/C-004/pagos',
+        traceId: 'tr-20260822-000731',
+        ...(errores ? { errores } : {}),
+      },
     },
   },
 });
@@ -154,11 +154,11 @@ export const documentoOpenAPI = {
             headers: { Location: { schema: { type: 'string' }, description: 'URI del pago creado' } },
             content: { 'application/json': { schema: { $ref: '#/components/schemas/PagoRegistrado' }, examples: { nuevo: { value: referenciaPago } } } },
           },
-          '404': problemResponse('El credito no existe.'),
-          '409': problemResponse('La clave de idempotencia fue reutilizada con otro contenido.'),
-          '422': problemResponse('El credito no admite pagos en su estado actual.'),
-          '429': problemResponse('Se excedio el limite de solicitudes.'),
-          '500': problemResponse('Error no previsto del servidor.'),
+          '404': problemResponse(404, 'Credito no encontrado', 'No existe un credito con el identificador C-004.'),
+          '409': problemResponse(409, 'Conflicto de idempotencia', 'La clave de idempotencia fue reutilizada con otro contenido.'),
+          '422': problemResponse(422, 'Credito no admite pagos', 'El credito no admite pagos en su estado actual.'),
+          '429': problemResponse(429, 'Limite de solicitudes excedido', 'Se excedio el limite de solicitudes. Intente nuevamente mas tarde.'),
+          '500': problemResponse(500, 'Error interno del servidor', 'Ocurrio un error no previsto al procesar la solicitud.'),
         },
       },
     },
@@ -194,33 +194,21 @@ export const documentoOpenAPI = {
               },
             },
           },
-          '400': problemResponse('Parametros de consulta invalidos.'),
-          '422': problemResponse('La fecha de corte esta fuera del rango permitido.'),
+          '400': problemResponse(400, 'Parametros de consulta invalidos', 'Revise los parametros enviados en la consulta.', [
+            { campo: 'fechaCorte', mensaje: 'El campo es obligatorio y debe tener formato AAAA-MM-DD.' },
+          ]),
+          '422': problemResponse(422, 'Fecha de corte fuera de rango', 'La fecha de corte esta fuera del rango permitido.'),
         },
       },
     },
   },
   components: {
     schemas: {
-      Dinero: convertirAOpenAPI(DineroSchema),
-      DineroPositivo: convertirAOpenAPI(DineroPositivoSchema),
-      ErrorDetalle: convertirAOpenAPI(ErrorDetalleSchema),
       ProblemDetails: convertirAOpenAPI(ProblemDetailsSchema),
-      FechaISO: convertirAOpenAPI(FechaISOSchema),
-      InstanteISO: convertirAOpenAPI(InstanteISOSchema),
       CreditoId: convertirAOpenAPI(CreditoIdSchema),
       IdempotencyKey: convertirAOpenAPI(IdempotencyKeySchema),
-      MedioDePago: convertirAOpenAPI(MedioDePagoSchema),
       RegistrarPagoRequest: convertirAOpenAPI(RegistrarPagoRequestSchema, 'input'),
-      AplicacionDelPago: convertirAOpenAPI(AplicacionDelPagoSchema),
-      DestinoExcedente: convertirAOpenAPI(DestinoExcedenteSchema),
-      TramoMora: convertirAOpenAPI(TramoMoraSchema),
-      EstadoCredito: convertirAOpenAPI(EstadoCreditoSchema),
-      EstadoCreditoDespuesDePago: convertirAOpenAPI(EstadoCreditoDespuesDePagoSchema),
       PagoRegistrado: convertirAOpenAPI(PagoRegistradoSchema),
-      CarteraEnRiesgoQuery: convertirAOpenAPI(CarteraEnRiesgoQuerySchema, 'input'),
-      DetalleTramoCartera: convertirAOpenAPI(DetalleTramoCarteraSchema),
-      ReestructuradosAlDia: convertirAOpenAPI(ReestructuradosAlDiaSchema),
       CarteraEnRiesgoResponse: convertirAOpenAPI(CarteraEnRiesgoResponseSchema),
     },
   },
