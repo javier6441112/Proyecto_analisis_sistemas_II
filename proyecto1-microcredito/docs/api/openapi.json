@@ -1,0 +1,1260 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "SGMC - API de Credito Vecino, S. A.",
+    "version": "1.0.0",
+    "description": "Contrato generado desde esquemas Zod. El contrato y la validacion comparten una unica fuente de verdad."
+  },
+  "servers": [
+    {
+      "url": "https://api.creditovecino.gt/v1",
+      "description": "Produccion ficticia"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Cartera y cobros",
+      "description": "Registro de pagos y saldos"
+    },
+    {
+      "name": "Cierres e indicadores",
+      "description": "Cartera en riesgo y cierres"
+    }
+  ],
+  "paths": {
+    "/creditos/{creditoId}/pagos": {
+      "post": {
+        "tags": [
+          "Cartera y cobros"
+        ],
+        "operationId": "registrarPago",
+        "summary": "Registra un pago sobre un credito",
+        "description": "Aplica gastos, interes moratorio, interes corriente y capital, en ese orden. La fecha del pago la envia el cliente.",
+        "parameters": [
+          {
+            "name": "creditoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CreditoId"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "Si se repite con el mismo cuerpo, devuelve la respuesta original sin cobrar de nuevo.",
+            "schema": {
+              "$ref": "#/components/schemas/IdempotencyKey"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrarPagoRequest"
+              },
+              "examples": {
+                "pagoExacto": {
+                  "summary": "Pago exacto de la cuota 2",
+                  "value": {
+                    "monto": {
+                      "valor": "1011.88",
+                      "moneda": "GTQ"
+                    },
+                    "fechaPago": "2026-08-22",
+                    "medio": "agente_bancario",
+                    "referencia": "BOL-88213"
+                  }
+                },
+                "pagoParcial": {
+                  "summary": "Pago parcial",
+                  "value": {
+                    "monto": {
+                      "valor": "500.00",
+                      "moneda": "GTQ"
+                    },
+                    "fechaPago": "2026-08-22",
+                    "medio": "efectivo"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Respuesta original de un pago ya registrado; no se cobra nuevamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagoRegistrado"
+                },
+                "examples": {
+                  "reproducido": {
+                    "value": {
+                      "pagoId": "PG-2026-000731",
+                      "creditoId": "C-004",
+                      "recibidoEn": "2026-08-22T09:15:00-06:00",
+                      "montoRecibido": {
+                        "valor": "1011.88",
+                        "moneda": "GTQ"
+                      },
+                      "aplicacion": {
+                        "gastos": {
+                          "valor": "0.00",
+                          "moneda": "GTQ"
+                        },
+                        "interesMoratorio": {
+                          "valor": "7.26",
+                          "moneda": "GTQ"
+                        },
+                        "interesCorriente": {
+                          "valor": "278.86",
+                          "moneda": "GTQ"
+                        },
+                        "capital": {
+                          "valor": "725.76",
+                          "moneda": "GTQ"
+                        },
+                        "excedente": {
+                          "valor": "0.00",
+                          "moneda": "GTQ"
+                        }
+                      },
+                      "destinoExcedente": null,
+                      "saldoCapitalDespues": {
+                        "valor": "8569.62",
+                        "moneda": "GTQ"
+                      },
+                      "estadoCredito": "vigente",
+                      "tramoMora": "ninguno",
+                      "diasAtraso": 0,
+                      "reproducido": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Pago registrado por primera vez.",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "URI del pago creado"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagoRegistrado"
+                },
+                "examples": {
+                  "nuevo": {
+                    "value": {
+                      "pagoId": "PG-2026-000731",
+                      "creditoId": "C-004",
+                      "recibidoEn": "2026-08-22T09:15:00-06:00",
+                      "montoRecibido": {
+                        "valor": "1011.88",
+                        "moneda": "GTQ"
+                      },
+                      "aplicacion": {
+                        "gastos": {
+                          "valor": "0.00",
+                          "moneda": "GTQ"
+                        },
+                        "interesMoratorio": {
+                          "valor": "7.26",
+                          "moneda": "GTQ"
+                        },
+                        "interesCorriente": {
+                          "valor": "278.86",
+                          "moneda": "GTQ"
+                        },
+                        "capital": {
+                          "valor": "725.76",
+                          "moneda": "GTQ"
+                        },
+                        "excedente": {
+                          "valor": "0.00",
+                          "moneda": "GTQ"
+                        }
+                      },
+                      "destinoExcedente": null,
+                      "saldoCapitalDespues": {
+                        "valor": "8569.62",
+                        "moneda": "GTQ"
+                      },
+                      "estadoCredito": "vigente",
+                      "tramoMora": "ninguno",
+                      "diasAtraso": 0,
+                      "reproducido": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El credito no existe.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La clave de idempotencia fue reutilizada con otro contenido.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "El credito no admite pagos en su estado actual.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Se excedio el limite de solicitudes.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error no previsto del servidor.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cartera-riesgo": {
+      "get": {
+        "tags": [
+          "Cierres e indicadores"
+        ],
+        "operationId": "consultarCarteraEnRiesgo",
+        "summary": "Consulta cartera en riesgo a una fecha de corte",
+        "description": "La fecha de corte es obligatoria y los reestructurados siempre se incluyen en el indicador oficial.",
+        "parameters": [
+          {
+            "name": "fechaCorte",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2026-08-22"
+            }
+          },
+          {
+            "name": "incluirReestructurados",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "enum": [
+                true
+              ],
+              "default": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Indicador calculado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CarteraEnRiesgoResponse"
+                },
+                "examples": {
+                  "referencia": {
+                    "value": {
+                      "fechaCorte": "2026-08-22",
+                      "carteraActiva": {
+                        "valor": "800000.00",
+                        "moneda": "GTQ"
+                      },
+                      "saldoEnRiesgo": {
+                        "valor": "56000.00",
+                        "moneda": "GTQ"
+                      },
+                      "porcentajeEnRiesgo": 0.07,
+                      "dadoPorIncobrableEnElPeriodo": {
+                        "valor": "15000.00",
+                        "moneda": "GTQ"
+                      },
+                      "porTramo": [],
+                      "reestructuradosAlDia": {
+                        "creditos": 1,
+                        "saldoCapital": {
+                          "valor": "6000.00",
+                          "moneda": "GTQ"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Parametros de consulta invalidos.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "La fecha de corte esta fuera del rango permitido.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Dinero": {
+        "type": "object",
+        "properties": {
+          "valor": {
+            "type": "string",
+            "pattern": "^\\d{1,13}\\.\\d{2}$",
+            "description": "Importe no negativo con exactamente dos decimales"
+          },
+          "moneda": {
+            "type": "string",
+            "enum": [
+              "GTQ"
+            ]
+          }
+        },
+        "required": [
+          "valor",
+          "moneda"
+        ],
+        "additionalProperties": false,
+        "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+      },
+      "DineroPositivo": {
+        "type": "object",
+        "properties": {
+          "valor": {
+            "type": "string",
+            "pattern": "^\\d{1,13}\\.\\d{2}$",
+            "description": "Importe mayor que cero con exactamente dos decimales"
+          },
+          "moneda": {
+            "type": "string",
+            "enum": [
+              "GTQ"
+            ]
+          }
+        },
+        "required": [
+          "valor",
+          "moneda"
+        ],
+        "additionalProperties": false,
+        "description": "Importe positivo en quetzales expresado como texto"
+      },
+      "ErrorDetalle": {
+        "type": "object",
+        "properties": {
+          "campo": {
+            "type": "string"
+          },
+          "mensaje": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "campo",
+          "mensaje"
+        ],
+        "additionalProperties": false
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 400,
+            "maximum": 599
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          },
+          "errores": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "campo": {
+                  "type": "string"
+                },
+                "mensaje": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "campo",
+                "mensaje"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status"
+        ],
+        "additionalProperties": false,
+        "description": "Cuerpo uniforme de error conforme a RFC 9457"
+      },
+      "FechaISO": {
+        "type": "string",
+        "format": "date",
+        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+        "description": "Fecha calendario en formato AAAA-MM-DD"
+      },
+      "InstanteISO": {
+        "type": "string",
+        "format": "date-time",
+        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+        "description": "Fecha y hora ISO 8601 con zona horaria"
+      },
+      "CreditoId": {
+        "type": "string",
+        "pattern": "^C-\\d{3,8}$",
+        "description": "Identificador del crédito"
+      },
+      "IdempotencyKey": {
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "description": "Clave UUID para evitar registrar dos veces el mismo pago"
+      },
+      "MedioDePago": {
+        "type": "string",
+        "enum": [
+          "efectivo",
+          "transferencia",
+          "agente_bancario",
+          "boleta_banco"
+        ],
+        "description": "Medio institucional de recepción del pago"
+      },
+      "RegistrarPagoRequest": {
+        "type": "object",
+        "properties": {
+          "monto": {
+            "type": "object",
+            "properties": {
+              "valor": {
+                "type": "string",
+                "pattern": "^\\d{1,13}\\.\\d{2}$",
+                "description": "Importe mayor que cero con exactamente dos decimales"
+              },
+              "moneda": {
+                "type": "string",
+                "enum": [
+                  "GTQ"
+                ]
+              }
+            },
+            "required": [
+              "valor",
+              "moneda"
+            ],
+            "additionalProperties": false,
+            "description": "Importe positivo en quetzales expresado como texto"
+          },
+          "fechaPago": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+            "description": "Fecha calendario en formato AAAA-MM-DD"
+          },
+          "medio": {
+            "type": "string",
+            "enum": [
+              "efectivo",
+              "transferencia",
+              "agente_bancario",
+              "boleta_banco"
+            ],
+            "description": "Medio institucional de recepción del pago"
+          },
+          "referencia": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        "required": [
+          "monto",
+          "fechaPago",
+          "medio"
+        ],
+        "additionalProperties": false,
+        "description": "Datos para registrar un pago mayor que cero"
+      },
+      "AplicacionDelPago": {
+        "type": "object",
+        "properties": {
+          "gastos": {
+            "type": "object",
+            "properties": {
+              "valor": {
+                "type": "string",
+                "pattern": "^\\d{1,13}\\.\\d{2}$",
+                "description": "Importe no negativo con exactamente dos decimales"
+              },
+              "moneda": {
+                "type": "string",
+                "enum": [
+                  "GTQ"
+                ]
+              }
+            },
+            "required": [
+              "valor",
+              "moneda"
+            ],
+            "additionalProperties": false,
+            "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+          },
+          "interesMoratorio": {
+            "type": "object",
+            "properties": {
+              "valor": {
+                "type": "string",
+                "pattern": "^\\d{1,13}\\.\\d{2}$",
+                "description": "Importe no negativo con exactamente dos decimales"
+              },
+              "moneda": {
+                "type": "string",
+                "enum": [
+                  "GTQ"
+                ]
+              }
+            },
+            "required": [
+              "valor",
+              "moneda"
+            ],
+            "additionalProperties": false,
+            "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+          },
+          "interesCorriente": {
+            "type": "object",
+            "properties": {
+              "valor": {
+                "type": "string",
+                "pattern": "^\\d{1,13}\\.\\d{2}$",
+                "description": "Importe no negativo con exactamente dos decimales"
+              },
+              "moneda": {
+                "type": "string",
+                "enum": [
+                  "GTQ"
+                ]
+              }
+            },
+            "required": [
+              "valor",
+              "moneda"
+            ],
+            "additionalProperties": false,
+            "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+          },
+          "capital": {
+            "type": "object",
+            "properties": {
+              "valor": {
+                "type": "string",
+                "pattern": "^\\d{1,13}\\.\\d{2}$",
+                "description": "Importe no negativo con exactamente dos decimales"
+              },
+              "moneda": {
+                "type": "string",
+                "enum": [
+                  "GTQ"
+                ]
+              }
+            },
+            "required": [
+              "valor",
+              "moneda"
+            ],
+            "additionalProperties": false,
+            "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+          },
+          "excedente": {
+            "type": "object",
+            "properties": {
+              "valor": {
+                "type": "string",
+                "pattern": "^\\d{1,13}\\.\\d{2}$",
+                "description": "Importe no negativo con exactamente dos decimales"
+              },
+              "moneda": {
+                "type": "string",
+                "enum": [
+                  "GTQ"
+                ]
+              }
+            },
+            "required": [
+              "valor",
+              "moneda"
+            ],
+            "additionalProperties": false,
+            "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+          }
+        },
+        "required": [
+          "gastos",
+          "interesMoratorio",
+          "interesCorriente",
+          "capital",
+          "excedente"
+        ],
+        "additionalProperties": false,
+        "description": "Desglose según la prelación de pagos"
+      },
+      "DestinoExcedente": {
+        "type": "string",
+        "enum": [
+          "amortizacion_capital",
+          "cuotas_futuras"
+        ],
+        "description": "Destino del excedente a favor del cliente"
+      },
+      "TramoMora": {
+        "type": "string",
+        "enum": [
+          "ninguno",
+          "mora_1",
+          "mora_2",
+          "mora_3",
+          "vencido"
+        ],
+        "description": "Clasificación derivada de los días de atraso, no estado del crédito"
+      },
+      "EstadoCredito": {
+        "type": "string",
+        "enum": [
+          "solicitado",
+          "aprobado",
+          "desembolsado",
+          "vigente",
+          "en_mora",
+          "reestructurado",
+          "rechazado",
+          "anulado",
+          "cancelado",
+          "incobrable"
+        ],
+        "description": "Estado del ciclo de vida completo del crédito"
+      },
+      "EstadoCreditoDespuesDePago": {
+        "type": "string",
+        "enum": [
+          "vigente",
+          "en_mora",
+          "reestructurado",
+          "cancelado"
+        ]
+      },
+      "PagoRegistrado": {
+        "type": "object",
+        "properties": {
+          "pagoId": {
+            "type": "string"
+          },
+          "creditoId": {
+            "type": "string",
+            "pattern": "^C-\\d{3,8}$",
+            "description": "Identificador del crédito"
+          },
+          "recibidoEn": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "description": "Fecha y hora ISO 8601 con zona horaria"
+          },
+          "montoRecibido": {
+            "type": "object",
+            "properties": {
+              "valor": {
+                "type": "string",
+                "pattern": "^\\d{1,13}\\.\\d{2}$",
+                "description": "Importe mayor que cero con exactamente dos decimales"
+              },
+              "moneda": {
+                "type": "string",
+                "enum": [
+                  "GTQ"
+                ]
+              }
+            },
+            "required": [
+              "valor",
+              "moneda"
+            ],
+            "additionalProperties": false,
+            "description": "Importe positivo en quetzales expresado como texto"
+          },
+          "aplicacion": {
+            "type": "object",
+            "properties": {
+              "gastos": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "string",
+                    "pattern": "^\\d{1,13}\\.\\d{2}$",
+                    "description": "Importe no negativo con exactamente dos decimales"
+                  },
+                  "moneda": {
+                    "type": "string",
+                    "enum": [
+                      "GTQ"
+                    ]
+                  }
+                },
+                "required": [
+                  "valor",
+                  "moneda"
+                ],
+                "additionalProperties": false,
+                "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+              },
+              "interesMoratorio": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "string",
+                    "pattern": "^\\d{1,13}\\.\\d{2}$",
+                    "description": "Importe no negativo con exactamente dos decimales"
+                  },
+                  "moneda": {
+                    "type": "string",
+                    "enum": [
+                      "GTQ"
+                    ]
+                  }
+                },
+                "required": [
+                  "valor",
+                  "moneda"
+                ],
+                "additionalProperties": false,
+                "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+              },
+              "interesCorriente": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "string",
+                    "pattern": "^\\d{1,13}\\.\\d{2}$",
+                    "description": "Importe no negativo con exactamente dos decimales"
+                  },
+                  "moneda": {
+                    "type": "string",
+                    "enum": [
+                      "GTQ"
+                    ]
+                  }
+                },
+                "required": [
+                  "valor",
+                  "moneda"
+                ],
+                "additionalProperties": false,
+                "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+              },
+              "capital": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "string",
+                    "pattern": "^\\d{1,13}\\.\\d{2}$",
+                    "description": "Importe no negativo con exactamente dos decimales"
+                  },
+                  "moneda": {
+                    "type": "string",
+                    "enum": [
+                      "GTQ"
+                    ]
+                  }
+                },
+                "required": [
+                  "valor",
+                  "moneda"
+                ],
+                "additionalProperties": false,
+                "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+              },
+              "excedente": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "string",
+                    "pattern": "^\\d{1,13}\\.\\d{2}$",
+                    "description": "Importe no negativo con exactamente dos decimales"
+                  },
+                  "moneda": {
+                    "type": "string",
+                    "enum": [
+                      "GTQ"
+                    ]
+                  }
+                },
+                "required": [
+                  "valor",
+                  "moneda"
+                ],
+                "additionalProperties": false,
+                "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+              }
+            },
+            "required": [
+              "gastos",
+              "interesMoratorio",
+              "interesCorriente",
+              "capital",
+              "excedente"
+            ],
+            "additionalProperties": false,
+            "description": "Desglose según la prelación de pagos"
+          },
+          "destinoExcedente": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "amortizacion_capital",
+                  "cuotas_futuras"
+                ],
+                "description": "Destino del excedente a favor del cliente"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "saldoCapitalDespues": {
+            "type": "object",
+            "properties": {
+              "valor": {
+                "type": "string",
+                "pattern": "^\\d{1,13}\\.\\d{2}$",
+                "description": "Importe no negativo con exactamente dos decimales"
+              },
+              "moneda": {
+                "type": "string",
+                "enum": [
+                  "GTQ"
+                ]
+              }
+            },
+            "required": [
+              "valor",
+              "moneda"
+            ],
+            "additionalProperties": false,
+            "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+          },
+          "estadoCredito": {
+            "type": "string",
+            "enum": [
+              "vigente",
+              "en_mora",
+              "reestructurado",
+              "cancelado"
+            ]
+          },
+          "tramoMora": {
+            "type": "string",
+            "enum": [
+              "ninguno",
+              "mora_1",
+              "mora_2",
+              "mora_3",
+              "vencido"
+            ],
+            "description": "Clasificación derivada de los días de atraso, no estado del crédito"
+          },
+          "diasAtraso": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reproducido": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "pagoId",
+          "creditoId",
+          "recibidoEn",
+          "montoRecibido",
+          "aplicacion",
+          "destinoExcedente",
+          "saldoCapitalDespues",
+          "estadoCredito",
+          "tramoMora",
+          "diasAtraso",
+          "reproducido"
+        ],
+        "additionalProperties": false,
+        "description": "Resultado de registrar y aplicar un pago"
+      },
+      "CarteraEnRiesgoQuery": {
+        "type": "object",
+        "properties": {
+          "fechaCorte": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+            "description": "Fecha calendario en formato AAAA-MM-DD"
+          },
+          "incluirReestructurados": {
+            "default": true,
+            "description": "El indicador oficial siempre incluye créditos reestructurados al día",
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "fechaCorte"
+        ],
+        "additionalProperties": false,
+        "description": "Parámetros para calcular cartera en riesgo"
+      },
+      "DetalleTramoCartera": {
+        "type": "object",
+        "properties": {
+          "tramo": {
+            "type": "string",
+            "enum": [
+              "ninguno",
+              "mora_1",
+              "mora_2",
+              "mora_3",
+              "vencido"
+            ],
+            "description": "Clasificación derivada de los días de atraso, no estado del crédito"
+          },
+          "creditos": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "saldoCapital": {
+            "type": "object",
+            "properties": {
+              "valor": {
+                "type": "string",
+                "pattern": "^\\d{1,13}\\.\\d{2}$",
+                "description": "Importe no negativo con exactamente dos decimales"
+              },
+              "moneda": {
+                "type": "string",
+                "enum": [
+                  "GTQ"
+                ]
+              }
+            },
+            "required": [
+              "valor",
+              "moneda"
+            ],
+            "additionalProperties": false,
+            "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+          }
+        },
+        "required": [
+          "tramo",
+          "creditos",
+          "saldoCapital"
+        ],
+        "additionalProperties": false
+      },
+      "ReestructuradosAlDia": {
+        "type": "object",
+        "properties": {
+          "creditos": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "saldoCapital": {
+            "type": "object",
+            "properties": {
+              "valor": {
+                "type": "string",
+                "pattern": "^\\d{1,13}\\.\\d{2}$",
+                "description": "Importe no negativo con exactamente dos decimales"
+              },
+              "moneda": {
+                "type": "string",
+                "enum": [
+                  "GTQ"
+                ]
+              }
+            },
+            "required": [
+              "valor",
+              "moneda"
+            ],
+            "additionalProperties": false,
+            "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+          }
+        },
+        "required": [
+          "creditos",
+          "saldoCapital"
+        ],
+        "additionalProperties": false
+      },
+      "CarteraEnRiesgoResponse": {
+        "type": "object",
+        "properties": {
+          "fechaCorte": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+            "description": "Fecha calendario en formato AAAA-MM-DD"
+          },
+          "carteraActiva": {
+            "type": "object",
+            "properties": {
+              "valor": {
+                "type": "string",
+                "pattern": "^\\d{1,13}\\.\\d{2}$",
+                "description": "Importe no negativo con exactamente dos decimales"
+              },
+              "moneda": {
+                "type": "string",
+                "enum": [
+                  "GTQ"
+                ]
+              }
+            },
+            "required": [
+              "valor",
+              "moneda"
+            ],
+            "additionalProperties": false,
+            "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+          },
+          "saldoEnRiesgo": {
+            "type": "object",
+            "properties": {
+              "valor": {
+                "type": "string",
+                "pattern": "^\\d{1,13}\\.\\d{2}$",
+                "description": "Importe no negativo con exactamente dos decimales"
+              },
+              "moneda": {
+                "type": "string",
+                "enum": [
+                  "GTQ"
+                ]
+              }
+            },
+            "required": [
+              "valor",
+              "moneda"
+            ],
+            "additionalProperties": false,
+            "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+          },
+          "porcentajeEnRiesgo": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "dadoPorIncobrableEnElPeriodo": {
+            "type": "object",
+            "properties": {
+              "valor": {
+                "type": "string",
+                "pattern": "^\\d{1,13}\\.\\d{2}$",
+                "description": "Importe no negativo con exactamente dos decimales"
+              },
+              "moneda": {
+                "type": "string",
+                "enum": [
+                  "GTQ"
+                ]
+              }
+            },
+            "required": [
+              "valor",
+              "moneda"
+            ],
+            "additionalProperties": false,
+            "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+          },
+          "porTramo": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "tramo": {
+                  "type": "string",
+                  "enum": [
+                    "ninguno",
+                    "mora_1",
+                    "mora_2",
+                    "mora_3",
+                    "vencido"
+                  ],
+                  "description": "Clasificación derivada de los días de atraso, no estado del crédito"
+                },
+                "creditos": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "saldoCapital": {
+                  "type": "object",
+                  "properties": {
+                    "valor": {
+                      "type": "string",
+                      "pattern": "^\\d{1,13}\\.\\d{2}$",
+                      "description": "Importe no negativo con exactamente dos decimales"
+                    },
+                    "moneda": {
+                      "type": "string",
+                      "enum": [
+                        "GTQ"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "valor",
+                    "moneda"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                }
+              },
+              "required": [
+                "tramo",
+                "creditos",
+                "saldoCapital"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "reestructuradosAlDia": {
+            "type": "object",
+            "properties": {
+              "creditos": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "saldoCapital": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "string",
+                    "pattern": "^\\d{1,13}\\.\\d{2}$",
+                    "description": "Importe no negativo con exactamente dos decimales"
+                  },
+                  "moneda": {
+                    "type": "string",
+                    "enum": [
+                      "GTQ"
+                    ]
+                  }
+                },
+                "required": [
+                  "valor",
+                  "moneda"
+                ],
+                "additionalProperties": false,
+                "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+              }
+            },
+            "required": [
+              "creditos",
+              "saldoCapital"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "fechaCorte",
+          "carteraActiva",
+          "saldoEnRiesgo",
+          "porcentajeEnRiesgo",
+          "dadoPorIncobrableEnElPeriodo",
+          "porTramo",
+          "reestructuradosAlDia"
+        ],
+        "additionalProperties": false,
+        "description": "Indicador de cartera en riesgo y baja contable del periodo"
+      }
+    }
+  }
+}
