@@ -2,7 +2,8 @@ import { Dinero } from './dinero.js';
 import { clasificarMora, type TramoMora } from './calculadora-mora.js';
 import { aplicarExcedente, aplicarPago, type Adeudo, type DestinoExcedente } from './prelacion-pago.js';
 import type { PoliticaCredito } from './politica-credito.js';
-import { resolverPoliticaMoraPorFecha, type PoliticaMora } from './politica-mora/catalogo-politicas.js';
+import { resolverPoliticaMoraPorFecha } from './politica-mora/catalogo-politicas.js';
+import type { PoliticaMora } from './politica-mora/politica-mora.js';
 
 export type EstadoCredito =
   | 'SOLICITADO'
