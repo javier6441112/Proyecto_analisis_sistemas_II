@@ -2,6 +2,7 @@ import { Dinero } from './dinero.js';
 import { clasificarMora, type TramoMora } from './calculadora-mora.js';
 import { aplicarExcedente, aplicarPago, type Adeudo, type DestinoExcedente } from './prelacion-pago.js';
 import type { PoliticaCredito } from './politica-credito.js';
+import { resolverPoliticaMoraPorFecha, type PoliticaMora } from './politica-mora/catalogo-politicas.js';
 
 export type EstadoCredito =
   | 'SOLICITADO'
@@ -166,6 +167,13 @@ class EstadoVigente extends EstadoActivo { readonly nombre = 'VIGENTE' as const;
 class EstadoEnMora extends EstadoActivo {
   readonly nombre = 'EN_MORA' as const;
 
+  cancelar(credito: Credito, contexto: ContextoTransicionCredito): void {
+    if (!credito.saldoCapital.esCero() || !credito.saldoVencido.esCero()) {
+      throw new Error('Un credito en mora solo puede cancelarse con saldo cero y cuota vencida saldada');
+    }
+    credito.cambiarEstado(new EstadoCancelado(), contexto);
+  }
+
   reestructurar(credito: Credito, contexto: ContextoTransicionCredito): void {
     credito.cambiarEstado(new EstadoReestructurado(), contexto);
   }
@@ -208,10 +216,12 @@ export class Credito {
   private _interesCorrienteSuspendido = false;
   private readonly transiciones: RegistroTransicionCredito[] = [];
   private reestructuradoHistorico = false;
+  private readonly politicaMora: PoliticaMora;
 
   private constructor(public readonly id: string, public readonly capital: Dinero, public readonly politica: PoliticaCredito) {
     this._saldoVencido = Dinero.cero(capital.moneda);
     this._saldoCapital = capital;
+    this.politicaMora = resolverPoliticaMoraPorFecha(this.politica.vigenteDesde);
   }
 
   static solicitado(id: string, capital: Dinero, politica: PoliticaCredito): Credito {
@@ -227,6 +237,7 @@ export class Credito {
   get interesCorrienteSuspendido(): boolean { return this._interesCorrienteSuspendido; }
   get tramoMora(): TramoMora { return Credito.tramoParaDias(this._diasAtraso); }
   get fueReestructurado(): boolean { return this.reestructuradoHistorico; }
+  get politicaActualMora(): PoliticaMora { return this.politicaMora; }
   get historial(): readonly RegistroTransicionCredito[] { return this.transiciones.map((item) => ({ ...item, fecha: new Date(item.fecha.getTime()) })); }
 
   aprobar(contexto: ContextoTransicionCredito): void { this.estadoActual.aprobar(this, contexto); }
@@ -266,6 +277,9 @@ export class Credito {
     const saldoResultante = this._saldoCapital.restar(capitalAplicado);
     if (saldoResultante.valor.isNegative()) throw new Error('El saldo de capital no puede ser negativo');
     this._saldoCapital = saldoResultante;
+  }
+  calcularInteresMoratorio(capitalEnMora: Dinero, diasAtraso: number): Dinero {
+    return this.politicaActualMora.calcular(capitalEnMora, diasAtraso);
   }
   marcarReestructurado(): void { this.reestructuradoHistorico = true; }
   reactivarInteresCorriente(): void { this._interesCorrienteSuspendido = false; }

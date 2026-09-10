@@ -8,6 +8,7 @@ export interface PoliticaMora {
   readonly nombre: string;
   readonly vigenteDesde: string;
   calcular(capitalEnMora: Dinero, diasAtraso: number): Dinero;
+  clasificar?(diasAtraso: number): string;
 }
 
 export function redondearDinero(valor: Decimal, moneda: 'GTQ' | 'USD' = 'GTQ'): Dinero {
