@@ -3,9 +3,9 @@ import { Dinero } from '../dinero.js';
 import { redondearDinero, type PoliticaMora } from './politica-mora.js';
 
 export class PoliticaPlana implements PoliticaMora {
-  readonly id = 'POL-2024-01';
-  readonly nombre = 'Plana 24%';
-  readonly vigenteDesde = '2024-01-01';
+  readonly id: string = 'POL-2024-01';
+  readonly nombre: string = 'Plana 24%';
+  readonly vigenteDesde: string = '2024-01-01';
   readonly tasaDiaria = new Decimal('0.0006666666666666667');
 
   calcular(capitalEnMora: Dinero, diasAtraso: number): Dinero {
