@@ -8,8 +8,8 @@
 ---
 
 ## 1. Punto de Partida
-- **Commit/Tag de entrega Proyecto 1:** 398353e626acd1f9c5b8c3829b8cf2231a3b6c19
-- **Commit/Tag de entrega Proyecto 2:** 6263f4a65051bb854d4cc47977c3fe4e151ae70c
+- **Primera versión base / entrega Proyecto 1:** 398353e626acd1f9c5b8c3829b8cf2231a3b6c19
+- **Nueva versión de referencia / entrega actual:** d46ac30299b28c8a6c5f5ad0128ddc35056e8b6e
 
 ---
 
@@ -19,26 +19,36 @@ Resume las métricas cuantitativas obtenidas del repositorio tras aplicar la evo
 
 | Métrica | Valor Obtenido | Interpretación / Estado |
 | :--- | :---: | :--- |
-| **Archivos del núcleo creados** | 7 | Separación de responsabilidades mediante componentes independientes. |
-| **Archivos del núcleo modificados** | 2 | Cambios mínimos enfocados únicamente en la integración del dominio y la exposición de indicadores. |
-| **¿Se modificó el motor de cálculo de mora?** | NO | Cumplimiento estricto del Principio Abierto/Cerrado (OCP). |
-| **Pruebas del P1 que dejaron de pasar** | 0 | Cero regresiones sobre el comportamiento original. |
-| **Pruebas del P1 reescritas** | 0 | La suite heredada pasó intacta en su totalidad. |
-| **Líneas netas añadidas al núcleo** | +219 | Código modular, cohesivo y extensible. |
+| **Archivos del núcleo creados** | 9 | Se añadieron 9 módulos del dominio para política, clasificación, catálogo y cálculo de gasto. |
+| **Archivos del núcleo modificados** | 2 | `credito.ts` y `cartera.ts` integran la nueva lógica sin tocar la base de cálculo original. |
+| **¿Se modificó el motor de cálculo de mora?** | NO | Se conserva el contrato base y se extiende por composición de políticas. |
+| **Pruebas del P1 que dejaron de pasar** | 0 | La suite heredada sigue en verde. |
+| **Pruebas del P1 reescritas** | 0 | No fue necesario reformular la suite base. |
+| **Líneas netas añadidas al núcleo (lógica del dominio)** | +219 | Cambio de dominio concentrado y extensible. |
 
-### Evidencia de Git Diff (`git diff --stat`)
+### Evidencia de Git Diff real (`git diff --stat` entre la base y la versión actual)
 ```text
-microcredito-p1/src/dominio/cartera.ts                               | 37 +++++++++++++++++
-microcredito-p1/src/dominio/credito.ts                               | 14 +++++++
-.../dominio/politica-mora/catalogo-politicas.ts                    | 17 ++++++++
-.../dominio/politica-mora/clasificacion-tramo.ts                  | 30 ++++++++++++++
-.../dominio/politica-mora/gasto-gestion-cobro.ts                  | 27 +++++++++++++
-.../dominio/politica-mora/politica-escalonada.ts                  | 47 ++++++++++++++++++++++
-.../src/dominio/politica-mora/politica-mora.ts                    | 16 ++++++++
-.../src/dominio/politica-mora/politica-plana.ts                   | 18 +++++++++
-.../dominio/politica-mora/politica-retroactiva.ts                 | 13 ++++++
-9 files changed, 219 insertions(+)
+microcredito-p1/docs/informe-impacto-solid.md      | 140 +++++++++++++++++++++
+microcredito-p1/package-lock.json                  |   3 -
+microcredito-p1/src/dominio/cartera.ts             |  37 ++++++
+microcredito-p1/src/dominio/credito.ts             |  15 +++
+.../dominio/politica-mora/catalogo-politicas.ts    |  17 +++
+.../dominio/politica-mora/clasificacion-tramo.ts   |  30 +++++
+.../dominio/politica-mora/gasto-gestion-cobro.ts    |  27 ++++
+.../dominio/politica-mora/politica-escalonada.ts   |  47 +++++++
+.../src/dominio/politica-mora/politica-mora.ts     |  16 +++
+.../src/dominio/politica-mora/politica-plana.ts    |  18 +++
+.../dominio/politica-mora/politica-retroactiva.ts |  13 ++
+microcredito-p1/tests/cartera-por-tramo-v2.test.ts |  42 +++++++
+.../tests/cartera-por-tramo.test.ts               |  21 ++++
+.../tests/contrato-politica.test.ts               |  47 +++++++
+.../tests/credito-v2.test.ts                      |  77 ++++++++++++
+.../tests/politica-mora.test.ts                   |  39 ++++++
+.../tests/regresion-p1.test.ts                   |  13 ++
+17 files changed, 599 insertions(+), 3 deletions(-)
 ```
+
+> Nota: el alcance real del repositorio incluye pruebas y documentación adicionales, además del dominio. La parte de dominio mantiene la afirmación central: la evolución fue extensiva y sin modificar el motor base de cálculo.
 
 ---
 
