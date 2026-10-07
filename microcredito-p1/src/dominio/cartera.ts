@@ -22,6 +22,15 @@ export interface ResumenCartera {
   saldoEnRiesgo: Dinero;
   porcentajeRiesgo: Decimal;
   incobrable: Dinero;
+  riesgoPorTramo: DetalleRiesgoCartera[];
+}
+
+export type TramoRiesgoCartera = 'MORA_1' | 'MORA_2' | 'MORA_3' | 'VENCIDO' | 'REESTRUCTURADO_AL_DIA';
+
+export interface DetalleRiesgoCartera {
+  readonly tramo: TramoRiesgoCartera;
+  readonly saldo: Dinero;
+  readonly porcentajeCarteraActiva: Decimal;
 }
 
 export interface ResumenCarteraPorTramo {
@@ -68,11 +77,37 @@ export function resumirCartera(creditos: readonly CreditoCartera[]): ResumenCart
   const saldoEnRiesgo = activos
     .filter(esCarteraEnRiesgo)
     .reduce((total, credito) => total.sumar(credito.saldoCapital), Dinero.cero(moneda));
+  const saldosPorTramo = new Map<TramoRiesgoCartera, Dinero>([
+    ['MORA_1', Dinero.cero(moneda)],
+    ['MORA_2', Dinero.cero(moneda)],
+    ['MORA_3', Dinero.cero(moneda)],
+    ['VENCIDO', Dinero.cero(moneda)],
+    ['REESTRUCTURADO_AL_DIA', Dinero.cero(moneda)],
+  ]);
+  for (const credito of activos.filter(esCarteraEnRiesgo)) {
+    let tramo: TramoRiesgoCartera;
+    if (credito.estado === 'REESTRUCTURADO' && credito.diasAtraso === 0) {
+      tramo = 'REESTRUCTURADO_AL_DIA';
+    } else if (credito.diasAtraso <= 30) {
+      tramo = 'MORA_1';
+    } else {
+      const clasificacion = clasificarTramo(credito.diasAtraso);
+      tramo = clasificacion === 'MORA_2' || clasificacion === 'MORA_3' || clasificacion === 'VENCIDO'
+        ? clasificacion
+        : 'VENCIDO';
+    }
+    saldosPorTramo.set(tramo, (saldosPorTramo.get(tramo) ?? Dinero.cero(moneda)).sumar(credito.saldoCapital));
+  }
+  const riesgoPorTramo = Array.from(saldosPorTramo, ([tramo, saldo]) => ({
+    tramo,
+    saldo,
+    porcentajeCarteraActiva: carteraActiva.esCero() ? new Decimal(0) : saldo.valor.div(carteraActiva.valor),
+  }));
   const incobrable = creditos
     .filter((credito) => credito.estado === 'INCOBRABLE')
     .reduce((total, credito) => total.sumar(credito.saldoCapital), Dinero.cero(moneda));
   const porcentajeRiesgo = carteraActiva.esCero()
     ? new Decimal(0)
     : saldoEnRiesgo.valor.div(carteraActiva.valor);
-  return { carteraActiva, saldoEnRiesgo, porcentajeRiesgo, incobrable };
+  return { carteraActiva, saldoEnRiesgo, porcentajeRiesgo, incobrable, riesgoPorTramo };
 }

@@ -1,150 +1,103 @@
-# Informe de Impacto y Evolución del Núcleo (Verificación SOLID/GRASP)
+# Informe de impacto SOLID — núcleo financiero Crédito Vecino
 
-**Sistema:** Crédito Vecino, S. A.  
-**Curso:** Análisis de Sistemas II  
-**Proyecto:** Proyecto 2 – Evolución del Núcleo (Entregable E6)  
-**Fecha:** Septiembre 2026  
+**Alcance:** correcciones determinables a partir de las observaciones docentes recibidas y de la documentación/código existente en el repositorio. No se ha consultado ni se afirma haber consultado un enunciado del Proyecto 2 que no está disponible.
 
----
+## 1. Base y métricas verificables
 
-## 1. Punto de Partida
-- **Primera versión base / entrega Proyecto 1:** 398353e626acd1f9c5b8c3829b8cf2231a3b6c19
-- **Nueva versión de referencia / entrega actual:** d46ac30299b28c8a6c5f5ad0128ddc35056e8b6e
+Base comparada: commit P1 `398353e626acd1f9c5b8c3829b8cf2231a3b6c19` (`Reforzar invariantes financieras`). Las métricas se obtuvieron del diff real de `microcredito-p1/src/dominio` entre esa base y el árbol de trabajo actual, no de una estimación manual:
 
----
+| Métrica del dominio | Resultado del diff |
+|---|---:|
+| Archivos agregados | 8 |
+| Archivos P1 modificados | 1 (`src/dominio/credito.ts`) |
+| Líneas añadidas | 463 |
+| Líneas eliminadas | 9 |
+| Cambio neto | +454 líneas |
+| Motor previo `calcularMora` de P1 modificado | No |
+| Pruebas heredadas de P1 modificadas | 0 |
 
-## 2. Métricas del Cambio
+La extensión añade las políticas y componentes de cartera al árbol comparado; las correcciones de esta tarea modifican sobre todo `credito.ts` y la familia `politica-mora/`. “Motor previo sin modificar” se refiere exclusivamente a `src/dominio/calculadora-mora.ts`, no a que el núcleo completo permanezca intacto.
 
-Resume las métricas cuantitativas obtenidas del repositorio tras aplicar la evolución:
+## 2. Evidencia de implementación y comportamiento
 
-| Métrica | Valor Obtenido | Interpretación / Estado |
-| :--- | :---: | :--- |
-| **Archivos del núcleo creados** | 9 | Se añadieron 9 módulos del dominio para política, clasificación, catálogo y cálculo de gasto. |
-| **Archivos del núcleo modificados** | 2 | `credito.ts` y `cartera.ts` integran la nueva lógica sin tocar la base de cálculo original. |
-| **¿Se modificó el motor de cálculo de mora?** | NO | Se conserva el contrato base y se extiende por composición de políticas. |
-| **Pruebas del P1 que dejaron de pasar** | 0 | La suite heredada sigue en verde. |
-| **Pruebas del P1 reescritas** | 0 | No fue necesario reformular la suite base. |
-| **Líneas netas añadidas al núcleo (lógica del dominio)** | +219 | Cambio de dominio concentrado y extensible. |
+### Mora y desglose — CP-04.3
 
-### Evidencia de Git Diff real (`git diff --stat` entre la base y la versión actual)
-```text
-microcredito-p1/docs/informe-impacto-solid.md      | 140 +++++++++++++++++++++
-microcredito-p1/package-lock.json                  |   3 -
-microcredito-p1/src/dominio/cartera.ts             |  37 ++++++
-microcredito-p1/src/dominio/credito.ts             |  15 +++
-.../dominio/politica-mora/catalogo-politicas.ts    |  17 +++
-.../dominio/politica-mora/clasificacion-tramo.ts   |  30 +++++
-.../dominio/politica-mora/gasto-gestion-cobro.ts    |  27 ++++
-.../dominio/politica-mora/politica-escalonada.ts   |  47 +++++++
-.../src/dominio/politica-mora/politica-mora.ts     |  16 +++
-.../src/dominio/politica-mora/politica-plana.ts    |  18 +++
-.../dominio/politica-mora/politica-retroactiva.ts |  13 ++
-microcredito-p1/tests/cartera-por-tramo-v2.test.ts |  42 +++++++
-.../tests/cartera-por-tramo.test.ts               |  21 ++++
-.../tests/contrato-politica.test.ts               |  47 +++++++
-.../tests/credito-v2.test.ts                      |  77 ++++++++++++
-.../tests/politica-mora.test.ts                   |  39 ++++++
-.../tests/regresion-p1.test.ts                   |  13 ++
-17 files changed, 599 insertions(+), 3 deletions(-)
+El contrato común expone tanto el cálculo monetario como su desglose. La estrategia escalonada conserva para cada tramo recorrido los días, tasa diaria e importe decimal sin redondear; solo redondea el total al producir `totalMoratorio`:
+
+```ts
+const tasaDiaria = tramo.tasaNominalAnual.div(360);
+const devengo = capitalEnMora.valor.times(tasaDiaria).times(diasEnEsteTramo);
+totalSinRedondear = totalSinRedondear.plus(devengo);
+detalleTramos.push({ tramo: tramo.nombre, dias: diasEnEsteTramo, tasaNominalAnual: tramo.tasaNominalAnual, tasaDiaria, importeSinRedondear: devengo });
 ```
 
-> Nota: el alcance real del repositorio incluye pruebas y documentación adicionales, además del dominio. La parte de dominio mantiene la afirmación central: la evolución fue extensiva y sin modificar el motor base de cálculo.
+Evidencia: `src/dominio/politica-mora/politica-mora.ts` y `src/dominio/politica-mora/politica-escalonada.ts`. El cálculo mantiene Actual/360, los tramos hasta el día 120 y deja de acumular días después de ese límite. La política plana usa 24%/360; la escalonada usa 18%, 24%, 30% y 36% nominal anual por tramo. El cálculo moratorio usa únicamente el capital en mora.
 
----
+### Suspensión de interés corriente — CP-04.2
 
-## 3. Resumen del Cambio Arquitectónico
+`Credito.registrarDevengoInteresCorriente(periodoId, importe)` registra una sola vez cada período: mientras el crédito está suspendido, el importe va a `interesEnSuspenso`, no al acumulado reconocido ni al adeudo exigible. `Credito.calcularAdeudoCuota(...)` integra esta clasificación al flujo del núcleo y exige un identificador estable del corte. `Credito.regularizar(...)` reactiva el devengo, transfiere el acumulado de suspenso al reconocido, vacía la cuenta de orden y devuelve el importe reconocido en esa operación. Una segunda reactivación no vuelve a reconocerlo. Los acumuladores internos conservan `Decimal`; esta capa no redondea el devengo recibido. Los valores `Dinero` de salida siguen la representación monetaria general del núcleo.
 
-La evolución del núcleo de dominio se organizó alrededor de una estrategia de políticas moratorias con catálogo versionado y clasificación de tramos. En lugar de introducir lógica condicional dentro del motor de cálculo, el dominio se separó en componentes con responsabilidades estrechas:
+La búsqueda de archivos del repositorio y del directorio del curso no encontró el enunciado P1 (PDF/DOCX). El código P1 disponible sí muestra que el plan francés calcula el interés de cuota multiplicando el saldo inicial por la tasa ordinaria mensual en `src/dominio/plan-amortizacion.ts`; no define el cálculo prorrateado entre dos cortes arbitrarios, sus días de inicio/fin ni la política de redondeo para ese devengo. Por tanto, la nueva operación recibe el importe del período ya calculado por el llamador y **no deriva fórmula, base ni redondeo**. Esta parte de CP-04.2 permanece pendiente hasta localizar el enunciado P1 o confirmar esas reglas con el docente.
 
-- clasificación de días de atraso y tramo;
-- definición de la política de mora;
-- resolución de política por fecha de otorgamiento;
-- cálculo de gasto de gestión;
-- integración mínima con el crédito y la cartera.
+La prueba usa importes de ejemplo para verificar la clasificación, idempotencia y transferencia contable; dichos valores no son una especificación de la fórmula financiera.
 
-Este enfoque mantiene la cohesión del dominio y reduce el riesgo de acoplamiento funcional. La calculadora base del moratorio se preserva como contrato estable, mientras que el comportamiento cambia por composición de estrategias.
+### Cartera EN RIESGO por tramo — CP-04.3 (§7.8)
 
----
+`resumirCartera(...)` expone `riesgoPorTramo` desde el núcleo con saldo y proporción sobre cartera activa. Se separa `REESTRUCTURADO_AL_DIA` y el resto se clasifica por días de atraso. La prueba canónica verifica Q24,000 en MORA_2 (3.00%), Q18,000 en MORA_3 (2.25%), Q8,000 en VENCIDO (1.00%) y Q6,000 reestructurado al día (0.75%): Q56,000 / Q800,000 = 7.00%. La versión previa del núcleo devolvía solo totales en `ResumenCartera`; no exponía ese desglose.
 
-## 4. Impacto sobre SOLID
+### Retroactiva comparativa — no adoptada
 
-### 4.1 Principio de Responsabilidad Única (SRP)
-Se logró una distribución más clara del dominio:
+`PoliticaRetroactiva` aplica a todos los días la tasa anual asociada al tramo vigente al corte, dividida entre 360. Oráculo M-3: `Q725.76 × 0.36 / 360 × 100 = Q72.576`, redondeado a Q72.58. El catálogo de `src/dominio/politica-mora/catalogo-politicas.ts` sigue resolviendo únicamente plana o escalonada por fecha de otorgamiento; no registra la retroactiva para créditos reales. La prueba comparativa ejercita las tres políticas con resultados diferenciados.
 
-- la clasificación del tramo quedó aislada en el componente de especificación;
-- la política moratoria quedó separada por estrategia concreta;
-- el cálculo de gasto de gestión quedó encapsulado en su propio servicio/lógica;
-- la cartera y el crédito mantuvieron responsabilidades distintas en su propio dominio.
+### Gasto de gestión
 
-Esto redujo la probabilidad de que una clase acumule responsabilidades mezcladas de cálculo, validación y clasificación.
+`GastoGestionCobroService` usa la identidad crédito/cuota, genera el cargo una vez al alcanzar 31 días, expone por separado lo generado y el saldo pendiente, y disminuye el saldo al recibir el pago. La política concreta se valida contra `POL-2026-10`; repetir el corte o cruzar a otro tramo no crea otro cargo. `Credito.calcularAdeudoCuota(...)` lo integra al adeudo que consume la prelación.
 
-### 4.2 Principio Abierto/Cerrado (OCP)
-La evolución cumple el objetivo central de OCP:
+El registro es en memoria y vive con la instancia del crédito; el repositorio no incluye persistencia, que está fuera del alcance solicitado. No se afirma idempotencia tras reconstruir una instancia desde almacenamiento inexistente.
 
-- el motor de cálculo de mora no fue alterado para incorporar la política escalonada;
-- la nueva regla se incorpora mediante una implementación que sustituye la estrategia, sin romper la API existente;
-- la nueva lógica es extensible para futuras políticas sin tocar la base del dominio.
+### M-5 y prelación
 
-### 4.3 Principio de Sustitución de Liskov (LSP)
-La creación de políticas concretas bajo un contrato común permite sustituir una implementación por otra sin cambiar el comportamiento esperable del cliente. Esto es una mejora relevante respecto al diseño monolítico previo, ya que la lógica de negocio puede extenderse con nuevas políticas sin afectar la abstracción del contrato.
+`Credito.calcularAdeudoCuota(...)` construye el adeudo usando el moratorio calculado, el gasto pendiente y los importes corrientes/capital recibidos para la cuota. La prueba M-5 verifica la suma del núcleo: Q25 + Q18.14 + Q278.86 + Q725.76 = **Q1,047.76**. El importe esperado solo está en la prueba. También comprueba que un pago parcial consume en orden gastos → moratorio → interés corriente → capital.
 
-### 4.4 Principio de Inversión de Dependencias (DIP)
-El dominio se orientó a dependencias de interfaces y contratos en vez de clases concretas. La resolución de la estrategia se hace mediante un catálogo, permitiendo que el crédito dependa de la abstracción de política y no de una implementación puntual. Esto facilita la prueba del comportamiento y reduce el acoplamiento directo a configuraciones específicas.
+## 3. Evaluación SOLID basada en código
 
----
+### SRP — Responsabilidad única: parcial, con fricción
 
-## 5. Impacto sobre GRASP
+La clasificación/cálculo por política está en `politica-escalonada.ts`; la regla y registro de cargos está en `gasto-gestion-cobro.ts`. Son separaciones observables de responsabilidades. Sin embargo, `Credito` sigue concentrando ciclo de vida, saldos, pagos y composición del adeudo (`calcularAdeudoCuota`); no es correcto afirmar que cada clase tenga una única razón de cambio. Separar un servicio de adeudos sería una evolución posible, no parte de esta corrección.
 
-### 5.1 Alta cohesión
-Cada componente quedó enfocado en una responsabilidad técnica específica: cálculo, clasificación, catalogación, evaluación de gastos y monitoreo de cartera. La cohesión aumentó porque cada unidad de código expresa un único propósito.
+### OCP — Abierto/cerrado: favorecido, no absoluto
 
-### 5.2 Bajo acoplamiento
-La lógica de la política moratoria quedó desacoplada de la lógica del crédito. La integración se realiza a través de contratos y resolución por fecha, evitando acoplamientos rígidos entre módulos del dominio.
+`PoliticaMora` permite que plana, escalonada y retroactiva suministren su propio desglose y total, y el cliente opera sobre el contrato. La retroactiva compara alternativas sin alterar el motor P1. No obstante, el catálogo versionado debe editarse para adoptar una nueva política real y añadir el método `desglosar` al contrato obliga a actualizar implementaciones existentes. OCP se cumple por estrategia en el cálculo, no para toda selección/configuración del sistema.
 
-### 5.3 Experto
-La lógica de cálculo moratorio quedó en la estrategia correspondiente, que es el lugar natural donde se conoce la tasa y la regla de tramo. La cartera y el crédito consumen esa decisión sin necesidad de duplicar reglas.
+### LSP — Sustitución de Liskov: consistente en el contrato probado
 
-### 5.4 Fabricador / creador
-La resolución de política por fecha funciona como un punto centralizador para crear la estrategia correcta según la vigencia del crédito. Esto evita que el cliente tenga que decidir implícitamente la política a aplicar.
+Las tres políticas implementan `PoliticaMora`, validan entradas equivalentes y devuelven `DesgloseMora`/`Dinero` en la misma moneda. Las diferencias monetarias son deliberadas por la política, no violaciones de sustitución. `tests/contrato-politica.test.ts` ejercita las tres y sus oráculos. La prueba no demuestra por sí sola todas las propiedades posibles ni formaliza una especificación exhaustiva del contrato.
 
----
+### ISP — Segregación de interfaces: parcial
 
-## 6. Verificación de Regresión y Cobertura de Casos
+`Adeudo` agrupa solo los cuatro rubros consumidos por la prelación, y `PoliticaMora` expresa las operaciones de política financiera. Como contrapartida, el contrato de política combina metadatos y operaciones de cálculo/desglose, y `Credito` expone una API de ciclo de vida amplia. No hay interfaces de puertos por caso de uso en esta entrega; el diseño no justifica afirmar cumplimiento pleno de ISP.
 
-La suite de pruebas del proyecto validó que la evolución no rompió el comportamiento heredado. Se conservaron las reglas del Proyecto 1 y se añadieron pruebas específicas para cubrir la nueva policy de mora escalonada y la coexistencia de políticas.
+### DIP — Inversión de dependencias: parcial
 
-Principales validaciones:
-- cálculo de mora plana para 15 días continúa dando el valor original del Proyecto 1;
-- cálculo de mora escalonada por tramos con acumulado por días en cada tramo;
-- regla de gasto de gestión en el día 31 con idempotencia;
-- resolución de política según fecha de otorgamiento;
-- cálculo de cartera por tramo y diferenciación entre mora y riesgo.
+`Credito` conserva la política de mora como abstracción (`PoliticaMora`), y los consumidores calculan por ese contrato. Pero `Credito` resuelve política mediante el catálogo concreto y crea directamente `GastoGestionCobroService`; no recibe esas dependencias por constructor ni por puerto. La inyección de dependencias y sustitución del registro quedan como puntos de fricción.
 
-La evidencia real de ejecución fue la siguiente:
+## 4. Evidencia de validación
 
-```text
-RUN  v2.1.9 ... /microcredito-p1
-✓ tests/calculadora-mora.test.ts (6)
-✓ tests/cartera-por-tramo.test.ts (1)
-✓ tests/cartera.test.ts (3)
-✓ tests/contrato-politica.test.ts (1)
-✓ tests/contratos.test.ts (9)
-✓ tests/credito.test.ts (13)
-✓ tests/plan-amortizacion.test.ts (1)
-✓ tests/politica-mora.test.ts (3)
-✓ tests/prelacion-pago.test.ts (5)
-✓ tests/regresion-p1.test.ts (1)
+Ejecución desde `microcredito-p1/`:
 
-Test Files  10 passed (10)
-Tests       43 passed (43)
-```
+- `npm test`: **12 archivos aprobados, 52 pruebas aprobadas**.
+- `npm run typecheck`: **correcto**, `tsc --noEmit` con `strict: true`.
+- Las suites heredadas del P1 se mantuvieron intactas; las expectativas revisadas corresponden únicamente a pruebas del comportamiento agregado P2 (entre ellas el resultado retroactivo, que antes era idéntico a la plana).
 
----
+## 5. Limitación pendiente
 
-## 7. Conclusión
+El destino del suspenso al regularizar ya está implementado. Solo queda pendiente confirmar el cálculo del importe de interés corriente devengado entre cortes; no se encontró el enunciado P1 y los documentos de dominio disponibles no resuelven esa fórmula.
 
-La evolución del núcleo mejoró la arquitectura de dominio respecto al estado inicial del Proyecto 1. La separación por política, estrategia, catálogo y clasificación de tramo logró un diseño más mantenible, extensible y alineado con los principios SOLID y GRASP.
+Preguntas abiertas que deben confirmar el docente:
 
-El resultado evidencia que la refactorización no fue un cambio aislado de reglas empresariales, sino una evolución estructural del dominio: se ampliaron los comportamientos sin violar el OCP ni introducir regresiones sobre el sistema anterior.
+1. ¿Cuál es la base del interés corriente durante cada intervalo: saldo de capital vigente, capital de cuota u otra base?
+2. ¿Cómo se deriva la tasa del período desde `tasaOrdinariaMensual` y `baseDias`, y qué convención define si el día inicial/final del corte cuenta?
+3. ¿Cuándo y con qué precisión se redondean los importes reconocidos y los trasladados a suspenso?
+4. ¿El devengo entre cortes aplica la tasa mensual contractual directamente sobre el saldo inicial de la cuota, o el enunciado P1 especifica otra base/prorrateo?
 
-En consecuencia, la solución obtenida cumple la finalidad de la entrega del Proyecto 2: ampliar el dominio sin romper la base funcional y dejando un núcleo preparado para futuras políticas y cambios regulatorios.
+La transferencia al regularizar no espera aclaración adicional: está definida por la regla aportada para P2. El cálculo entre cortes sigue **pendiente**; no se presenta CP-04.2 como completamente cerrado mientras falten su fórmula, período y redondeo.

@@ -24,19 +24,12 @@ describe('cartera en riesgo - v2', () => {
     expect(resumen.carteraActiva.formato()).toBe('800000.00');
     expect(resumen.saldoEnRiesgo.formato()).toBe('56000.00');
     expect(resumen.porcentajeRiesgo.toFixed(4)).toBe('0.0700');
-
-    const porcentajeActivos = resumen.carteraActiva.valor;
-    const riesgoPorTramo = [
-      { tramo: 'MORA_1', valor: Dinero.de('24000.00') },
-      { tramo: 'MORA_2', valor: Dinero.de('18000.00') },
-      { tramo: 'MORA_3', valor: Dinero.de('8000.00') },
-      { tramo: 'VENCIDO', valor: Dinero.de('6000.00') },
-    ].map((item) => ({
-      tramo: item.tramo,
-      porcentaje: item.valor.valor.div(porcentajeActivos).toFixed(4),
-    }));
-
-    expect(riesgoPorTramo.map((item) => item.porcentaje)).toEqual(['0.0300', '0.0225', '0.0100', '0.0075']);
-    expect(Number(riesgoPorTramo[0].porcentaje) + Number(riesgoPorTramo[1].porcentaje) + Number(riesgoPorTramo[2].porcentaje) + Number(riesgoPorTramo[3].porcentaje)).toBeCloseTo(0.07, 4);
+    expect(resumen.riesgoPorTramo.map(({ tramo, saldo, porcentajeCarteraActiva }) => ({ tramo, saldo: saldo.formato(), porcentaje: porcentajeCarteraActiva.toFixed(4) }))).toEqual([
+      { tramo: 'MORA_1', saldo: '0.00', porcentaje: '0.0000' },
+      { tramo: 'MORA_2', saldo: '24000.00', porcentaje: '0.0300' },
+      { tramo: 'MORA_3', saldo: '18000.00', porcentaje: '0.0225' },
+      { tramo: 'VENCIDO', saldo: '8000.00', porcentaje: '0.0100' },
+      { tramo: 'REESTRUCTURADO_AL_DIA', saldo: '6000.00', porcentaje: '0.0075' },
+    ]);
   });
 });

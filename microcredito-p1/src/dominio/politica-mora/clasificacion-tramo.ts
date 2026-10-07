@@ -5,7 +5,7 @@ export interface TramoConfiguracion {
   nombre: TramoMora;
   desde: number;
   hasta: number;
-  tasaDiaria: Decimal;
+  tasaNominalAnual: Decimal;
 }
 
 export function validarDiasAtraso(diasAtraso: number): void {

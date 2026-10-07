@@ -8,7 +8,7 @@ import { PoliticaRetroactiva } from '../src/dominio/politica-mora/politica-retro
 const CAPITAL = Dinero.de('725.76');
 
 describe('contrato de politicas de mora', () => {
-  it('cumple el contrato de sustitucion entre la politica plana, escalonada y retroactiva', () => {
+  it('cumple la bateria de contrato y conserva los resultados propios de cada politica', () => {
     const politicas = [
       new PoliticaPlana(),
       new PoliticaEscalonada('POL-2026-10'),
@@ -24,7 +24,8 @@ describe('contrato de politicas de mora', () => {
 
     expect(new PoliticaPlana().calcular(CAPITAL, 15).formato()).toBe('7.26');
     expect(new PoliticaEscalonada('POL-2026-10').calcular(CAPITAL, 45).formato()).toBe('18.14');
-    expect(new PoliticaRetroactiva().calcular(CAPITAL, 15).formato()).toBe('7.26');
+    expect(new PoliticaRetroactiva().calcular(CAPITAL, 15).formato()).toBe('5.44');
+    expect(new PoliticaRetroactiva().calcular(CAPITAL, 100).formato()).toBe('72.58');
   });
 
   it('invariante 2: la mora escalonada no supera la retroactiva en el tramo recorrido', () => {
@@ -43,5 +44,23 @@ describe('contrato de politicas de mora', () => {
 
     expect(escalonada.formato()).toBe('5.44');
     expect(escalonada.valor.toFixed(2)).toBe(esperado.toFixed(2));
+  });
+
+  it('expone los días, la tasa y el importe no redondeado de cada tramo moratorio', () => {
+    const detalle = new PoliticaEscalonada('POL-2026-10').desglosar(CAPITAL, 45);
+
+    expect(detalle.capitalEnMora.formato()).toBe('725.76');
+    expect(detalle.tramos.map(({ tramo, dias }) => ({ tramo, dias }))).toEqual([
+      { tramo: 'MORA_1', dias: 30 },
+      { tramo: 'MORA_2', dias: 15 },
+    ]);
+    expect(detalle.tramos[0]?.tasaNominalAnual.toString()).toBe('0.18');
+    expect(detalle.tramos[0]?.tasaDiaria.toString()).toBe('0.0005');
+    expect(detalle.tramos[0]?.importeSinRedondear.toFixed(4)).toBe('10.8864');
+    expect(detalle.tramos[1]?.tasaDiaria.toString()).toBe('0.00066666666666666666667');
+    expect(detalle.tramos[1]?.tasaNominalAnual.toString()).toBe('0.24');
+    expect(detalle.tramos[1]?.importeSinRedondear.toFixed(4)).toBe('7.2576');
+    expect(detalle.totalSinRedondear.toFixed(4)).toBe('18.1440');
+    expect(detalle.totalMoratorio.formato()).toBe('18.14');
   });
 });

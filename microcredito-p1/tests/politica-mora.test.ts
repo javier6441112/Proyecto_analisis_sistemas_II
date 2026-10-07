@@ -3,7 +3,7 @@ import { Dinero } from '../src/dominio/dinero.js';
 import { resolverPoliticaMoraPorFecha } from '../src/dominio/politica-mora/catalogo-politicas.js';
 import { PoliticaEscalonada } from '../src/dominio/politica-mora/politica-escalonada.js';
 import { PoliticaPlana } from '../src/dominio/politica-mora/politica-plana.js';
-import { debeGenerarGastoGestion, gastoGestionCobro } from '../src/dominio/politica-mora/gasto-gestion-cobro.js';
+import { debeGenerarGastoGestion, gastoGestionCobro, GastoGestionCobroService } from '../src/dominio/politica-mora/gasto-gestion-cobro.js';
 
 const CAPITAL_EN_MORA = Dinero.de('725.76');
 
@@ -21,10 +21,32 @@ describe('politica de mora escalonada', () => {
   it('genera el gasto de gestion una sola vez al entrar a mora 2', () => {
     expect(gastoGestionCobro(Dinero.de('725.76'), 30).formato()).toBe('0.00');
     expect(gastoGestionCobro(Dinero.de('725.76'), 31).formato()).toBe('25.00');
-    expect(gastoGestionCobro(Dinero.de('725.76'), 45).formato()).toBe('0.00');
+    expect(gastoGestionCobro(Dinero.de('725.76'), 45).formato()).toBe('25.00');
     expect(debeGenerarGastoGestion(30)).toBe(false);
     expect(debeGenerarGastoGestion(31)).toBe(true);
-    expect(debeGenerarGastoGestion(60)).toBe(false);
+    expect(debeGenerarGastoGestion(60)).toBe(true);
+    expect(debeGenerarGastoGestion(121)).toBe(true);
+  });
+
+  it('registra un gasto por identidad de crédito/cuota, mantiene saldo pendiente y no aplica a política plana', () => {
+    const service = new GastoGestionCobroService();
+    const primerCorte = service.generarSiCorresponde('C-001', '2', 'POL-2026-10', 45);
+    const cierreRepetido = service.generarSiCorresponde('C-001', '2', 'POL-2026-10', 60);
+    const otraCuota = service.generarSiCorresponde('C-001', '3', 'POL-2026-10', 60);
+    const creditoAnterior = service.generarSiCorresponde('C-002', '2', 'POL-2024-01', 45);
+
+    expect(primerCorte.generado.formato()).toBe('25.00');
+    expect(primerCorte.saldoPendiente.formato()).toBe('25.00');
+    expect(cierreRepetido.generado.formato()).toBe('0.00');
+    expect(cierreRepetido.saldoPendiente.formato()).toBe('25.00');
+    expect(otraCuota.generado.formato()).toBe('25.00');
+    expect(creditoAnterior.saldoPendiente.formato()).toBe('0.00');
+
+    expect(service.registrarPago('C-001', '2', Dinero.de('10.00')).formato()).toBe('10.00');
+    expect(service.obtenerSaldoPendiente('C-001', '2').formato()).toBe('15.00');
+    expect(service.registrarPago('C-001', '2', Dinero.de('20.00')).formato()).toBe('15.00');
+    expect(service.obtenerSaldoPendiente('C-001', '2').formato()).toBe('0.00');
+    expect(service.generarSiCorresponde('C-001', '2', 'POL-2026-10', 90).generado.formato()).toBe('0.00');
   });
 
   it('resuelve la politica por fecha de otorgamiento', () => {

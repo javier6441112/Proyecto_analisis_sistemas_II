@@ -1,9 +1,12 @@
+import { Decimal } from 'decimal.js';
 import { Dinero } from './dinero.js';
 import { clasificarMora, type TramoMora } from './calculadora-mora.js';
 import { aplicarExcedente, aplicarPago, type Adeudo, type DestinoExcedente } from './prelacion-pago.js';
 import type { PoliticaCredito } from './politica-credito.js';
 import { resolverPoliticaMoraPorFecha } from './politica-mora/catalogo-politicas.js';
 import type { PoliticaMora } from './politica-mora/politica-mora.js';
+import type { DesgloseMora } from './politica-mora/politica-mora.js';
+import { GastoGestionCobroService } from './politica-mora/gasto-gestion-cobro.js';
 
 export type EstadoCredito =
   | 'SOLICITADO'
@@ -48,6 +51,19 @@ export interface AplicacionPagoCredito {
 
 export type ResultadoPago = AplicacionPagoCredito | RecuperacionCredito;
 
+export interface ResultadoAdeudoCuota {
+  readonly adeudo: Adeudo;
+  readonly desgloseMora: DesgloseMora;
+  readonly gastoGenerado: Dinero;
+  readonly devengoInteresCorriente: ResultadoDevengoInteresCorriente;
+}
+
+export interface ResultadoDevengoInteresCorriente {
+  readonly reconocido: Dinero;
+  readonly suspendido: Dinero;
+  readonly duplicado: boolean;
+}
+
 type Accion = (credito: Credito, contexto: ContextoTransicionCredito) => void;
 
 interface EstadoCreditoState {
@@ -60,7 +76,7 @@ interface EstadoCreditoState {
   actualizarMora: (credito: Credito, dias: number, saldo: Dinero, contexto: ContextoTransicionCredito) => void;
   registrarPago: (credito: Credito, monto: Dinero, dias: number, saldo: Dinero, adeudo: Adeudo, destino: DestinoExcedente, contexto: ContextoTransicionCredito) => ResultadoPago;
   reestructurar: Accion;
-  regularizar: Accion;
+  regularizar: (credito: Credito, contexto: ContextoTransicionCredito) => Dinero;
   cancelar: Accion;
   declararIncobrable: Accion;
 }
@@ -76,7 +92,7 @@ abstract class EstadoBase implements EstadoCreditoState {
   actualizarMora(_credito: Credito, _dias: number, _saldo: Dinero, _contexto: ContextoTransicionCredito): void { this.invalida('actualizarMora'); }
   registrarPago(_credito: Credito, _monto: Dinero, _dias: number, _saldo: Dinero, _adeudo: Adeudo, _destino: DestinoExcedente, _contexto: ContextoTransicionCredito): ResultadoPago { throw new Error(`Pago rechazado: el credito esta ${this.nombre}`); }
   reestructurar(_credito: Credito, _contexto: ContextoTransicionCredito): void { this.invalida('reestructurar'); }
-  regularizar(_credito: Credito, _contexto: ContextoTransicionCredito): void { this.invalida('regularizar'); }
+  regularizar(_credito: Credito, _contexto: ContextoTransicionCredito): Dinero { this.invalida('regularizar'); }
   cancelar(_credito: Credito, _contexto: ContextoTransicionCredito): void { this.invalida('cancelar'); }
   declararIncobrable(_credito: Credito, _contexto: ContextoTransicionCredito): void { this.invalida('declararIncobrable'); }
 
@@ -202,10 +218,12 @@ class EstadoReestructurado extends EstadoActivo {
     return resultado;
   }
 
-  regularizar(credito: Credito, contexto: ContextoTransicionCredito): void {
+  regularizar(credito: Credito, contexto: ContextoTransicionCredito): Dinero {
+    credito.validarContexto(contexto);
     credito.marcarReestructurado();
-    credito.reactivarInteresCorriente();
+    const reconocido = credito.reactivarInteresCorriente();
     credito.cambiarEstado(new EstadoVigente(), contexto);
+    return reconocido;
   }
 }
 
@@ -215,9 +233,13 @@ export class Credito {
   private _saldoVencido: Dinero;
   private _saldoCapital: Dinero;
   private _interesCorrienteSuspendido = false;
+  private _interesCorrienteReconocido = new Decimal(0);
+  private _interesEnSuspenso = new Decimal(0);
   private readonly transiciones: RegistroTransicionCredito[] = [];
   private reestructuradoHistorico = false;
   private readonly politicaMora: PoliticaMora;
+  private readonly gastosGestion = new GastoGestionCobroService();
+  private readonly devengosInteresPorPeriodo = new Map<string, { reconocido: Decimal; suspendido: Decimal }>();
 
   private constructor(public readonly id: string, public readonly capital: Dinero, public readonly politica: PoliticaCredito) {
     this._saldoVencido = Dinero.cero(capital.moneda);
@@ -236,6 +258,8 @@ export class Credito {
   get saldoVencido(): Dinero { return this._saldoVencido; }
   get saldoCapital(): Dinero { return this._saldoCapital; }
   get interesCorrienteSuspendido(): boolean { return this._interesCorrienteSuspendido; }
+  get interesCorrienteReconocido(): Dinero { return Dinero.de(this._interesCorrienteReconocido, this.capital.moneda); }
+  get interesEnSuspenso(): Dinero { return Dinero.de(this._interesEnSuspenso, this.capital.moneda); }
   get tramoMora(): TramoMora { return Credito.tramoParaDias(this._diasAtraso); }
   get fueReestructurado(): boolean { return this.reestructuradoHistorico; }
   get politicaActualMora(): PoliticaMora { return this.politicaMora; }
@@ -252,13 +276,18 @@ export class Credito {
     this.estadoActual.actualizarMora(this, dias, saldo, contexto);
   }
 
-  registrarPago(monto: Dinero, dias: number, saldo: Dinero, adeudo: Adeudo, contexto: ContextoTransicionCredito, destino: DestinoExcedente = 'amortizacion_capital'): ResultadoPago {
+  registrarPago(monto: Dinero, dias: number, saldo: Dinero, adeudo: Adeudo, contexto: ContextoTransicionCredito, destino: DestinoExcedente = 'amortizacion_capital', cuotaNumero?: number): ResultadoPago {
     if (monto.esCero() || monto.valor.isNegative()) throw new Error('El pago debe ser positivo');
-    return this.estadoActual.registrarPago(this, monto, dias, saldo, adeudo, destino, contexto);
+    if (cuotaNumero !== undefined && (!Number.isInteger(cuotaNumero) || cuotaNumero < 1)) throw new Error('El numero de cuota debe ser entero positivo');
+    const resultado = this.estadoActual.registrarPago(this, monto, dias, saldo, adeudo, destino, contexto);
+    if (cuotaNumero !== undefined && resultado.tipo === 'APLICACION') {
+      this.gastosGestion.registrarPago(this.id, String(cuotaNumero), resultado.aplicado.gastos);
+    }
+    return resultado;
   }
 
   reestructurar(contexto: ContextoTransicionCredito): void { this.estadoActual.reestructurar(this, contexto); }
-  regularizar(contexto: ContextoTransicionCredito): void { this.estadoActual.regularizar(this, contexto); }
+  regularizar(contexto: ContextoTransicionCredito): Dinero { return this.estadoActual.regularizar(this, contexto); }
   cancelar(contexto: ContextoTransicionCredito): void { this.estadoActual.cancelar(this, contexto); }
   declararIncobrable(contexto: ContextoTransicionCredito): void { this.estadoActual.declararIncobrable(this, contexto); }
 
@@ -282,8 +311,68 @@ export class Credito {
   calcularInteresMoratorio(capitalEnMora: Dinero, diasAtraso: number): Dinero {
     return this.politicaActualMora.calcular(capitalEnMora, diasAtraso);
   }
+  desglosarInteresMoratorio(capitalEnMora: Dinero, diasAtraso: number): DesgloseMora {
+    return this.politicaActualMora.desglosar(capitalEnMora, diasAtraso);
+  }
+  calcularAdeudoCuota(cuotaNumero: number, capitalEnMora: Dinero, interesCorriente: Dinero | Decimal | string, diasAtraso: number, periodoId: string): ResultadoAdeudoCuota {
+    if (!Number.isInteger(cuotaNumero) || cuotaNumero < 1) throw new Error('El numero de cuota debe ser entero positivo');
+    if (!periodoId) throw new Error('El devengo de interes requiere identificador estable de periodo o corte');
+    if (capitalEnMora.moneda !== this.capital.moneda) throw new Error('Los importes del adeudo deben usar la moneda del credito');
+    if (capitalEnMora.valor.isNegative()) throw new Error('Los importes del adeudo no pueden ser negativos');
+    const desgloseMora = this.desglosarInteresMoratorio(capitalEnMora, diasAtraso);
+    const devengo = this.registrarDevengoInteresCorriente(periodoId, interesCorriente);
+    const gasto = this.gastosGestion.generarSiCorresponde(
+      this.id,
+      String(cuotaNumero),
+      this.politicaMora.id,
+      diasAtraso,
+      this.capital.moneda,
+    );
+    return {
+      adeudo: {
+        gastos: gasto.saldoPendiente,
+        interesMoratorio: desgloseMora.totalMoratorio,
+        interesCorriente: devengo.reconocido,
+        capital: capitalEnMora,
+      },
+      desgloseMora,
+      gastoGenerado: gasto.generado,
+      devengoInteresCorriente: devengo,
+    };
+  }
   marcarReestructurado(): void { this.reestructuradoHistorico = true; }
-  reactivarInteresCorriente(): void { this._interesCorrienteSuspendido = false; }
+  registrarDevengoInteresCorriente(periodoId: string, importe: Dinero | Decimal | string): ResultadoDevengoInteresCorriente {
+    if (!periodoId) throw new Error('El devengo de interes requiere identificador estable de periodo o corte');
+    if (importe instanceof Dinero && importe.moneda !== this.capital.moneda) throw new Error('El interes corriente debe usar la moneda del credito');
+    const importeDecimal = importe instanceof Dinero ? importe.valor : new Decimal(importe);
+    if (!importeDecimal.isFinite() || importeDecimal.isNegative()) throw new Error('El interes corriente debe ser finito y no negativo');
+    const previo = this.devengosInteresPorPeriodo.get(periodoId);
+    if (previo) return {
+      reconocido: Dinero.de(previo.reconocido, this.capital.moneda),
+      suspendido: Dinero.de(previo.suspendido, this.capital.moneda),
+      duplicado: true,
+    };
+
+    const reconocido = this._interesCorrienteSuspendido ? new Decimal(0) : importeDecimal;
+    const suspendido = this._interesCorrienteSuspendido ? importeDecimal : new Decimal(0);
+    this._interesCorrienteReconocido = this._interesCorrienteReconocido.plus(reconocido);
+    this._interesEnSuspenso = this._interesEnSuspenso.plus(suspendido);
+    this.devengosInteresPorPeriodo.set(periodoId, { reconocido, suspendido });
+    const resultado = { reconocido, suspendido, duplicado: false };
+    return {
+      reconocido: Dinero.de(resultado.reconocido, this.capital.moneda),
+      suspendido: Dinero.de(resultado.suspendido, this.capital.moneda),
+      duplicado: resultado.duplicado,
+    };
+  }
+
+  reactivarInteresCorriente(): Dinero {
+    this._interesCorrienteSuspendido = false;
+    const transferido = this._interesEnSuspenso;
+    this._interesCorrienteReconocido = this._interesCorrienteReconocido.plus(transferido);
+    this._interesEnSuspenso = new Decimal(0);
+    return Dinero.de(transferido, this.capital.moneda);
+  }
 
   validarPago(monto: Dinero, dias: number, saldo: Dinero, adeudo: Adeudo): void {
     this.validarDatosDeMora(dias, saldo);
