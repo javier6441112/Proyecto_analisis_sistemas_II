@@ -1,0 +1,61 @@
+id_cliente,nombre_completo,dpi,telefono,municipio,fecha_alta
+CL-0030,Miguel José Coy Morales,DPI-FICT-000030,5555-1203,Antigua Guatemala,2026-01-07
+CL-0050,Marta María Batz Castillo,DPI-FICT-000050,5555-1343,Chimaltenango,2026-01-13
+CL-0079,Óscar Byron Juárez Solís,DPI-FICT-000079,5555-1546,Chinautla,2026-01-14
+CL-0087,Juan Ricardo Ordóñez Morales,DPI-FICT-000087,5555-1602,Santa Catarina Pinula,2026-01-19
+CL-0062,Sonia Silvia Tzoc Pérez,DPI-FICT-000062,5555-1427,Villa Nueva,2026-01-20
+CL-0082,Sonia Rosa Solís Xiloj,DPI-FICT-000082,5555-1567,Mixco,2026-02-05
+CL-0018,Pedro Luis Castillo Cifuentes,DPI-FICT-000018,5555-1119,Amatitlán,2026-02-09
+CL-0010,José Óscar Sicán Cifuentes,DPI-FICT-000010,5555-1063,San Miguel Petapa,2026-02-15
+CL-0044,Pedro Fernando Reyes Sicán,DPI-FICT-000044,5555-1301,Escuintla,2026-02-17
+CL-0003,Blanca Elena Cabrera Sicán,DPI-FICT-000003,5555-1014,Santa Catarina Pinula,2026-03-03
+CL-0054,Aracely Patricia Girón Coy,DPI-FICT-000054,5555-1371,Guatemala,2026-03-10
+CL-0069,Héctor Luis García Orellana,DPI-FICT-000069,5555-1476,Mixco,2026-03-11
+CL-0083,José Óscar Hernández Coy,DPI-FICT-000083,5555-1574,Guatemala,2026-03-16
+CL-0036,Óscar Marvin Coy Barrios,DPI-FICT-000036,5555-1245,Antigua Guatemala,2026-03-17
+CL-0059,Blanca Rebeca Ramírez Cifuentes,DPI-FICT-000059,5555-1406,Chimaltenango,2026-03-20
+CL-0073,Dora Irma López Sicán,DPI-FICT-000073,5555-1504,Guatemala,2026-03-22
+CL-0039,Dora Patricia Cifuentes García,DPI-FICT-000039,5555-1266,Chinautla,2026-03-30
+CL-0065,Fernando Byron Monzón Alvarado,DPI-FICT-000065,5555-1448,Villa Nueva,2026-03-31
+CL-0033,Héctor Fernando Xiloj Estrada,DPI-FICT-000033,5555-1224,Amatitlán,2026-04-08
+CL-0005,Miguel Héctor Cabrera Coy,DPI-FICT-000005,5555-1028,Santa Catarina Pinula,2026-04-20
+CL-0088,Mario Luis Cifuentes Ramírez,DPI-FICT-000088,5555-1609,Guatemala,2026-04-28
+CL-0053,Héctor Ricardo López Méndez,DPI-FICT-000053,5555-1364,Escuintla,2026-05-04
+CL-0004,Marvin Fernando Ajú Ajú,DPI-FICT-000004,5555-1021,Chimaltenango,2026-05-06
+CL-0081,Ana Blanca Hernández Ordóñez,DPI-FICT-000081,5555-1560,Guatemala,2026-05-16
+CL-0084,Edgar Miguel Orellana Ordóñez,DPI-FICT-000084,5555-1581,Escuintla,2026-05-16
+CL-0021,Rebeca Marta Orellana Coy,DPI-FICT-000021,5555-1140,Santa Catarina Pinula,2026-05-17
+CL-0028,Marvin Walter Tzoc Tzoc,DPI-FICT-000028,5555-1189,Antigua Guatemala,2026-05-20
+CL-0013,Fernando Óscar Ramírez Coy,DPI-FICT-000013,5555-1084,Amatitlán,2026-05-24
+CL-0024,Óscar Víctor Ramírez Solís,DPI-FICT-000024,5555-1161,Guatemala,2026-06-11
+CL-0006,Ana Rosa Cabrera Morales,DPI-FICT-000006,5555-1035,Mixco,2026-06-16
+CL-0008,Blanca Elena García Cifuentes,DPI-FICT-000008,5555-1049,Chimaltenango,2026-06-26
+CL-0042,Óscar Héctor Pérez Orellana,DPI-FICT-000042,5555-1287,Amatitlán,2026-07-08
+CL-0043,Pedro Fernando Reyes López,DPI-FICT-000043,5555-1294,San Miguel Petapa,2026-07-09
+CL-0016,Gladys Sandra Estrada Solís,DPI-FICT-000016,5555-1105,Escuintla,2026-07-16
+CL-0020,Juan Víctor Ajú Girón,DPI-FICT-000020,5555-1133,Antigua Guatemala,2026-07-16
+CL-0060,Elena Sonia Alvarado Méndez,DPI-FICT-000060,5555-1413,Chimaltenango,2026-08-02
+CL-0019,María Dora Alvarado Sicán,DPI-FICT-000019,5555-1126,Villa Nueva,2026-08-03
+CL-0047,Carmen Sandra Sicán García,DPI-FICT-000047,5555-1322,Santa Catarina Pinula,2026-08-10
+CL-0022,Pedro Marvin Reyes Ramírez,DPI-FICT-000022,5555-1147,Mixco,2026-08-14
+CL-0078,Carlos Byron Orellana Estrada,DPI-FICT-000078,5555-1539,San Miguel Petapa,2026-08-14
+CL-0029,Blanca Gladys Ordóñez Coy,DPI-FICT-000029,5555-1196,Santa Catarina Pinula,2026-08-16
+CL-0045,Rolando Víctor Sicán Barrios,DPI-FICT-000045,5555-1308,Escuintla,2026-08-16
+CL-0012,Juan Carlos Tojín Estrada,DPI-FICT-000012,5555-1077,Mixco,2026-08-19
+CL-0086,Rosa Lidia Tojín Coy,DPI-FICT-000086,5555-1595,Villa Nueva,2026-08-20
+CL-0040,Ricardo Víctor García Xiloj,DPI-FICT-000040,5555-1273,Santa Catarina Pinula,2026-08-29
+CL-0075,Dora Carmen Monzón Ordóñez,DPI-FICT-000075,5555-1518,Guatemala,2026-09-04
+CL-0048,Aracely Marta Girón Solís,DPI-FICT-000048,5555-1329,Guatemala,2026-09-07
+CL-0014,Luis Fernando Morales Coy,DPI-FICT-000014,5555-1091,Villa Nueva,2026-09-11
+CL-0031,Gladys Dora Barrios Hernández,DPI-FICT-000031,5555-1210,Chimaltenango,2026-09-11
+CL-0066,María Aracely Ramírez Coy,DPI-FICT-000066,5555-1455,Chimaltenango,2026-09-15
+CL-0001,Mario Pedro Alvarado Ramírez,DPI-FICT-000001,5555-1000,Antigua Guatemala,2026-09-19
+CL-0011,Lidia Gladys Chávez Cabrera,DPI-FICT-000011,5555-1070,Amatitlán,2026-09-19
+CL-0025,Gladys Silvia Xiloj Monzón,DPI-FICT-000025,5555-1168,Escuintla,2026-09-19
+CL-0038,Pedro Ricardo Barrios Barrios,DPI-FICT-000038,5555-1259,Guatemala,2026-09-26
+CL-0089,Mario Luis Barrios Reyes,DPI-FICT-000089,5555-1616,Amatitlán,2026-10-07
+CL-0009,Patricia Aracely Solís Ramírez,DPI-FICT-000009,5555-1056,Chimaltenango,2026-10-08
+CL-0056,Carlos Byron Alvarado Coy,DPI-FICT-000056,5555-1385,Chinautla,2026-10-10
+CL-0068,Carlos Walter Méndez Xiloj,DPI-FICT-000068,5555-1469,Guatemala,2026-10-11
+CL-0090,Walter Óscar Estrada Tzoc,DPI-FICT-000090,5555-1623,San Miguel Petapa,2026-10-20
+CL-0055,Luisa Lidia Hernández Morales,DPI-FICT-000055,5555-1378,Escuintla,2026-10-27

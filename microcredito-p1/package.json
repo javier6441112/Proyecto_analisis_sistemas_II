@@ -8,10 +8,14 @@
     "test": "vitest run",
     "generar": "tsx src/generar.ts",
     "validar": "tsx src/validar.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "cargar:datos": "node --import tsx src/persistencia/cargar.ts"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite-pgvector": "^0.0.9",
     "@seriousme/openapi-schema-validator": "^2.4.0",
+    "csv-parse": "^7.0.3",
     "date-fns": "^4.1.0",
     "decimal.js": "^10.4.3",
     "yaml": "^2.7.0",

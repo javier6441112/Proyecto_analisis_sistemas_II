@@ -82,3 +82,18 @@ Los diagramas Mermaid pueden visualizarse en la vista previa Markdown de VS Code
 - Mermaid para representar los diagramas editables de arquitectura, UML y flujos.
 
 La autoria, revision y validacion final del contenido corresponden al equipo del proyecto.
+
+## Proyecto Final — E2
+
+Persistencia PGlite + pgvector y cargador canónico:
+[Guía de instalación, ejecución y pruebas](docs/E2-persistencia-carga.md).
+
+Desde esta carpeta, en PowerShell:
+```powershell
+npm install
+$env:CV_DATA_DIR = (Resolve-Path .\datos\datos-proyecto-final).Path
+$env:CV_DB_DIR = Join-Path $PWD.Path '.cv-db'
+npm run cargar:datos
+```
+
+El núcleo se conserva. Esta fase almacena los datos y prepara vectores; la conexión de los registros al cálculo financiero se implementará después.

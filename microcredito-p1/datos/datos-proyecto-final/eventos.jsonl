@@ -1,0 +1,363 @@
+{"seq":1,"tipo":"CLIENTE","id_cliente":"CL-0030","nombre_completo":"Miguel José Coy Morales","dpi":"DPI-FICT-000030","telefono":"5555-1203","municipio":"Antigua Guatemala","fecha_alta":"2026-01-07"}
+{"seq":2,"tipo":"CLIENTE","id_cliente":"CL-0050","nombre_completo":"Marta María Batz Castillo","dpi":"DPI-FICT-000050","telefono":"5555-1343","municipio":"Chimaltenango","fecha_alta":"2026-01-13"}
+{"seq":3,"tipo":"CLIENTE","id_cliente":"CL-0079","nombre_completo":"Óscar Byron Juárez Solís","dpi":"DPI-FICT-000079","telefono":"5555-1546","municipio":"Chinautla","fecha_alta":"2026-01-14"}
+{"seq":4,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0001","id_cliente":"CL-0030","id_asesor":"AS-01","fecha":"2026-01-14","capital_centavos":2500000,"plazo_meses":12,"tna_bps":3600,"reestructurado":false}
+{"seq":5,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0002","id_cliente":"CL-0050","id_asesor":"AS-06","fecha":"2026-01-16","capital_centavos":500000,"plazo_meses":6,"tna_bps":4000,"reestructurado":false}
+{"seq":6,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0003","id_cliente":"CL-0079","id_asesor":"AS-01","fecha":"2026-01-17","capital_centavos":600000,"plazo_meses":12,"tna_bps":4000,"reestructurado":false}
+{"seq":7,"tipo":"CLIENTE","id_cliente":"CL-0087","nombre_completo":"Juan Ricardo Ordóñez Morales","dpi":"DPI-FICT-000087","telefono":"5555-1602","municipio":"Santa Catarina Pinula","fecha_alta":"2026-01-19"}
+{"seq":8,"tipo":"CLIENTE","id_cliente":"CL-0062","nombre_completo":"Sonia Silvia Tzoc Pérez","dpi":"DPI-FICT-000062","telefono":"5555-1427","municipio":"Villa Nueva","fecha_alta":"2026-01-20"}
+{"seq":9,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0004","id_cliente":"CL-0087","id_asesor":"AS-02","fecha":"2026-01-23","capital_centavos":600000,"plazo_meses":12,"tna_bps":3600,"reestructurado":false}
+{"seq":10,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0005","id_cliente":"CL-0062","id_asesor":"AS-05","fecha":"2026-01-24","capital_centavos":800000,"plazo_meses":12,"tna_bps":4000,"reestructurado":false}
+{"seq":11,"tipo":"CLIENTE","id_cliente":"CL-0082","nombre_completo":"Sonia Rosa Solís Xiloj","dpi":"DPI-FICT-000082","telefono":"5555-1567","municipio":"Mixco","fecha_alta":"2026-02-05"}
+{"seq":12,"tipo":"CLIENTE","id_cliente":"CL-0018","nombre_completo":"Pedro Luis Castillo Cifuentes","dpi":"DPI-FICT-000018","telefono":"5555-1119","municipio":"Amatitlán","fecha_alta":"2026-02-09"}
+{"seq":13,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0006","id_cliente":"CL-0082","id_asesor":"AS-04","fecha":"2026-02-09","capital_centavos":1500000,"plazo_meses":9,"tna_bps":3600,"reestructurado":false}
+{"seq":14,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0007","id_cliente":"CL-0018","id_asesor":"AS-06","fecha":"2026-02-13","capital_centavos":1200000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":15,"tipo":"PAGO","clave_idempotencia":"IDEM-000001","id_credito":"CV-2026-0001","fecha":"2026-02-14","monto_centavos":251155,"canal":"agencia"}
+{"seq":16,"tipo":"CLIENTE","id_cliente":"CL-0010","nombre_completo":"José Óscar Sicán Cifuentes","dpi":"DPI-FICT-000010","telefono":"5555-1063","municipio":"San Miguel Petapa","fecha_alta":"2026-02-15"}
+{"seq":17,"tipo":"PAGO","clave_idempotencia":"IDEM-000013","id_credito":"CV-2026-0002","fecha":"2026-02-16","monto_centavos":93321,"canal":"campo"}
+{"seq":18,"tipo":"CLIENTE","id_cliente":"CL-0044","nombre_completo":"Pedro Fernando Reyes Sicán","dpi":"DPI-FICT-000044","telefono":"5555-1301","municipio":"Escuintla","fecha_alta":"2026-02-17"}
+{"seq":19,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0008","id_cliente":"CL-0010","id_asesor":"AS-03","fecha":"2026-02-17","capital_centavos":1200000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":20,"tipo":"PAGO","clave_idempotencia":"IDEM-000019","id_credito":"CV-2026-0003","fecha":"2026-02-17","monto_centavos":61483,"canal":"campo"}
+{"seq":21,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0009","id_cliente":"CL-0044","id_asesor":"AS-01","fecha":"2026-02-21","capital_centavos":800000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":22,"tipo":"PAGO","clave_idempotencia":"IDEM-000031","id_credito":"CV-2026-0004","fecha":"2026-02-23","monto_centavos":60277,"canal":"campo"}
+{"seq":23,"tipo":"PAGO","clave_idempotencia":"IDEM-000043","id_credito":"CV-2026-0005","fecha":"2026-02-24","monto_centavos":81977,"canal":"campo"}
+{"seq":24,"tipo":"CLIENTE","id_cliente":"CL-0003","nombre_completo":"Blanca Elena Cabrera Sicán","dpi":"DPI-FICT-000003","telefono":"5555-1014","municipio":"Santa Catarina Pinula","fecha_alta":"2026-03-03"}
+{"seq":25,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0010","id_cliente":"CL-0003","id_asesor":"AS-04","fecha":"2026-03-03","capital_centavos":2000000,"plazo_meses":24,"tna_bps":3600,"reestructurado":false}
+{"seq":26,"tipo":"PAGO","clave_idempotencia":"IDEM-000055","id_credito":"CV-2026-0006","fecha":"2026-03-09","monto_centavos":192651,"canal":"campo"}
+{"seq":27,"tipo":"CLIENTE","id_cliente":"CL-0054","nombre_completo":"Aracely Patricia Girón Coy","dpi":"DPI-FICT-000054","telefono":"5555-1371","municipio":"Guatemala","fecha_alta":"2026-03-10"}
+{"seq":28,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0011","id_cliente":"CL-0054","id_asesor":"AS-01","fecha":"2026-03-10","capital_centavos":150000,"plazo_meses":12,"tna_bps":3600,"reestructurado":false}
+{"seq":29,"tipo":"CLIENTE","id_cliente":"CL-0069","nombre_completo":"Héctor Luis García Orellana","dpi":"DPI-FICT-000069","telefono":"5555-1476","municipio":"Mixco","fecha_alta":"2026-03-11"}
+{"seq":30,"tipo":"PAGO","clave_idempotencia":"IDEM-000064","id_credito":"CV-2026-0007","fecha":"2026-03-13","monto_centavos":221517,"canal":"agencia"}
+{"seq":31,"tipo":"PAGO","clave_idempotencia":"IDEM-000002","id_credito":"CV-2026-0001","fecha":"2026-03-14","monto_centavos":251155,"canal":"campo"}
+{"seq":32,"tipo":"CLIENTE","id_cliente":"CL-0083","nombre_completo":"José Óscar Hernández Coy","dpi":"DPI-FICT-000083","telefono":"5555-1574","municipio":"Guatemala","fecha_alta":"2026-03-16"}
+{"seq":33,"tipo":"PAGO","clave_idempotencia":"IDEM-000014","id_credito":"CV-2026-0002","fecha":"2026-03-16","monto_centavos":93321,"canal":"campo"}
+{"seq":34,"tipo":"CLIENTE","id_cliente":"CL-0036","nombre_completo":"Óscar Marvin Coy Barrios","dpi":"DPI-FICT-000036","telefono":"5555-1245","municipio":"Antigua Guatemala","fecha_alta":"2026-03-17"}
+{"seq":35,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0012","id_cliente":"CL-0069","id_asesor":"AS-06","fecha":"2026-03-17","capital_centavos":400000,"plazo_meses":12,"tna_bps":3600,"reestructurado":false}
+{"seq":36,"tipo":"PAGO","clave_idempotencia":"IDEM-000020","id_credito":"CV-2026-0003","fecha":"2026-03-17","monto_centavos":61483,"canal":"agencia"}
+{"seq":37,"tipo":"CLIENTE","id_cliente":"CL-0059","nombre_completo":"Blanca Rebeca Ramírez Cifuentes","dpi":"DPI-FICT-000059","telefono":"5555-1406","municipio":"Chimaltenango","fecha_alta":"2026-03-20"}
+{"seq":38,"tipo":"PAGO","clave_idempotencia":"IDEM-000070","id_credito":"CV-2026-0008","fecha":"2026-03-20","monto_centavos":221888,"canal":"campo"}
+{"seq":39,"tipo":"CLIENTE","id_cliente":"CL-0073","nombre_completo":"Dora Irma López Sicán","dpi":"DPI-FICT-000073","telefono":"5555-1504","municipio":"Guatemala","fecha_alta":"2026-03-22"}
+{"seq":40,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0013","id_cliente":"CL-0083","id_asesor":"AS-03","fecha":"2026-03-22","capital_centavos":200000,"plazo_meses":8,"tna_bps":3600,"reestructurado":false}
+{"seq":41,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0014","id_cliente":"CL-0059","id_asesor":"AS-05","fecha":"2026-03-23","capital_centavos":500000,"plazo_meses":9,"tna_bps":3600,"reestructurado":false}
+{"seq":42,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0015","id_cliente":"CL-0036","id_asesor":"AS-02","fecha":"2026-03-23","capital_centavos":150000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":43,"tipo":"PAGO","clave_idempotencia":"IDEM-000032","id_credito":"CV-2026-0004","fecha":"2026-03-23","monto_centavos":60277,"canal":"campo"}
+{"seq":44,"tipo":"PAGO","clave_idempotencia":"IDEM-000044","id_credito":"CV-2026-0005","fecha":"2026-03-24","monto_centavos":81977,"canal":"campo"}
+{"seq":45,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0016","id_cliente":"CL-0079","id_asesor":"AS-04","fecha":"2026-03-28","capital_centavos":2500000,"plazo_meses":3,"tna_bps":3000,"reestructurado":false}
+{"seq":46,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0017","id_cliente":"CL-0073","id_asesor":"AS-05","fecha":"2026-03-28","capital_centavos":2000000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":47,"tipo":"CLIENTE","id_cliente":"CL-0039","nombre_completo":"Dora Patricia Cifuentes García","dpi":"DPI-FICT-000039","telefono":"5555-1266","municipio":"Chinautla","fecha_alta":"2026-03-30"}
+{"seq":48,"tipo":"CLIENTE","id_cliente":"CL-0065","nombre_completo":"Fernando Byron Monzón Alvarado","dpi":"DPI-FICT-000065","telefono":"5555-1448","municipio":"Villa Nueva","fecha_alta":"2026-03-31"}
+{"seq":49,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0018","id_cliente":"CL-0065","id_asesor":"AS-02","fecha":"2026-04-01","capital_centavos":300000,"plazo_meses":12,"tna_bps":3000,"reestructurado":false}
+{"seq":50,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0019","id_cliente":"CL-0039","id_asesor":"AS-06","fecha":"2026-04-03","capital_centavos":1200000,"plazo_meses":12,"tna_bps":4000,"reestructurado":false}
+{"seq":51,"tipo":"PAGO","clave_idempotencia":"IDEM-000082","id_credito":"CV-2026-0010","fecha":"2026-04-03","monto_centavos":118095,"canal":"transferencia"}
+{"seq":52,"tipo":"PAGO","clave_idempotencia":"IDEM-000076","id_credito":"CV-2026-0009","fecha":"2026-04-04","monto_centavos":148832,"canal":"campo"}
+{"seq":53,"tipo":"CLIENTE","id_cliente":"CL-0033","nombre_completo":"Héctor Fernando Xiloj Estrada","dpi":"DPI-FICT-000033","telefono":"5555-1224","municipio":"Amatitlán","fecha_alta":"2026-04-08"}
+{"seq":54,"tipo":"PAGO","clave_idempotencia":"IDEM-000056","id_credito":"CV-2026-0006","fecha":"2026-04-09","monto_centavos":192651,"canal":"transferencia"}
+{"seq":55,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0020","id_cliente":"CL-0033","id_asesor":"AS-06","fecha":"2026-04-10","capital_centavos":600000,"plazo_meses":18,"tna_bps":3600,"reestructurado":false}
+{"seq":56,"tipo":"PAGO","clave_idempotencia":"IDEM-000065","id_credito":"CV-2026-0007","fecha":"2026-04-13","monto_centavos":221517,"canal":"transferencia"}
+{"seq":57,"tipo":"PAGO","clave_idempotencia":"IDEM-000015","id_credito":"CV-2026-0002","fecha":"2026-04-16","monto_centavos":93321,"canal":"transferencia"}
+{"seq":58,"tipo":"PAGO","clave_idempotencia":"IDEM-000021","id_credito":"CV-2026-0003","fecha":"2026-04-17","monto_centavos":61483,"canal":"campo"}
+{"seq":59,"tipo":"PAGO","clave_idempotencia":"IDEM-000107","id_credito":"CV-2026-0012","fecha":"2026-04-17","monto_centavos":40185,"canal":"agencia"}
+{"seq":60,"tipo":"CLIENTE","id_cliente":"CL-0005","nombre_completo":"Miguel Héctor Cabrera Coy","dpi":"DPI-FICT-000005","telefono":"5555-1028","municipio":"Santa Catarina Pinula","fecha_alta":"2026-04-20"}
+{"seq":61,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0021","id_cliente":"CL-0005","id_asesor":"AS-02","fecha":"2026-04-21","capital_centavos":600000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":62,"tipo":"PAGO","clave_idempotencia":"IDEM-000077","id_credito":"CV-2026-0009","fecha":"2026-04-21","monto_centavos":147678,"canal":"agencia"}
+{"seq":63,"tipo":"PAGO","clave_idempotencia":"IDEM-000119","id_credito":"CV-2026-0013","fecha":"2026-04-22","monto_centavos":28491,"canal":"campo"}
+{"seq":64,"tipo":"PAGO","clave_idempotencia":"IDEM-000095","id_credito":"CV-2026-0011","fecha":"2026-04-23","monto_centavos":15161,"canal":"campo"}
+{"seq":65,"tipo":"PAGO","clave_idempotencia":"IDEM-000122","id_credito":"CV-2026-0014","fecha":"2026-04-23","monto_centavos":64217,"canal":"agencia"}
+{"seq":66,"tipo":"PAGO","clave_idempotencia":"IDEM-000131","id_credito":"CV-2026-0015","fecha":"2026-04-23","monto_centavos":27690,"canal":"transferencia"}
+{"seq":67,"tipo":"PAGO","clave_idempotencia":"IDEM-000045","id_credito":"CV-2026-0005","fecha":"2026-04-24","monto_centavos":81977,"canal":"agencia"}
+{"seq":68,"tipo":"PAGO","clave_idempotencia":"IDEM-000003","id_credito":"CV-2026-0001","fecha":"2026-04-25","monto_centavos":252525,"canal":"campo"}
+{"seq":69,"tipo":"PAGO","clave_idempotencia":"IDEM-000033","id_credito":"CV-2026-0004","fecha":"2026-04-27","monto_centavos":60397,"canal":"agencia"}
+{"seq":70,"tipo":"CLIENTE","id_cliente":"CL-0088","nombre_completo":"Mario Luis Cifuentes Ramírez","dpi":"DPI-FICT-000088","telefono":"5555-1609","municipio":"Guatemala","fecha_alta":"2026-04-28"}
+{"seq":71,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0022","id_cliente":"CL-0088","id_asesor":"AS-06","fecha":"2026-04-28","capital_centavos":150000,"plazo_meses":7,"tna_bps":3600,"reestructurado":false}
+{"seq":72,"tipo":"PAGO","clave_idempotencia":"IDEM-000071","id_credito":"CV-2026-0008","fecha":"2026-04-28","monto_centavos":222918,"canal":"campo"}
+{"seq":73,"tipo":"PAGO","clave_idempotencia":"IDEM-000133","id_credito":"CV-2026-0016","fecha":"2026-04-28","monto_centavos":875343,"canal":"agencia"}
+{"seq":74,"tipo":"PAGO","clave_idempotencia":"IDEM-000136","id_credito":"CV-2026-0017","fecha":"2026-04-28","monto_centavos":369195,"canal":"transferencia"}
+{"seq":75,"tipo":"PAGO","clave_idempotencia":"IDEM-000142","id_credito":"CV-2026-0018","fecha":"2026-05-01","monto_centavos":29246,"canal":"campo"}
+{"seq":76,"tipo":"PAGO","clave_idempotencia":"IDEM-000083","id_credito":"CV-2026-0010","fecha":"2026-05-03","monto_centavos":118095,"canal":"transferencia"}
+{"seq":77,"tipo":"PAGO","clave_idempotencia":"IDEM-000154","id_credito":"CV-2026-0019","fecha":"2026-05-03","monto_centavos":122966,"canal":"agencia"}
+{"seq":78,"tipo":"CLIENTE","id_cliente":"CL-0053","nombre_completo":"Héctor Ricardo López Méndez","dpi":"DPI-FICT-000053","telefono":"5555-1364","municipio":"Escuintla","fecha_alta":"2026-05-04"}
+{"seq":79,"tipo":"CLIENTE","id_cliente":"CL-0004","nombre_completo":"Marvin Fernando Ajú Ajú","dpi":"DPI-FICT-000004","telefono":"5555-1021","municipio":"Chimaltenango","fecha_alta":"2026-05-06"}
+{"seq":80,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0023","id_cliente":"CL-0073","id_asesor":"AS-01","fecha":"2026-05-09","capital_centavos":100000,"plazo_meses":24,"tna_bps":4000,"reestructurado":false}
+{"seq":81,"tipo":"PAGO","clave_idempotencia":"IDEM-000057","id_credito":"CV-2026-0006","fecha":"2026-05-09","monto_centavos":192651,"canal":"transferencia"}
+{"seq":82,"tipo":"PAGO","clave_idempotencia":"IDEM-000166","id_credito":"CV-2026-0020","fecha":"2026-05-10","monto_centavos":43625,"canal":"transferencia"}
+{"seq":83,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0024","id_cliente":"CL-0053","id_asesor":"AS-05","fecha":"2026-05-11","capital_centavos":1200000,"plazo_meses":6,"tna_bps":4000,"reestructurado":false}
+{"seq":84,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0025","id_cliente":"CL-0004","id_asesor":"AS-05","fecha":"2026-05-12","capital_centavos":2000000,"plazo_meses":12,"tna_bps":3600,"reestructurado":false}
+{"seq":85,"tipo":"PAGO","clave_idempotencia":"IDEM-000096","id_credito":"CV-2026-0011","fecha":"2026-05-12","monto_centavos":15084,"canal":"transferencia"}
+{"seq":86,"tipo":"PAGO","clave_idempotencia":"IDEM-000066","id_credito":"CV-2026-0007","fecha":"2026-05-13","monto_centavos":221517,"canal":"campo"}
+{"seq":87,"tipo":"PAGO","clave_idempotencia":"IDEM-000004","id_credito":"CV-2026-0001","fecha":"2026-05-14","monto_centavos":251155,"canal":"agencia"}
+{"seq":88,"tipo":"CLIENTE","id_cliente":"CL-0081","nombre_completo":"Ana Blanca Hernández Ordóñez","dpi":"DPI-FICT-000081","telefono":"5555-1560","municipio":"Guatemala","fecha_alta":"2026-05-16"}
+{"seq":89,"tipo":"CLIENTE","id_cliente":"CL-0084","nombre_completo":"Edgar Miguel Orellana Ordóñez","dpi":"DPI-FICT-000084","telefono":"5555-1581","municipio":"Escuintla","fecha_alta":"2026-05-16"}
+{"seq":90,"tipo":"PAGO","clave_idempotencia":"IDEM-000016","id_credito":"CV-2026-0002","fecha":"2026-05-16","monto_centavos":93321,"canal":"transferencia"}
+{"seq":91,"tipo":"CLIENTE","id_cliente":"CL-0021","nombre_completo":"Rebeca Marta Orellana Coy","dpi":"DPI-FICT-000021","telefono":"5555-1140","municipio":"Santa Catarina Pinula","fecha_alta":"2026-05-17"}
+{"seq":92,"tipo":"PAGO","clave_idempotencia":"IDEM-000022","id_credito":"CV-2026-0003","fecha":"2026-05-17","monto_centavos":61483,"canal":"campo"}
+{"seq":93,"tipo":"PAGO","clave_idempotencia":"IDEM-000108","id_credito":"CV-2026-0012","fecha":"2026-05-17","monto_centavos":40185,"canal":"campo"}
+{"seq":94,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0026","id_cliente":"CL-0081","id_asesor":"AS-06","fecha":"2026-05-18","capital_centavos":2000000,"plazo_meses":24,"tna_bps":3000,"reestructurado":false}
+{"seq":95,"tipo":"CLIENTE","id_cliente":"CL-0028","nombre_completo":"Marvin Walter Tzoc Tzoc","dpi":"DPI-FICT-000028","telefono":"5555-1189","municipio":"Antigua Guatemala","fecha_alta":"2026-05-20"}
+{"seq":96,"tipo":"PAGO","clave_idempotencia":"IDEM-000078","id_credito":"CV-2026-0009","fecha":"2026-05-21","monto_centavos":147678,"canal":"agencia"}
+{"seq":97,"tipo":"PAGO","clave_idempotencia":"IDEM-000178","id_credito":"CV-2026-0021","fecha":"2026-05-21","monto_centavos":110759,"canal":"agencia"}
+{"seq":98,"tipo":"PAGO","clave_idempotencia":"IDEM-000120","id_credito":"CV-2026-0013","fecha":"2026-05-22","monto_centavos":28491,"canal":"transferencia"}
+{"seq":99,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0027","id_cliente":"CL-0084","id_asesor":"AS-03","fecha":"2026-05-23","capital_centavos":250000,"plazo_meses":18,"tna_bps":3600,"reestructurado":false}
+{"seq":100,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0028","id_cliente":"CL-0028","id_asesor":"AS-03","fecha":"2026-05-23","capital_centavos":150000,"plazo_meses":6,"tna_bps":3000,"reestructurado":false}
+{"seq":101,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0029","id_cliente":"CL-0021","id_asesor":"AS-04","fecha":"2026-05-23","capital_centavos":1500000,"plazo_meses":3,"tna_bps":3600,"reestructurado":false}
+{"seq":102,"tipo":"PAGO","clave_idempotencia":"IDEM-000123","id_credito":"CV-2026-0014","fecha":"2026-05-23","monto_centavos":64217,"canal":"agencia"}
+{"seq":103,"tipo":"PAGO","clave_idempotencia":"IDEM-000132","id_credito":"CV-2026-0015","fecha":"2026-05-23","monto_centavos":27690,"canal":"campo"}
+{"seq":104,"tipo":"CLIENTE","id_cliente":"CL-0013","nombre_completo":"Fernando Óscar Ramírez Coy","dpi":"DPI-FICT-000013","telefono":"5555-1084","municipio":"Amatitlán","fecha_alta":"2026-05-24"}
+{"seq":105,"tipo":"PAGO","clave_idempotencia":"IDEM-000046","id_credito":"CV-2026-0005","fecha":"2026-05-24","monto_centavos":81977,"canal":"agencia"}
+{"seq":106,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0030","id_cliente":"CL-0013","id_asesor":"AS-03","fecha":"2026-05-27","capital_centavos":100000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":107,"tipo":"PAGO","clave_idempotencia":"IDEM-000134","id_credito":"CV-2026-0016","fecha":"2026-05-28","monto_centavos":875343,"canal":"campo"}
+{"seq":108,"tipo":"PAGO","clave_idempotencia":"IDEM-000137","id_credito":"CV-2026-0017","fecha":"2026-05-28","monto_centavos":369195,"canal":"transferencia"}
+{"seq":109,"tipo":"PAGO","clave_idempotencia":"IDEM-000184","id_credito":"CV-2026-0022","fecha":"2026-05-28","monto_centavos":24076,"canal":"agencia"}
+{"seq":110,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0031","id_cliente":"CL-0082","id_asesor":"AS-03","fecha":"2026-06-01","capital_centavos":1200000,"plazo_meses":18,"tna_bps":3600,"reestructurado":false}
+{"seq":111,"tipo":"PAGO","clave_idempotencia":"IDEM-000143","id_credito":"CV-2026-0018","fecha":"2026-06-01","monto_centavos":29246,"canal":"campo"}
+{"seq":112,"tipo":"PAGO","clave_idempotencia":"IDEM-000072","id_credito":"CV-2026-0008","fecha":"2026-06-03","monto_centavos":223748,"canal":"transferencia"}
+{"seq":113,"tipo":"PAGO","clave_idempotencia":"IDEM-000084","id_credito":"CV-2026-0010","fecha":"2026-06-03","monto_centavos":118095,"canal":"transferencia"}
+{"seq":114,"tipo":"PAGO","clave_idempotencia":"IDEM-000155","id_credito":"CV-2026-0019","fecha":"2026-06-03","monto_centavos":122966,"canal":"agencia"}
+{"seq":115,"tipo":"PAGO","clave_idempotencia":"IDEM-000034","id_credito":"CV-2026-0004","fecha":"2026-06-09","monto_centavos":60801,"canal":"agencia"}
+{"seq":116,"tipo":"PAGO","clave_idempotencia":"IDEM-000058","id_credito":"CV-2026-0006","fecha":"2026-06-09","monto_centavos":192651,"canal":"campo"}
+{"seq":117,"tipo":"PAGO","clave_idempotencia":"IDEM-000185","id_credito":"CV-2026-0023","fecha":"2026-06-09","monto_centavos":6119,"canal":"transferencia"}
+{"seq":118,"tipo":"PAGO","clave_idempotencia":"IDEM-000097","id_credito":"CV-2026-0011","fecha":"2026-06-10","monto_centavos":15069,"canal":"transferencia"}
+{"seq":119,"tipo":"PAGO","clave_idempotencia":"IDEM-000167","id_credito":"CV-2026-0020","fecha":"2026-06-10","monto_centavos":43625,"canal":"transferencia"}
+{"seq":120,"tipo":"CLIENTE","id_cliente":"CL-0024","nombre_completo":"Óscar Víctor Ramírez Solís","dpi":"DPI-FICT-000024","telefono":"5555-1161","municipio":"Guatemala","fecha_alta":"2026-06-11"}
+{"seq":121,"tipo":"PAGO","clave_idempotencia":"IDEM-000196","id_credito":"CV-2026-0024","fecha":"2026-06-11","monto_centavos":223970,"canal":"campo"}
+{"seq":122,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0032","id_cliente":"CL-0024","id_asesor":"AS-03","fecha":"2026-06-13","capital_centavos":250000,"plazo_meses":18,"tna_bps":3600,"reestructurado":false}
+{"seq":123,"tipo":"PAGO","clave_idempotencia":"IDEM-000067","id_credito":"CV-2026-0007","fecha":"2026-06-13","monto_centavos":221517,"canal":"campo"}
+{"seq":124,"tipo":"PAGO","clave_idempotencia":"IDEM-000005","id_credito":"CV-2026-0001","fecha":"2026-06-14","monto_centavos":251155,"canal":"agencia"}
+{"seq":125,"tipo":"CLIENTE","id_cliente":"CL-0006","nombre_completo":"Ana Rosa Cabrera Morales","dpi":"DPI-FICT-000006","telefono":"5555-1035","municipio":"Mixco","fecha_alta":"2026-06-16"}
+{"seq":126,"tipo":"PAGO","clave_idempotencia":"IDEM-000017","id_credito":"CV-2026-0002","fecha":"2026-06-16","monto_centavos":93321,"canal":"campo"}
+{"seq":127,"tipo":"PAGO","clave_idempotencia":"IDEM-000023","id_credito":"CV-2026-0003","fecha":"2026-06-17","monto_centavos":61483,"canal":"transferencia"}
+{"seq":128,"tipo":"PAGO","clave_idempotencia":"IDEM-000073","id_credito":"CV-2026-0008","fecha":"2026-06-17","monto_centavos":221517,"canal":"agencia"}
+{"seq":129,"tipo":"PAGO","clave_idempotencia":"IDEM-000109","id_credito":"CV-2026-0012","fecha":"2026-06-17","monto_centavos":40185,"canal":"campo"}
+{"seq":130,"tipo":"PAGO","clave_idempotencia":"IDEM-000202","id_credito":"CV-2026-0025","fecha":"2026-06-17","monto_centavos":201394,"canal":"campo"}
+{"seq":131,"tipo":"PAGO","clave_idempotencia":"IDEM-000213","id_credito":"CV-2026-0026","fecha":"2026-06-18","monto_centavos":111826,"canal":"campo"}
+{"seq":132,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0033","id_cliente":"CL-0018","id_asesor":"AS-05","fecha":"2026-06-20","capital_centavos":500000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":133,"tipo":"PAGO","clave_idempotencia":"IDEM-000079","id_credito":"CV-2026-0009","fecha":"2026-06-21","monto_centavos":147678,"canal":"campo"}
+{"seq":134,"tipo":"PAGO","clave_idempotencia":"IDEM-000179","id_credito":"CV-2026-0021","fecha":"2026-06-21","monto_centavos":110759,"canal":"agencia"}
+{"seq":135,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0034","id_cliente":"CL-0033","id_asesor":"AS-03","fecha":"2026-06-22","capital_centavos":1200000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":136,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0035","id_cliente":"CL-0006","id_asesor":"AS-01","fecha":"2026-06-22","capital_centavos":150000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":137,"tipo":"PAGO","clave_idempotencia":"IDEM-000121","id_credito":"CV-2026-0013","fecha":"2026-06-22","monto_centavos":28491,"canal":"campo"}
+{"seq":138,"tipo":"PAGO","clave_idempotencia":"IDEM-000035","id_credito":"CV-2026-0004","fecha":"2026-06-23","monto_centavos":60277,"canal":"campo"}
+{"seq":139,"tipo":"PAGO","clave_idempotencia":"IDEM-000124","id_credito":"CV-2026-0014","fecha":"2026-06-23","monto_centavos":64217,"canal":"agencia"}
+{"seq":140,"tipo":"PAGO","clave_idempotencia":"IDEM-000224","id_credito":"CV-2026-0027","fecha":"2026-06-23","monto_centavos":18177,"canal":"agencia"}
+{"seq":141,"tipo":"PAGO","clave_idempotencia":"IDEM-000235","id_credito":"CV-2026-0028","fecha":"2026-06-23","monto_centavos":27232,"canal":"transferencia"}
+{"seq":142,"tipo":"PAGO","clave_idempotencia":"IDEM-000241","id_credito":"CV-2026-0029","fecha":"2026-06-23","monto_centavos":530296,"canal":"campo"}
+{"seq":143,"tipo":"PAGO","clave_idempotencia":"IDEM-000047","id_credito":"CV-2026-0005","fecha":"2026-06-24","monto_centavos":81977,"canal":"campo"}
+{"seq":144,"tipo":"CLIENTE","id_cliente":"CL-0008","nombre_completo":"Blanca Elena García Cifuentes","dpi":"DPI-FICT-000008","telefono":"5555-1049","municipio":"Chimaltenango","fecha_alta":"2026-06-26"}
+{"seq":145,"tipo":"PAGO","clave_idempotencia":"IDEM-000244","id_credito":"CV-2026-0030","fecha":"2026-06-27","monto_centavos":18460,"canal":"campo"}
+{"seq":146,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0036","id_cliente":"CL-0008","id_asesor":"AS-02","fecha":"2026-06-28","capital_centavos":300000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":147,"tipo":"PAGO","clave_idempotencia":"IDEM-000135","id_credito":"CV-2026-0016","fecha":"2026-06-28","monto_centavos":875343,"canal":"transferencia"}
+{"seq":148,"tipo":"PAGO","clave_idempotencia":"IDEM-000138","id_credito":"CV-2026-0017","fecha":"2026-06-28","monto_centavos":369195,"canal":"agencia"}
+{"seq":149,"tipo":"PAGO","clave_idempotencia":"IDEM-000144","id_credito":"CV-2026-0018","fecha":"2026-07-01","monto_centavos":29246,"canal":"campo"}
+{"seq":150,"tipo":"PAGO","clave_idempotencia":"IDEM-000246","id_credito":"CV-2026-0031","fecha":"2026-07-01","monto_centavos":87250,"canal":"campo"}
+{"seq":151,"tipo":"PAGO","clave_idempotencia":"IDEM-000085","id_credito":"CV-2026-0010","fecha":"2026-07-03","monto_centavos":118095,"canal":"campo"}
+{"seq":152,"tipo":"PAGO","clave_idempotencia":"IDEM-000156","id_credito":"CV-2026-0019","fecha":"2026-07-03","monto_centavos":122966,"canal":"transferencia"}
+{"seq":153,"tipo":"CLIENTE","id_cliente":"CL-0042","nombre_completo":"Óscar Héctor Pérez Orellana","dpi":"DPI-FICT-000042","telefono":"5555-1287","municipio":"Amatitlán","fecha_alta":"2026-07-08"}
+{"seq":154,"tipo":"CLIENTE","id_cliente":"CL-0043","nombre_completo":"Pedro Fernando Reyes López","dpi":"DPI-FICT-000043","telefono":"5555-1294","municipio":"San Miguel Petapa","fecha_alta":"2026-07-09"}
+{"seq":155,"tipo":"PAGO","clave_idempotencia":"IDEM-000059","id_credito":"CV-2026-0006","fecha":"2026-07-09","monto_centavos":192651,"canal":"campo"}
+{"seq":156,"tipo":"PAGO","clave_idempotencia":"IDEM-000186","id_credito":"CV-2026-0023","fecha":"2026-07-09","monto_centavos":6119,"canal":"agencia"}
+{"seq":157,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0037","id_cliente":"CL-0042","id_asesor":"AS-04","fecha":"2026-07-10","capital_centavos":1200000,"plazo_meses":12,"tna_bps":3000,"reestructurado":false}
+{"seq":158,"tipo":"PAGO","clave_idempotencia":"IDEM-000098","id_credito":"CV-2026-0011","fecha":"2026-07-10","monto_centavos":15069,"canal":"transferencia"}
+{"seq":159,"tipo":"PAGO","clave_idempotencia":"IDEM-000168","id_credito":"CV-2026-0020","fecha":"2026-07-10","monto_centavos":43625,"canal":"campo"}
+{"seq":160,"tipo":"PAGO","clave_idempotencia":"IDEM-000197","id_credito":"CV-2026-0024","fecha":"2026-07-11","monto_centavos":223970,"canal":"campo"}
+{"seq":161,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0201","id_cliente":"CL-0087","id_asesor":"AS-04","fecha":"2026-07-13","capital_centavos":600000,"plazo_meses":12,"tna_bps":3600,"reestructurado":true}
+{"seq":162,"tipo":"PAGO","clave_idempotencia":"IDEM-000068","id_credito":"CV-2026-0007","fecha":"2026-07-13","monto_centavos":221517,"canal":"campo"}
+{"seq":163,"tipo":"PAGO","clave_idempotencia":"IDEM-000256","id_credito":"CV-2026-0032","fecha":"2026-07-13","monto_centavos":18177,"canal":"agencia"}
+{"seq":164,"tipo":"PAGO","clave_idempotencia":"IDEM-000068","id_credito":"CV-2026-0007","fecha":"2026-07-13","monto_centavos":221517,"canal":"campo"}
+{"seq":165,"tipo":"PAGO","clave_idempotencia":"IDEM-000006","id_credito":"CV-2026-0001","fecha":"2026-07-14","monto_centavos":251155,"canal":"campo"}
+{"seq":166,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0038","id_cliente":"CL-0043","id_asesor":"AS-03","fecha":"2026-07-15","capital_centavos":500000,"plazo_meses":24,"tna_bps":4000,"reestructurado":false}
+{"seq":167,"tipo":"PAGO","clave_idempotencia":"IDEM-000203","id_credito":"CV-2026-0025","fecha":"2026-07-15","monto_centavos":201214,"canal":"campo"}
+{"seq":168,"tipo":"CLIENTE","id_cliente":"CL-0016","nombre_completo":"Gladys Sandra Estrada Solís","dpi":"DPI-FICT-000016","telefono":"5555-1105","municipio":"Escuintla","fecha_alta":"2026-07-16"}
+{"seq":169,"tipo":"CLIENTE","id_cliente":"CL-0020","nombre_completo":"Juan Víctor Ajú Girón","dpi":"DPI-FICT-000020","telefono":"5555-1133","municipio":"Antigua Guatemala","fecha_alta":"2026-07-16"}
+{"seq":170,"tipo":"PAGO","clave_idempotencia":"IDEM-000018","id_credito":"CV-2026-0002","fecha":"2026-07-16","monto_centavos":93322,"canal":"transferencia"}
+{"seq":171,"tipo":"PAGO","clave_idempotencia":"IDEM-000024","id_credito":"CV-2026-0003","fecha":"2026-07-17","monto_centavos":61483,"canal":"campo"}
+{"seq":172,"tipo":"PAGO","clave_idempotencia":"IDEM-000110","id_credito":"CV-2026-0012","fecha":"2026-07-17","monto_centavos":40185,"canal":"campo"}
+{"seq":173,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0039","id_cliente":"CL-0020","id_asesor":"AS-01","fecha":"2026-07-18","capital_centavos":1200000,"plazo_meses":24,"tna_bps":4000,"reestructurado":false}
+{"seq":174,"tipo":"PAGO","clave_idempotencia":"IDEM-000214","id_credito":"CV-2026-0026","fecha":"2026-07-18","monto_centavos":111826,"canal":"campo"}
+{"seq":175,"tipo":"PAGO","clave_idempotencia":"IDEM-000266","id_credito":"CV-2026-0033","fecha":"2026-07-20","monto_centavos":92299,"canal":"agencia"}
+{"seq":176,"tipo":"PAGO","clave_idempotencia":"IDEM-000080","id_credito":"CV-2026-0009","fecha":"2026-07-21","monto_centavos":147678,"canal":"agencia"}
+{"seq":177,"tipo":"PAGO","clave_idempotencia":"IDEM-000180","id_credito":"CV-2026-0021","fecha":"2026-07-21","monto_centavos":110759,"canal":"campo"}
+{"seq":178,"tipo":"PAGO","clave_idempotencia":"IDEM-000272","id_credito":"CV-2026-0034","fecha":"2026-07-22","monto_centavos":221517,"canal":"transferencia"}
+{"seq":179,"tipo":"PAGO","clave_idempotencia":"IDEM-000276","id_credito":"CV-2026-0035","fecha":"2026-07-22","monto_centavos":27690,"canal":"campo"}
+{"seq":180,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0040","id_cliente":"CL-0016","id_asesor":"AS-01","fecha":"2026-07-23","capital_centavos":800000,"plazo_meses":3,"tna_bps":3600,"reestructurado":false}
+{"seq":181,"tipo":"PAGO","clave_idempotencia":"IDEM-000125","id_credito":"CV-2026-0014","fecha":"2026-07-23","monto_centavos":64217,"canal":"transferencia"}
+{"seq":182,"tipo":"PAGO","clave_idempotencia":"IDEM-000225","id_credito":"CV-2026-0027","fecha":"2026-07-23","monto_centavos":18177,"canal":"campo"}
+{"seq":183,"tipo":"PAGO","clave_idempotencia":"IDEM-000236","id_credito":"CV-2026-0028","fecha":"2026-07-23","monto_centavos":27232,"canal":"campo"}
+{"seq":184,"tipo":"PAGO","clave_idempotencia":"IDEM-000242","id_credito":"CV-2026-0029","fecha":"2026-07-23","monto_centavos":530296,"canal":"agencia"}
+{"seq":185,"tipo":"PAGO","clave_idempotencia":"IDEM-000048","id_credito":"CV-2026-0005","fecha":"2026-07-24","monto_centavos":81977,"canal":"campo"}
+{"seq":186,"tipo":"PAGO","clave_idempotencia":"IDEM-000074","id_credito":"CV-2026-0008","fecha":"2026-07-24","monto_centavos":222491,"canal":"campo"}
+{"seq":187,"tipo":"PAGO","clave_idempotencia":"IDEM-000245","id_credito":"CV-2026-0030","fecha":"2026-07-27","monto_centavos":18460,"canal":"transferencia"}
+{"seq":188,"tipo":"PAGO","clave_idempotencia":"IDEM-000139","id_credito":"CV-2026-0017","fecha":"2026-07-28","monto_centavos":369195,"canal":"campo"}
+{"seq":189,"tipo":"PAGO","clave_idempotencia":"IDEM-000145","id_credito":"CV-2026-0018","fecha":"2026-08-01","monto_centavos":29246,"canal":"campo"}
+{"seq":190,"tipo":"CLIENTE","id_cliente":"CL-0060","nombre_completo":"Elena Sonia Alvarado Méndez","dpi":"DPI-FICT-000060","telefono":"5555-1413","municipio":"Chimaltenango","fecha_alta":"2026-08-02"}
+{"seq":191,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0041","id_cliente":"CL-0043","id_asesor":"AS-02","fecha":"2026-08-02","capital_centavos":200000,"plazo_meses":5,"tna_bps":3600,"reestructurado":false}
+{"seq":192,"tipo":"CLIENTE","id_cliente":"CL-0019","nombre_completo":"María Dora Alvarado Sicán","dpi":"DPI-FICT-000019","telefono":"5555-1126","municipio":"Villa Nueva","fecha_alta":"2026-08-03"}
+{"seq":193,"tipo":"PAGO","clave_idempotencia":"IDEM-000086","id_credito":"CV-2026-0010","fecha":"2026-08-03","monto_centavos":118095,"canal":"campo"}
+{"seq":194,"tipo":"PAGO","clave_idempotencia":"IDEM-000157","id_credito":"CV-2026-0019","fecha":"2026-08-03","monto_centavos":122966,"canal":"transferencia"}
+{"seq":195,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0042","id_cliente":"CL-0019","id_asesor":"AS-02","fecha":"2026-08-05","capital_centavos":800000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":196,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0043","id_cliente":"CL-0060","id_asesor":"AS-01","fecha":"2026-08-06","capital_centavos":300000,"plazo_meses":6,"tna_bps":3000,"reestructurado":false}
+{"seq":197,"tipo":"PAGO","clave_idempotencia":"IDEM-000060","id_credito":"CV-2026-0006","fecha":"2026-08-09","monto_centavos":192651,"canal":"campo"}
+{"seq":198,"tipo":"PAGO","clave_idempotencia":"IDEM-000187","id_credito":"CV-2026-0023","fecha":"2026-08-09","monto_centavos":6119,"canal":"agencia"}
+{"seq":199,"tipo":"CLIENTE","id_cliente":"CL-0047","nombre_completo":"Carmen Sandra Sicán García","dpi":"DPI-FICT-000047","telefono":"5555-1322","municipio":"Santa Catarina Pinula","fecha_alta":"2026-08-10"}
+{"seq":200,"tipo":"PAGO","clave_idempotencia":"IDEM-000169","id_credito":"CV-2026-0020","fecha":"2026-08-10","monto_centavos":43625,"canal":"campo"}
+{"seq":201,"tipo":"PAGO","clave_idempotencia":"IDEM-000277","id_credito":"CV-2026-0037","fecha":"2026-08-10","monto_centavos":116985,"canal":"agencia"}
+{"seq":202,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0044","id_cliente":"CL-0047","id_asesor":"AS-06","fecha":"2026-08-11","capital_centavos":1200000,"plazo_meses":18,"tna_bps":3600,"reestructurado":false}
+{"seq":203,"tipo":"PAGO","clave_idempotencia":"IDEM-000198","id_credito":"CV-2026-0024","fecha":"2026-08-11","monto_centavos":223970,"canal":"agencia"}
+{"seq":204,"tipo":"PAGO","clave_idempotencia":"IDEM-000036","id_credito":"CV-2026-0004","fecha":"2026-08-12","monto_centavos":60930,"canal":"transferencia"}
+{"seq":205,"tipo":"PAGO","clave_idempotencia":"IDEM-000069","id_credito":"CV-2026-0007","fecha":"2026-08-13","monto_centavos":221517,"canal":"campo"}
+{"seq":206,"tipo":"PAGO","clave_idempotencia":"IDEM-000257","id_credito":"CV-2026-0032","fecha":"2026-08-13","monto_centavos":18177,"canal":"transferencia"}
+{"seq":207,"tipo":"PAGO","clave_idempotencia":"IDEM-000286","id_credito":"CV-2026-0201","fecha":"2026-08-13","monto_centavos":60277,"canal":"agencia"}
+{"seq":208,"tipo":"CLIENTE","id_cliente":"CL-0022","nombre_completo":"Pedro Marvin Reyes Ramírez","dpi":"DPI-FICT-000022","telefono":"5555-1147","municipio":"Mixco","fecha_alta":"2026-08-14"}
+{"seq":209,"tipo":"CLIENTE","id_cliente":"CL-0078","nombre_completo":"Carlos Byron Orellana Estrada","dpi":"DPI-FICT-000078","telefono":"5555-1539","municipio":"San Miguel Petapa","fecha_alta":"2026-08-14"}
+{"seq":210,"tipo":"PAGO","clave_idempotencia":"IDEM-000204","id_credito":"CV-2026-0025","fecha":"2026-08-14","monto_centavos":201123,"canal":"transferencia"}
+{"seq":211,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0100","id_cliente":"CL-0078","id_asesor":"AS-04","fecha":"2026-08-15","capital_centavos":1000000,"plazo_meses":12,"tna_bps":3600,"reestructurado":false}
+{"seq":212,"tipo":"PAGO","clave_idempotencia":"IDEM-000247","id_credito":"CV-2026-0031","fecha":"2026-08-15","monto_centavos":87743,"canal":"campo"}
+{"seq":213,"tipo":"PAGO","clave_idempotencia":"IDEM-000295","id_credito":"CV-2026-0038","fecha":"2026-08-15","monto_centavos":30594,"canal":"campo"}
+{"seq":214,"tipo":"CLIENTE","id_cliente":"CL-0029","nombre_completo":"Blanca Gladys Ordóñez Coy","dpi":"DPI-FICT-000029","telefono":"5555-1196","municipio":"Santa Catarina Pinula","fecha_alta":"2026-08-16"}
+{"seq":215,"tipo":"CLIENTE","id_cliente":"CL-0045","nombre_completo":"Rolando Víctor Sicán Barrios","dpi":"DPI-FICT-000045","telefono":"5555-1308","municipio":"Escuintla","fecha_alta":"2026-08-16"}
+{"seq":216,"tipo":"PAGO","clave_idempotencia":"IDEM-000025","id_credito":"CV-2026-0003","fecha":"2026-08-17","monto_centavos":61483,"canal":"campo"}
+{"seq":217,"tipo":"PAGO","clave_idempotencia":"IDEM-000111","id_credito":"CV-2026-0012","fecha":"2026-08-17","monto_centavos":40185,"canal":"campo"}
+{"seq":218,"tipo":"PAGO","clave_idempotencia":"IDEM-000215","id_credito":"CV-2026-0026","fecha":"2026-08-18","monto_centavos":111826,"canal":"agencia"}
+{"seq":219,"tipo":"CLIENTE","id_cliente":"CL-0012","nombre_completo":"Juan Carlos Tojín Estrada","dpi":"DPI-FICT-000012","telefono":"5555-1077","municipio":"Mixco","fecha_alta":"2026-08-19"}
+{"seq":220,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0045","id_cliente":"CL-0012","id_asesor":"AS-02","fecha":"2026-08-19","capital_centavos":300000,"plazo_meses":5,"tna_bps":3600,"reestructurado":false}
+{"seq":221,"tipo":"CLIENTE","id_cliente":"CL-0086","nombre_completo":"Rosa Lidia Tojín Coy","dpi":"DPI-FICT-000086","telefono":"5555-1595","municipio":"Villa Nueva","fecha_alta":"2026-08-20"}
+{"seq":222,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0046","id_cliente":"CL-0022","id_asesor":"AS-04","fecha":"2026-08-20","capital_centavos":200000,"plazo_meses":24,"tna_bps":3600,"reestructurado":false}
+{"seq":223,"tipo":"PAGO","clave_idempotencia":"IDEM-000007","id_credito":"CV-2026-0001","fecha":"2026-08-20","monto_centavos":251996,"canal":"campo"}
+{"seq":224,"tipo":"PAGO","clave_idempotencia":"IDEM-000267","id_credito":"CV-2026-0033","fecha":"2026-08-20","monto_centavos":92299,"canal":"agencia"}
+{"seq":225,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0047","id_cliente":"CL-0045","id_asesor":"AS-02","fecha":"2026-08-21","capital_centavos":500000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":226,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0048","id_cliente":"CL-0029","id_asesor":"AS-04","fecha":"2026-08-21","capital_centavos":100000,"plazo_meses":4,"tna_bps":3600,"reestructurado":false}
+{"seq":227,"tipo":"PAGO","clave_idempotencia":"IDEM-000081","id_credito":"CV-2026-0009","fecha":"2026-08-21","monto_centavos":147678,"canal":"campo"}
+{"seq":228,"tipo":"PAGO","clave_idempotencia":"IDEM-000181","id_credito":"CV-2026-0021","fecha":"2026-08-21","monto_centavos":110759,"canal":"transferencia"}
+{"seq":229,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0049","id_cliente":"CL-0086","id_asesor":"AS-04","fecha":"2026-08-22","capital_centavos":200000,"plazo_meses":12,"tna_bps":3600,"reestructurado":false}
+{"seq":230,"tipo":"PAGO","clave_idempotencia":"IDEM-000075","id_credito":"CV-2026-0008","fecha":"2026-08-22","monto_centavos":222234,"canal":"agencia"}
+{"seq":231,"tipo":"PAGO","clave_idempotencia":"IDEM-000273","id_credito":"CV-2026-0034","fecha":"2026-08-22","monto_centavos":221517,"canal":"campo"}
+{"seq":232,"tipo":"PAGO","clave_idempotencia":"IDEM-000126","id_credito":"CV-2026-0014","fecha":"2026-08-23","monto_centavos":64217,"canal":"campo"}
+{"seq":233,"tipo":"PAGO","clave_idempotencia":"IDEM-000226","id_credito":"CV-2026-0027","fecha":"2026-08-23","monto_centavos":18177,"canal":"campo"}
+{"seq":234,"tipo":"PAGO","clave_idempotencia":"IDEM-000237","id_credito":"CV-2026-0028","fecha":"2026-08-23","monto_centavos":27232,"canal":"transferencia"}
+{"seq":235,"tipo":"PAGO","clave_idempotencia":"IDEM-000243","id_credito":"CV-2026-0029","fecha":"2026-08-23","monto_centavos":530294,"canal":"campo"}
+{"seq":236,"tipo":"PAGO","clave_idempotencia":"IDEM-000311","id_credito":"CV-2026-0040","fecha":"2026-08-23","monto_centavos":282824,"canal":"campo"}
+{"seq":237,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0050","id_cliente":"CL-0054","id_asesor":"AS-03","fecha":"2026-08-24","capital_centavos":500000,"plazo_meses":18,"tna_bps":3600,"reestructurado":false}
+{"seq":238,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0202","id_cliente":"CL-0069","id_asesor":"AS-05","fecha":"2026-08-24","capital_centavos":800000,"plazo_meses":9,"tna_bps":3600,"reestructurado":true}
+{"seq":239,"tipo":"PAGO","clave_idempotencia":"IDEM-000049","id_credito":"CV-2026-0005","fecha":"2026-08-24","monto_centavos":81977,"canal":"agencia"}
+{"seq":240,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0051","id_cliente":"CL-0028","id_asesor":"AS-03","fecha":"2026-08-26","capital_centavos":150000,"plazo_meses":12,"tna_bps":3600,"reestructurado":false}
+{"seq":241,"tipo":"PAGO","clave_idempotencia":"IDEM-000099","id_credito":"CV-2026-0011","fecha":"2026-08-27","monto_centavos":15204,"canal":"transferencia"}
+{"seq":242,"tipo":"PAGO","clave_idempotencia":"IDEM-000140","id_credito":"CV-2026-0017","fecha":"2026-08-28","monto_centavos":369195,"canal":"agencia"}
+{"seq":243,"tipo":"PAGO","clave_idempotencia":"IDEM-000302","id_credito":"CV-2026-0039","fecha":"2026-08-28","monto_centavos":73648,"canal":"agencia"}
+{"seq":244,"tipo":"CLIENTE","id_cliente":"CL-0040","nombre_completo":"Ricardo Víctor García Xiloj","dpi":"DPI-FICT-000040","telefono":"5555-1273","municipio":"Santa Catarina Pinula","fecha_alta":"2026-08-29"}
+{"seq":245,"tipo":"PAGO","clave_idempotencia":"IDEM-000037","id_credito":"CV-2026-0004","fecha":"2026-08-31","monto_centavos":60546,"canal":"agencia"}
+{"seq":246,"tipo":"PAGO","clave_idempotencia":"IDEM-000146","id_credito":"CV-2026-0018","fecha":"2026-09-01","monto_centavos":29246,"canal":"campo"}
+{"seq":247,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0052","id_cliente":"CL-0040","id_asesor":"AS-04","fecha":"2026-09-02","capital_centavos":100000,"plazo_meses":24,"tna_bps":3000,"reestructurado":false}
+{"seq":248,"tipo":"PAGO","clave_idempotencia":"IDEM-000314","id_credito":"CV-2026-0041","fecha":"2026-09-02","monto_centavos":43671,"canal":"agencia"}
+{"seq":249,"tipo":"PAGO","clave_idempotencia":"IDEM-000087","id_credito":"CV-2026-0010","fecha":"2026-09-03","monto_centavos":118095,"canal":"agencia"}
+{"seq":250,"tipo":"PAGO","clave_idempotencia":"IDEM-000158","id_credito":"CV-2026-0019","fecha":"2026-09-03","monto_centavos":122966,"canal":"transferencia"}
+{"seq":251,"tipo":"CLIENTE","id_cliente":"CL-0075","nombre_completo":"Dora Carmen Monzón Ordóñez","dpi":"DPI-FICT-000075","telefono":"5555-1518","municipio":"Guatemala","fecha_alta":"2026-09-04"}
+{"seq":252,"tipo":"PAGO","clave_idempotencia":"IDEM-000315","id_credito":"CV-2026-0042","fecha":"2026-09-05","monto_centavos":147678,"canal":"campo"}
+{"seq":253,"tipo":"CLIENTE","id_cliente":"CL-0048","nombre_completo":"Aracely Marta Girón Solís","dpi":"DPI-FICT-000048","telefono":"5555-1329","municipio":"Guatemala","fecha_alta":"2026-09-07"}
+{"seq":254,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0053","id_cliente":"CL-0048","id_asesor":"AS-04","fecha":"2026-09-08","capital_centavos":2500000,"plazo_meses":24,"tna_bps":3600,"reestructurado":false}
+{"seq":255,"tipo":"PAGO","clave_idempotencia":"IDEM-000061","id_credito":"CV-2026-0006","fecha":"2026-09-09","monto_centavos":192651,"canal":"campo"}
+{"seq":256,"tipo":"PAGO","clave_idempotencia":"IDEM-000188","id_credito":"CV-2026-0023","fecha":"2026-09-09","monto_centavos":6119,"canal":"transferencia"}
+{"seq":257,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0054","id_cliente":"CL-0075","id_asesor":"AS-01","fecha":"2026-09-10","capital_centavos":300000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":258,"tipo":"PAGO","clave_idempotencia":"IDEM-000170","id_credito":"CV-2026-0020","fecha":"2026-09-10","monto_centavos":43625,"canal":"campo"}
+{"seq":259,"tipo":"PAGO","clave_idempotencia":"IDEM-000278","id_credito":"CV-2026-0037","fecha":"2026-09-10","monto_centavos":116985,"canal":"agencia"}
+{"seq":260,"tipo":"CLIENTE","id_cliente":"CL-0014","nombre_completo":"Luis Fernando Morales Coy","dpi":"DPI-FICT-000014","telefono":"5555-1091","municipio":"Villa Nueva","fecha_alta":"2026-09-11"}
+{"seq":261,"tipo":"CLIENTE","id_cliente":"CL-0031","nombre_completo":"Gladys Dora Barrios Hernández","dpi":"DPI-FICT-000031","telefono":"5555-1210","municipio":"Chimaltenango","fecha_alta":"2026-09-11"}
+{"seq":262,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0055","id_cliente":"CL-0003","id_asesor":"AS-04","fecha":"2026-09-11","capital_centavos":800000,"plazo_meses":18,"tna_bps":3600,"reestructurado":false}
+{"seq":263,"tipo":"PAGO","clave_idempotencia":"IDEM-000199","id_credito":"CV-2026-0024","fecha":"2026-09-11","monto_centavos":223970,"canal":"transferencia"}
+{"seq":264,"tipo":"PAGO","clave_idempotencia":"IDEM-000321","id_credito":"CV-2026-0044","fecha":"2026-09-11","monto_centavos":87250,"canal":"agencia"}
+{"seq":265,"tipo":"PAGO","clave_idempotencia":"IDEM-000258","id_credito":"CV-2026-0032","fecha":"2026-09-13","monto_centavos":18177,"canal":"transferencia"}
+{"seq":266,"tipo":"PAGO","clave_idempotencia":"IDEM-000287","id_credito":"CV-2026-0201","fecha":"2026-09-13","monto_centavos":60277,"canal":"transferencia"}
+{"seq":267,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0203","id_cliente":"CL-0031","id_asesor":"AS-01","fecha":"2026-09-14","capital_centavos":1200000,"plazo_meses":12,"tna_bps":3600,"reestructurado":true}
+{"seq":268,"tipo":"PAGO","clave_idempotencia":"IDEM-000008","id_credito":"CV-2026-0001","fecha":"2026-09-14","monto_centavos":251155,"canal":"transferencia"}
+{"seq":269,"tipo":"CLIENTE","id_cliente":"CL-0066","nombre_completo":"María Aracely Ramírez Coy","dpi":"DPI-FICT-000066","telefono":"5555-1455","municipio":"Chimaltenango","fecha_alta":"2026-09-15"}
+{"seq":270,"tipo":"PAGO","clave_idempotencia":"IDEM-000205","id_credito":"CV-2026-0025","fecha":"2026-09-15","monto_centavos":201232,"canal":"agencia"}
+{"seq":271,"tipo":"PAGO","clave_idempotencia":"IDEM-000329","id_credito":"CV-2026-0100","fecha":"2026-09-15","monto_centavos":100462,"canal":"agencia"}
+{"seq":272,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0056","id_cliente":"CL-0048","id_asesor":"AS-06","fecha":"2026-09-16","capital_centavos":500000,"plazo_meses":12,"tna_bps":4000,"reestructurado":false}
+{"seq":273,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0057","id_cliente":"CL-0014","id_asesor":"AS-03","fecha":"2026-09-17","capital_centavos":200000,"plazo_meses":4,"tna_bps":3600,"reestructurado":false}
+{"seq":274,"tipo":"PAGO","clave_idempotencia":"IDEM-000026","id_credito":"CV-2026-0003","fecha":"2026-09-17","monto_centavos":61483,"canal":"transferencia"}
+{"seq":275,"tipo":"PAGO","clave_idempotencia":"IDEM-000112","id_credito":"CV-2026-0012","fecha":"2026-09-17","monto_centavos":40185,"canal":"campo"}
+{"seq":276,"tipo":"PAGO","clave_idempotencia":"IDEM-000216","id_credito":"CV-2026-0026","fecha":"2026-09-18","monto_centavos":111826,"canal":"transferencia"}
+{"seq":277,"tipo":"PAGO","clave_idempotencia":"IDEM-000303","id_credito":"CV-2026-0039","fecha":"2026-09-18","monto_centavos":73425,"canal":"agencia"}
+{"seq":278,"tipo":"CLIENTE","id_cliente":"CL-0001","nombre_completo":"Mario Pedro Alvarado Ramírez","dpi":"DPI-FICT-000001","telefono":"5555-1000","municipio":"Antigua Guatemala","fecha_alta":"2026-09-19"}
+{"seq":279,"tipo":"CLIENTE","id_cliente":"CL-0011","nombre_completo":"Lidia Gladys Chávez Cabrera","dpi":"DPI-FICT-000011","telefono":"5555-1070","municipio":"Amatitlán","fecha_alta":"2026-09-19"}
+{"seq":280,"tipo":"CLIENTE","id_cliente":"CL-0025","nombre_completo":"Gladys Silvia Xiloj Monzón","dpi":"DPI-FICT-000025","telefono":"5555-1168","municipio":"Escuintla","fecha_alta":"2026-09-19"}
+{"seq":281,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0058","id_cliente":"CL-0066","id_asesor":"AS-03","fecha":"2026-09-19","capital_centavos":800000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":282,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0059","id_cliente":"CL-0001","id_asesor":"AS-04","fecha":"2026-09-19","capital_centavos":300000,"plazo_meses":7,"tna_bps":3600,"reestructurado":false}
+{"seq":283,"tipo":"PAGO","clave_idempotencia":"IDEM-000268","id_credito":"CV-2026-0033","fecha":"2026-09-20","monto_centavos":92299,"canal":"agencia"}
+{"seq":284,"tipo":"PAGO","clave_idempotencia":"IDEM-000296","id_credito":"CV-2026-0038","fecha":"2026-09-20","monto_centavos":30642,"canal":"transferencia"}
+{"seq":285,"tipo":"PAGO","clave_idempotencia":"IDEM-000330","id_credito":"CV-2026-0046","fecha":"2026-09-20","monto_centavos":11809,"canal":"campo"}
+{"seq":286,"tipo":"PAGO","clave_idempotencia":"IDEM-000182","id_credito":"CV-2026-0021","fecha":"2026-09-21","monto_centavos":110759,"canal":"campo"}
+{"seq":287,"tipo":"PAGO","clave_idempotencia":"IDEM-000248","id_credito":"CV-2026-0031","fecha":"2026-09-21","monto_centavos":87975,"canal":"campo"}
+{"seq":288,"tipo":"PAGO","clave_idempotencia":"IDEM-000338","id_credito":"CV-2026-0047","fecha":"2026-09-21","monto_centavos":92299,"canal":"campo"}
+{"seq":289,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0060","id_cliente":"CL-0011","id_asesor":"AS-05","fecha":"2026-09-22","capital_centavos":150000,"plazo_meses":7,"tna_bps":3600,"reestructurado":false}
+{"seq":290,"tipo":"PAGO","clave_idempotencia":"IDEM-000274","id_credito":"CV-2026-0034","fecha":"2026-09-22","monto_centavos":221517,"canal":"campo"}
+{"seq":291,"tipo":"PAGO","clave_idempotencia":"IDEM-000344","id_credito":"CV-2026-0049","fecha":"2026-09-22","monto_centavos":20092,"canal":"transferencia"}
+{"seq":292,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0061","id_cliente":"CL-0025","id_asesor":"AS-01","fecha":"2026-09-23","capital_centavos":200000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":293,"tipo":"PAGO","clave_idempotencia":"IDEM-000127","id_credito":"CV-2026-0014","fecha":"2026-09-23","monto_centavos":64217,"canal":"agencia"}
+{"seq":294,"tipo":"PAGO","clave_idempotencia":"IDEM-000227","id_credito":"CV-2026-0027","fecha":"2026-09-23","monto_centavos":18177,"canal":"campo"}
+{"seq":295,"tipo":"PAGO","clave_idempotencia":"IDEM-000238","id_credito":"CV-2026-0028","fecha":"2026-09-23","monto_centavos":27232,"canal":"campo"}
+{"seq":296,"tipo":"PAGO","clave_idempotencia":"IDEM-000312","id_credito":"CV-2026-0040","fecha":"2026-09-23","monto_centavos":282824,"canal":"campo"}
+{"seq":297,"tipo":"PAGO","clave_idempotencia":"IDEM-000127","id_credito":"CV-2026-0014","fecha":"2026-09-23","monto_centavos":64217,"canal":"agencia"}
+{"seq":298,"tipo":"PAGO","clave_idempotencia":"IDEM-000050","id_credito":"CV-2026-0005","fecha":"2026-09-24","monto_centavos":81977,"canal":"transferencia"}
+{"seq":299,"tipo":"PAGO","clave_idempotencia":"IDEM-000352","id_credito":"CV-2026-0050","fecha":"2026-09-24","monto_centavos":36354,"canal":"agencia"}
+{"seq":300,"tipo":"PAGO","clave_idempotencia":"IDEM-000360","id_credito":"CV-2026-0202","fecha":"2026-09-24","monto_centavos":102747,"canal":"transferencia"}
+{"seq":301,"tipo":"CLIENTE","id_cliente":"CL-0038","nombre_completo":"Pedro Ricardo Barrios Barrios","dpi":"DPI-FICT-000038","telefono":"5555-1259","municipio":"Guatemala","fecha_alta":"2026-09-26"}
+{"seq":302,"tipo":"PAGO","clave_idempotencia":"IDEM-000100","id_credito":"CV-2026-0011","fecha":"2026-09-26","monto_centavos":15200,"canal":"campo"}
+{"seq":303,"tipo":"PAGO","clave_idempotencia":"IDEM-000368","id_credito":"CV-2026-0051","fecha":"2026-09-26","monto_centavos":15069,"canal":"campo"}
+{"seq":304,"tipo":"PAGO","clave_idempotencia":"IDEM-000038","id_credito":"CV-2026-0004","fecha":"2026-09-27","monto_centavos":60416,"canal":"campo"}
+{"seq":305,"tipo":"PAGO","clave_idempotencia":"IDEM-000141","id_credito":"CV-2026-0017","fecha":"2026-09-28","monto_centavos":369194,"canal":"transferencia"}
+{"seq":306,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0062","id_cliente":"CL-0038","id_asesor":"AS-01","fecha":"2026-10-01","capital_centavos":100000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":307,"tipo":"PAGO","clave_idempotencia":"IDEM-000147","id_credito":"CV-2026-0018","fecha":"2026-10-01","monto_centavos":29246,"canal":"campo"}
+{"seq":308,"tipo":"PAGO","clave_idempotencia":"IDEM-000249","id_credito":"CV-2026-0031","fecha":"2026-10-01","monto_centavos":87250,"canal":"campo"}
+{"seq":309,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0063","id_cliente":"CL-0062","id_asesor":"AS-02","fecha":"2026-10-03","capital_centavos":1000000,"plazo_meses":18,"tna_bps":3600,"reestructurado":false}
+{"seq":310,"tipo":"PAGO","clave_idempotencia":"IDEM-000088","id_credito":"CV-2026-0010","fecha":"2026-10-03","monto_centavos":118095,"canal":"campo"}
+{"seq":311,"tipo":"PAGO","clave_idempotencia":"IDEM-000159","id_credito":"CV-2026-0019","fecha":"2026-10-03","monto_centavos":122966,"canal":"transferencia"}
+{"seq":312,"tipo":"PAGO","clave_idempotencia":"IDEM-000316","id_credito":"CV-2026-0042","fecha":"2026-10-05","monto_centavos":147678,"canal":"agencia"}
+{"seq":313,"tipo":"CLIENTE","id_cliente":"CL-0089","nombre_completo":"Mario Luis Barrios Reyes","dpi":"DPI-FICT-000089","telefono":"5555-1616","municipio":"Amatitlán","fecha_alta":"2026-10-07"}
+{"seq":314,"tipo":"CLIENTE","id_cliente":"CL-0009","nombre_completo":"Patricia Aracely Solís Ramírez","dpi":"DPI-FICT-000009","telefono":"5555-1056","municipio":"Chimaltenango","fecha_alta":"2026-10-08"}
+{"seq":315,"tipo":"PAGO","clave_idempotencia":"IDEM-000383","id_credito":"CV-2026-0053","fecha":"2026-10-08","monto_centavos":147619,"canal":"transferencia"}
+{"seq":316,"tipo":"PAGO","clave_idempotencia":"IDEM-000062","id_credito":"CV-2026-0006","fecha":"2026-10-09","monto_centavos":192651,"canal":"transferencia"}
+{"seq":317,"tipo":"PAGO","clave_idempotencia":"IDEM-000189","id_credito":"CV-2026-0023","fecha":"2026-10-09","monto_centavos":6119,"canal":"campo"}
+{"seq":318,"tipo":"CLIENTE","id_cliente":"CL-0056","nombre_completo":"Carlos Byron Alvarado Coy","dpi":"DPI-FICT-000056","telefono":"5555-1385","municipio":"Chinautla","fecha_alta":"2026-10-10"}
+{"seq":319,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0410","id_cliente":"CL-0089","id_asesor":"AS-04","fecha":"2026-10-10","capital_centavos":1000000,"plazo_meses":12,"tna_bps":3600,"reestructurado":false}
+{"seq":320,"tipo":"PAGO","clave_idempotencia":"IDEM-000101","id_credito":"CV-2026-0011","fecha":"2026-10-10","monto_centavos":15069,"canal":"transferencia"}
+{"seq":321,"tipo":"PAGO","clave_idempotencia":"IDEM-000171","id_credito":"CV-2026-0020","fecha":"2026-10-10","monto_centavos":43625,"canal":"transferencia"}
+{"seq":322,"tipo":"PAGO","clave_idempotencia":"IDEM-000279","id_credito":"CV-2026-0037","fecha":"2026-10-10","monto_centavos":116985,"canal":"campo"}
+{"seq":323,"tipo":"PAGO","clave_idempotencia":"IDEM-000390","id_credito":"CV-2026-0054","fecha":"2026-10-10","monto_centavos":55379,"canal":"agencia"}
+{"seq":324,"tipo":"CLIENTE","id_cliente":"CL-0068","nombre_completo":"Carlos Walter Méndez Xiloj","dpi":"DPI-FICT-000068","telefono":"5555-1469","municipio":"Guatemala","fecha_alta":"2026-10-11"}
+{"seq":325,"tipo":"PAGO","clave_idempotencia":"IDEM-000200","id_credito":"CV-2026-0024","fecha":"2026-10-11","monto_centavos":223970,"canal":"campo"}
+{"seq":326,"tipo":"PAGO","clave_idempotencia":"IDEM-000322","id_credito":"CV-2026-0044","fecha":"2026-10-11","monto_centavos":87250,"canal":"campo"}
+{"seq":327,"tipo":"PAGO","clave_idempotencia":"IDEM-000391","id_credito":"CV-2026-0055","fecha":"2026-10-11","monto_centavos":58167,"canal":"transferencia"}
+{"seq":328,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0064","id_cliente":"CL-0045","id_asesor":"AS-03","fecha":"2026-10-12","capital_centavos":500000,"plazo_meses":12,"tna_bps":4000,"reestructurado":false}
+{"seq":329,"tipo":"PAGO","clave_idempotencia":"IDEM-000259","id_credito":"CV-2026-0032","fecha":"2026-10-13","monto_centavos":18177,"canal":"transferencia"}
+{"seq":330,"tipo":"PAGO","clave_idempotencia":"IDEM-000288","id_credito":"CV-2026-0201","fecha":"2026-10-13","monto_centavos":60277,"canal":"transferencia"}
+{"seq":331,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0065","id_cliente":"CL-0009","id_asesor":"AS-03","fecha":"2026-10-14","capital_centavos":300000,"plazo_meses":6,"tna_bps":3600,"reestructurado":false}
+{"seq":332,"tipo":"PAGO","clave_idempotencia":"IDEM-000398","id_credito":"CV-2026-0203","fecha":"2026-10-14","monto_centavos":120555,"canal":"transferencia"}
+{"seq":333,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0066","id_cliente":"CL-0068","id_asesor":"AS-03","fecha":"2026-10-15","capital_centavos":100000,"plazo_meses":4,"tna_bps":3600,"reestructurado":false}
+{"seq":334,"tipo":"PAGO","clave_idempotencia":"IDEM-000297","id_credito":"CV-2026-0038","fecha":"2026-10-15","monto_centavos":30594,"canal":"campo"}
+{"seq":335,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0067","id_cliente":"CL-0056","id_asesor":"AS-05","fecha":"2026-10-16","capital_centavos":600000,"plazo_meses":12,"tna_bps":4000,"reestructurado":false}
+{"seq":336,"tipo":"PAGO","clave_idempotencia":"IDEM-000027","id_credito":"CV-2026-0003","fecha":"2026-10-17","monto_centavos":61483,"canal":"agencia"}
+{"seq":337,"tipo":"PAGO","clave_idempotencia":"IDEM-000113","id_credito":"CV-2026-0012","fecha":"2026-10-17","monto_centavos":40185,"canal":"campo"}
+{"seq":338,"tipo":"PAGO","clave_idempotencia":"IDEM-000376","id_credito":"CV-2026-0052","fecha":"2026-10-17","monto_centavos":5622,"canal":"campo"}
+{"seq":339,"tipo":"PAGO","clave_idempotencia":"IDEM-000217","id_credito":"CV-2026-0026","fecha":"2026-10-18","monto_centavos":111826,"canal":"campo"}
+{"seq":340,"tipo":"PAGO","clave_idempotencia":"IDEM-000304","id_credito":"CV-2026-0039","fecha":"2026-10-18","monto_centavos":73425,"canal":"transferencia"}
+{"seq":341,"tipo":"PAGO","clave_idempotencia":"IDEM-000412","id_credito":"CV-2026-0058","fecha":"2026-10-19","monto_centavos":147678,"canal":"campo"}
+{"seq":342,"tipo":"PAGO","clave_idempotencia":"IDEM-000418","id_credito":"CV-2026-0059","fecha":"2026-10-19","monto_centavos":48152,"canal":"transferencia"}
+{"seq":343,"tipo":"CLIENTE","id_cliente":"CL-0090","nombre_completo":"Walter Óscar Estrada Tzoc","dpi":"DPI-FICT-000090","telefono":"5555-1623","municipio":"San Miguel Petapa","fecha_alta":"2026-10-20"}
+{"seq":344,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0068","id_cliente":"CL-0090","id_asesor":"AS-02","fecha":"2026-10-20","capital_centavos":150000,"plazo_meses":24,"tna_bps":3000,"reestructurado":false}
+{"seq":345,"tipo":"PAGO","clave_idempotencia":"IDEM-000269","id_credito":"CV-2026-0033","fecha":"2026-10-20","monto_centavos":92299,"canal":"agencia"}
+{"seq":346,"tipo":"PAGO","clave_idempotencia":"IDEM-000331","id_credito":"CV-2026-0046","fecha":"2026-10-20","monto_centavos":11809,"canal":"transferencia"}
+{"seq":347,"tipo":"PAGO","clave_idempotencia":"IDEM-000183","id_credito":"CV-2026-0021","fecha":"2026-10-21","monto_centavos":110756,"canal":"agencia"}
+{"seq":348,"tipo":"PAGO","clave_idempotencia":"IDEM-000339","id_credito":"CV-2026-0047","fecha":"2026-10-21","monto_centavos":92299,"canal":"campo"}
+{"seq":349,"tipo":"PAGO","clave_idempotencia":"IDEM-000275","id_credito":"CV-2026-0034","fecha":"2026-10-22","monto_centavos":221517,"canal":"transferencia"}
+{"seq":350,"tipo":"PAGO","clave_idempotencia":"IDEM-000420","id_credito":"CV-2026-0060","fecha":"2026-10-22","monto_centavos":24076,"canal":"transferencia"}
+{"seq":351,"tipo":"PAGO","clave_idempotencia":"IDEM-000009","id_credito":"CV-2026-0001","fecha":"2026-10-23","monto_centavos":252494,"canal":"campo"}
+{"seq":352,"tipo":"PAGO","clave_idempotencia":"IDEM-000128","id_credito":"CV-2026-0014","fecha":"2026-10-23","monto_centavos":64217,"canal":"agencia"}
+{"seq":353,"tipo":"PAGO","clave_idempotencia":"IDEM-000228","id_credito":"CV-2026-0027","fecha":"2026-10-23","monto_centavos":18177,"canal":"transferencia"}
+{"seq":354,"tipo":"PAGO","clave_idempotencia":"IDEM-000239","id_credito":"CV-2026-0028","fecha":"2026-10-23","monto_centavos":27232,"canal":"campo"}
+{"seq":355,"tipo":"PAGO","clave_idempotencia":"IDEM-000313","id_credito":"CV-2026-0040","fecha":"2026-10-23","monto_centavos":282825,"canal":"campo"}
+{"seq":356,"tipo":"PAGO","clave_idempotencia":"IDEM-000051","id_credito":"CV-2026-0005","fecha":"2026-10-24","monto_centavos":81977,"canal":"campo"}
+{"seq":357,"tipo":"PAGO","clave_idempotencia":"IDEM-000353","id_credito":"CV-2026-0050","fecha":"2026-10-24","monto_centavos":36354,"canal":"campo"}
+{"seq":358,"tipo":"PAGO","clave_idempotencia":"IDEM-000361","id_credito":"CV-2026-0202","fecha":"2026-10-24","monto_centavos":102747,"canal":"campo"}
+{"seq":359,"tipo":"PAGO","clave_idempotencia":"IDEM-000369","id_credito":"CV-2026-0051","fecha":"2026-10-26","monto_centavos":15069,"canal":"campo"}
+{"seq":360,"tipo":"CLIENTE","id_cliente":"CL-0055","nombre_completo":"Luisa Lidia Hernández Morales","dpi":"DPI-FICT-000055","telefono":"5555-1378","municipio":"Escuintla","fecha_alta":"2026-10-27"}
+{"seq":361,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0069","id_cliente":"CL-0055","id_asesor":"AS-05","fecha":"2026-10-27","capital_centavos":100000,"plazo_meses":3,"tna_bps":3600,"reestructurado":false}
+{"seq":362,"tipo":"DESEMBOLSO","id_credito":"CV-2026-0070","id_cliente":"CL-0053","id_asesor":"AS-04","fecha":"2026-10-28","capital_centavos":250000,"plazo_meses":3,"tna_bps":3600,"reestructurado":false}
+{"seq":363,"tipo":"PAGO","clave_idempotencia":"IDEM-000405","id_credito":"CV-2026-0056","fecha":"2026-10-30","monto_centavos":51559,"canal":"agencia"}

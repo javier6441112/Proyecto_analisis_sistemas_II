@@ -1,0 +1,37 @@
+{
+  "version": "1.0",
+  "descripcion": "Parámetros de política de Crédito Vecino, S. A. para la carga canónica del Proyecto Final. Son datos, no constantes de código (P1 6.3.1, P2 7.2).",
+  "moneda": "GTQ",
+  "base_conteo": "Actual/360",
+  "politicas_mora": {
+    "POL-2024-01": {
+      "nombre": "Mora plana 24 % nominal anual",
+      "tipo": "plana",
+      "tna_bps": 2400,
+      "vigencia_otorgamiento": { "hasta": "2026-09-30" },
+      "autor": "Comité de Crédito",
+      "motivo": "Política original de la institución (P1 6.5)."
+    },
+    "POL-2026-10": {
+      "nombre": "Mora escalonada por tramo recorrido",
+      "tipo": "escalonada",
+      "vigencia_otorgamiento": { "desde": "2026-10-01" },
+      "tramos": [
+        { "id": "mora_1", "ini": 1, "fin": 30, "bps": 1800 },
+        { "id": "mora_2", "ini": 31, "fin": 60, "bps": 2400 },
+        { "id": "mora_3", "ini": 61, "fin": 90, "bps": 3000 },
+        { "id": "vencido", "ini": 91, "fin": 120, "bps": 3600 }
+      ],
+      "autor": "Comité de Crédito, Acta 09-2026",
+      "motivo": "Distinguir el descuido del deterioro (P2 7.1)."
+    }
+  },
+  "gasto_gestion_cobro": {
+    "monto_centavos": 2500,
+    "dia_generacion": 31,
+    "aplica_a_politicas": ["POL-2026-10"],
+    "nota": "P2 7.5 no dice si el gasto aplica a créditos con política plana. Decisión de la carga canónica: solo POL-2026-10 (RP-08)."
+  },
+  "regla_incobrable_dias": 120,
+  "regla_riesgo_dias": 30
+}

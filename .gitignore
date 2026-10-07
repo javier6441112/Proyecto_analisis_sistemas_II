@@ -20,3 +20,5 @@ pnpm-debug.log*
 # Archivos del sistema operativo y del editor
 .DS_Store
 Thumbs.db
+# Base de datos local
+.cv-db/
