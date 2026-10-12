@@ -9,7 +9,8 @@
     "generar": "tsx src/generar.ts",
     "validar": "tsx src/validar.ts",
     "typecheck": "tsc --noEmit",
-    "cargar:datos": "node --import tsx src/persistencia/cargar.ts"
+    "cargar:datos": "node --import tsx src/persistencia/cargar.ts",
+    "rag:ingestar": "node --import tsx src/rag/ingestar.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
