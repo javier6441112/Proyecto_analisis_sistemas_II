@@ -14,6 +14,7 @@
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
     "@electric-sql/pglite-pgvector": "^0.0.9",
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "@seriousme/openapi-schema-validator": "^2.4.0",
     "csv-parse": "^7.0.3",
     "date-fns": "^4.1.0",
