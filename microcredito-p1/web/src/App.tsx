@@ -1,0 +1,262 @@
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { api, fijarOperador } from './api';
+import { ContextoSesion, FECHA_INICIAL, useSesion, type Sesion } from './sesion';
+import { Alert, DISPLAY, FOCO, Ico, useCarga } from './ui';
+import Inicio from './asesor/Inicio';
+import Clientes from './asesor/Clientes';
+import Solicitudes from './asesor/Solicitudes';
+import Creditos from './asesor/Creditos';
+import Pagos from './asesor/Pagos';
+import Tablero from './gerencia/Tablero';
+import Comite from './gerencia/Comite';
+import Cierres from './gerencia/Cierres';
+import Asistente from './gerencia/Asistente';
+
+// ── Navegación ───────────────────────────────────────────────────────────
+/** Destino al que una pantalla puede enviar a otra (con el registro ya seleccionado). */
+export type Destino =
+  | { tab: 'inicio' }
+  | { tab: 'clientes'; idCliente?: string }
+  | { tab: 'solicitudes'; idCliente?: string; desembolsar?: string }
+  | { tab: 'creditos'; idCredito?: string }
+  | { tab: 'pagos'; idCredito?: string };
+export type Ir = (d: Destino) => void;
+
+type TabGerencia = 'tablero' | 'comite' | 'cierres' | 'asistente';
+
+interface Credenciales { perfil: 'asesor' | 'gerencia'; usuario: string; idAsesor?: string }
+
+const CLAVE_SESION = 'cv-sesion';
+function leerSesion(): Credenciales | null {
+  try {
+    const t = sessionStorage.getItem(CLAVE_SESION);
+    return t ? (JSON.parse(t) as Credenciales) : null;
+  } catch {
+    return null;
+  }
+}
+
+export default function App() {
+  const [cred, setCred] = useState<Credenciales | null>(leerSesion);
+  const [fecha, setFecha] = useState(FECHA_INICIAL);
+
+  // El operador viaja en X-Perfil / X-Usuario en cada operación.
+  fijarOperador(cred ? { perfil: cred.perfil, usuario: cred.usuario } : null);
+
+  const sesion = useMemo<Sesion | null>(() => cred && {
+    ...cred,
+    fecha,
+    cambiarFecha: (f: string) => { if (/^\d{4}-\d{2}-\d{2}$/.test(f)) setFecha(f); },
+    salir: () => { try { sessionStorage.removeItem(CLAVE_SESION); } catch { /* sin almacenamiento */ } setCred(null); },
+  }, [cred, fecha]);
+
+  if (!sesion) {
+    return <Login onEntrar={(c) => { try { sessionStorage.setItem(CLAVE_SESION, JSON.stringify(c)); } catch { /* sin almacenamiento */ } setCred(c); }} />;
+  }
+  return (
+    <ContextoSesion.Provider value={sesion}>
+      {sesion.perfil === 'asesor' ? <ShellAsesor /> : <ShellGerencia />}
+    </ContextoSesion.Provider>
+  );
+}
+
+// ── Login ────────────────────────────────────────────────────────────────
+function Login({ onEntrar }: { onEntrar: (c: Credenciales) => void }) {
+  const [perfil, setPerfil] = useState<'asesor' | 'gerencia'>('asesor');
+  const [idAsesor, setIdAsesor] = useState('');
+  const [nombre, setNombre] = useState('');
+  const [error, setError] = useState('');
+  const asesores = useCarga(() => api.asesores(), []);
+
+  const entrar = () => {
+    if (perfil === 'asesor') {
+      const a = asesores.datos?.find((x) => x.idAsesor === idAsesor);
+      if (!a) return setError('Selecciona tu nombre de asesor.');
+      onEntrar({ perfil, usuario: a.nombreCompleto, idAsesor: a.idAsesor });
+    } else {
+      if (nombre.trim().length < 3) return setError('Escribe tu nombre (mínimo 3 letras).');
+      onEntrar({ perfil, usuario: nombre.trim() });
+    }
+  };
+
+  return (
+    <div className="min-h-full bg-[#0f172a] flex flex-col">
+      <form className="flex-1 flex flex-col justify-center px-6 py-12 w-full max-w-md mx-auto" onSubmit={(e) => { e.preventDefault(); entrar(); }}>
+        <div className="w-12 h-12 rounded-2xl bg-teal-400 flex items-center justify-center mb-5">{Ico.logo()}</div>
+        <h1 className="text-3xl font-extrabold text-white mb-1" style={DISPLAY}>Crédito Vecino</h1>
+        <p className="text-slate-400 text-sm mb-8">Sistema de Gestión de Microcrédito</p>
+
+        <fieldset className="mb-5">
+          <legend className="text-xs font-semibold text-slate-400 mb-2">Ingresar como</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {([['asesor', 'Asesor de crédito'], ['gerencia', 'Gerencia']] as const).map(([p, l]) => (
+              <button key={p} type="button" onClick={() => { setPerfil(p); setError(''); }} aria-pressed={perfil === p}
+                className={`py-3 rounded-xl text-sm font-semibold border ${perfil === p ? 'bg-teal-400 text-[#0f172a] border-teal-400' : 'bg-white/5 text-slate-300 border-white/20'} ${FOCO}`}>
+                {l}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        {perfil === 'asesor' ? (
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="asesor" className="text-xs font-semibold text-slate-400">Asesor</label>
+            <select id="asesor" value={idAsesor} onChange={(e) => { setIdAsesor(e.target.value); setError(''); }}
+              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 [&>option]:text-[#0f172a]">
+              <option value="">{asesores.cargando ? 'Cargando asesores…' : 'Seleccionar…'}</option>
+              {asesores.datos?.map((a) => <option key={a.idAsesor} value={a.idAsesor}>{a.nombreCompleto} · {a.idAsesor}</option>)}
+            </select>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="nombre" className="text-xs font-semibold text-slate-400">Nombre de quien opera</label>
+            <input id="nombre" value={nombre} onChange={(e) => { setNombre(e.target.value); setError(''); }} placeholder="Ej. Elena Morales" autoComplete="name"
+              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            <p className="text-[11px] text-slate-500">Queda registrado en la auditoría de cada aprobación.</p>
+          </div>
+        )}
+
+        {error && <p className="text-xs text-red-400 mt-2 flex items-center gap-1" role="alert">{Ico.alert('#f87171')} {error}</p>}
+        {asesores.error !== undefined && perfil === 'asesor' && (
+          <div className="mt-3"><Alert type="error">No se pudo contactar la API. Inicie el servidor con <code>npm run api</code>.</Alert></div>
+        )}
+
+        <button type="submit" className={`w-full bg-teal-400 text-[#0f172a] font-bold py-4 rounded-xl text-sm mt-6 active:bg-teal-300 ${FOCO}`} style={DISPLAY}>
+          Iniciar sesión
+        </button>
+      </form>
+      <p className="text-[11px] text-slate-600 text-center pb-6">SGMC · Crédito Vecino, S. A. · 2026</p>
+    </div>
+  );
+}
+
+// ── Selector de fecha de operación ───────────────────────────────────────
+export function FechaOperacion({ sesion, oscuro = true }: { sesion: Sesion; oscuro?: boolean }) {
+  return (
+    <label className={`flex items-center gap-2 text-[11px] ${oscuro ? 'text-slate-400' : 'text-slate-600'}`}>
+      <span className="shrink-0">Fecha de operación</span>
+      <input type="date" value={sesion.fecha} onChange={(e) => sesion.cambiarFecha(e.target.value)} aria-label="Fecha de operación"
+        className={`rounded-lg px-2 py-1 text-xs font-semibold ${oscuro ? 'bg-white/10 text-white border border-white/20 [color-scheme:dark]' : 'bg-white border border-slate-200 text-[#0f172a]'} ${FOCO}`} />
+    </label>
+  );
+}
+
+// ── Asesor (móvil) ───────────────────────────────────────────────────────
+function ShellAsesor() {
+  const [destino, setDestino] = useState<Destino>({ tab: 'inicio' });
+  const [clave, setClave] = useState(0); // remonta la pestaña al navegar con un destino nuevo
+  const ir: Ir = (d) => { setDestino(d); setClave((k) => k + 1); };
+
+  const tabs: Array<{ id: Destino['tab']; label: string; icon: (c: string) => ReactNode }> = [
+    { id: 'inicio', label: 'Inicio', icon: Ico.home },
+    { id: 'clientes', label: 'Clientes', icon: Ico.users },
+    { id: 'solicitudes', label: 'Solicitudes', icon: Ico.filePlus },
+    { id: 'creditos', label: 'Créditos', icon: Ico.creditCard },
+    { id: 'pagos', label: 'Pagos', icon: Ico.dollar },
+  ];
+
+  return (
+    <div className="h-full flex justify-center md:py-6">
+      <div className="relative bg-white flex flex-col overflow-hidden w-full md:max-w-[430px] h-full md:rounded-[32px] md:shadow-2xl">
+        <main className="flex-1 overflow-hidden flex flex-col min-h-0" key={clave}>
+          {destino.tab === 'inicio' && <Inicio ir={ir} />}
+          {destino.tab === 'clientes' && <Clientes ir={ir} idInicial={destino.idCliente} />}
+          {destino.tab === 'solicitudes' && <Solicitudes ir={ir} idCliente={destino.idCliente} desembolsar={destino.desembolsar} />}
+          {destino.tab === 'creditos' && <Creditos ir={ir} idInicial={destino.idCredito} />}
+          {destino.tab === 'pagos' && <Pagos ir={ir} idInicial={destino.idCredito} />}
+        </main>
+        <nav className="flex items-center border-t border-slate-100 bg-white shrink-0" aria-label="Navegación principal">
+          {tabs.map(({ id, label, icon }) => {
+            const activo = destino.tab === id;
+            return (
+              <button key={id} onClick={() => ir({ tab: id } as Destino)} aria-current={activo ? 'page' : undefined}
+                className={`flex-1 flex flex-col items-center py-2 gap-0.5 min-h-[56px] ${FOCO}`}>
+                <span className="flex items-center justify-center w-10 h-10">{icon(activo ? '#0f172a' : '#94a3b8')}</span>
+                <span className={`text-[10px] font-medium ${activo ? 'text-[#0f172a]' : 'text-slate-400'}`}>{label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+    </div>
+  );
+}
+
+// ── Gerencia (escritorio con menú lateral; móvil con navegación inferior) ─
+function ShellGerencia() {
+  const [tab, setTab] = useState<TabGerencia>('tablero');
+  const [clave, setClave] = useState(0);
+  const ir = (t: TabGerencia) => { setTab(t); setClave((k) => k + 1); };
+  const tabs: Array<{ id: TabGerencia; label: string; icon: (c: string) => ReactNode }> = [
+    { id: 'tablero', label: 'Tablero', icon: Ico.barChart },
+    { id: 'comite', label: 'Comité', icon: Ico.clipboard },
+    { id: 'cierres', label: 'Cierres', icon: Ico.calendar },
+    { id: 'asistente', label: 'Asistente', icon: Ico.chat },
+  ];
+  const sesion = useSesion();
+  useEffect(() => { document.title = `Crédito Vecino · ${tabs.find((t) => t.id === tab)?.label}`; });
+
+  return (
+        <div className="h-full flex flex-col md:flex-row bg-[#f8fafc]">
+          <aside className="hidden md:flex w-60 bg-[#0f172a] flex-col shrink-0 h-full">
+            <div className="px-5 pt-8 pb-6">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-8 h-8 rounded-xl bg-teal-400 flex items-center justify-center">{Ico.logo(16)}</div>
+                <span className="text-white font-bold text-sm" style={DISPLAY}>Crédito Vecino</span>
+              </div>
+              <p className="text-slate-500 text-[10px]">Vista gerencial</p>
+            </div>
+            <nav className="flex flex-col px-3 gap-1 flex-1" aria-label="Navegación gerencial">
+              {tabs.map(({ id, label, icon }) => (
+                <button key={id} onClick={() => ir(id)} aria-current={tab === id ? 'page' : undefined}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-left w-full transition-colors ${FOCO} ${tab === id ? 'bg-white/15 text-white' : 'text-slate-400 hover:bg-white/10 hover:text-white'}`}>
+                  {icon('currentColor')}{label}
+                </button>
+              ))}
+            </nav>
+            <div className="px-5 pb-5 flex flex-col gap-3">
+              <FechaOperacion sesion={sesion} />
+              <p className="text-[11px] text-slate-400 truncate">{sesion.usuario} · Gerencia</p>
+              <button onClick={sesion.salir} className={`flex items-center gap-2 text-xs text-slate-400 hover:text-white ${FOCO}`}>{Ico.logout()} Cerrar sesión</button>
+            </div>
+          </aside>
+
+          <header className="md:hidden bg-[#0f172a] px-4 pt-4 pb-3 flex items-center justify-between gap-2 shrink-0">
+            <span className="text-white font-bold text-sm" style={DISPLAY}>Crédito Vecino · Gerencia</span>
+            <button onClick={sesion.salir} aria-label="Cerrar sesión" className={`text-slate-400 p-2 ${FOCO}`}>{Ico.logout()}</button>
+          </header>
+          <div className="md:hidden bg-[#0f172a] px-4 pb-3 shrink-0"><FechaOperacion sesion={sesion} /></div>
+
+          <main className="flex-1 overflow-auto min-h-0" key={clave}>
+            {tab === 'tablero' && <Tablero irComite={() => ir('comite')} irCierres={() => ir('cierres')} irAsistente={() => ir('asistente')} />}
+            {tab === 'comite' && <Comite />}
+            {tab === 'cierres' && <Cierres />}
+            {tab === 'asistente' && <Asistente />}
+          </main>
+
+          <nav className="md:hidden flex items-center border-t border-slate-100 bg-white shrink-0" aria-label="Navegación gerencial">
+            {tabs.map(({ id, label, icon }) => (
+              <button key={id} onClick={() => ir(id)} aria-current={tab === id ? 'page' : undefined}
+                className={`flex-1 flex flex-col items-center py-2 gap-0.5 min-h-[56px] ${FOCO}`}>
+                <span className="flex items-center justify-center w-10 h-10">{icon(tab === id ? '#0f172a' : '#94a3b8')}</span>
+                <span className={`text-[10px] font-medium ${tab === id ? 'text-[#0f172a]' : 'text-slate-400'}`}>{label}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+  );
+}
+
+/** Encabezado de página de escritorio (gerencia). */
+export function EncabezadoPagina({ titulo, sub, children }: { titulo: string; sub?: string; children?: ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div>
+        <h2 className="text-2xl font-bold text-[#0f172a]" style={DISPLAY}>{titulo}</h2>
+        {sub && <p className="text-slate-500 text-sm mt-0.5">{sub}</p>}
+      </div>
+      {children}
+    </div>
+  );
+}
+

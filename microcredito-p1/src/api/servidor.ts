@@ -11,65 +11,14 @@ import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest }
 import { z } from 'zod';
 
 import { AdaptadorNucleo, ErrorNegocio } from '../persistencia/adaptador-nucleo.js';
-import { CANALES, ServicioOperaciones } from '../persistencia/servicio-operaciones.js';
+import { ServicioOperaciones } from '../persistencia/servicio-operaciones.js';
 import type { TramoMora } from '../dominio/politica-mora/politica-mora.js';
 import { aJson } from './serializacion.js';
 import { aProblema } from './errores.js';
-
-const Fecha = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato AAAA-MM-DD');
-const Monto = z.string().regex(/^\d{1,13}(\.\d{1,2})?$/, 'Monto con hasta dos decimales, como texto');
-const Tramo = z.enum(['MORA_1', 'MORA_2', 'MORA_3', 'VENCIDO', 'INCOBRABLE']);
-const Perfil = z.enum(['asesor', 'gerencia']);
-
-const ConCorte = z.object({ fechaCorte: Fecha });
-
-const AltaClienteBody = z.object({
-  idCliente: z.string().regex(/^CL-\d{4}$/),
-  nombreCompleto: z.string().trim().min(3).max(150),
-  dpi: z.string().trim().min(5).max(30),
-  telefono: z.string().trim().max(20).optional(),
-  municipio: z.string().trim().min(2).max(100),
-  fechaAlta: Fecha,
-}).strict();
-
-const SolicitudBody = z.object({
-  idSolicitud: z.string().regex(/^SOL-\d{4,8}$/).optional(),
-  idCliente: z.string().regex(/^CL-\d{4}$/),
-  idAsesor: z.string().regex(/^AS-\d{2}$/),
-  capital: Monto,
-  plazoMeses: z.number().int().min(3).max(24),
-  tnaBps: z.number().int().min(1).max(9999),
-  fecha: Fecha,
-}).strict();
-
-const PlanBody = z.object({
-  capital: Monto,
-  plazoMeses: z.number().int().min(3).max(24),
-  tnaBps: z.number().int().min(1).max(9999),
-  fechaDesembolso: Fecha,
-}).strict();
-
-const ResolucionBody = z.object({
-  decision: z.enum(['APROBADA', 'RECHAZADA']),
-  motivo: z.string().trim().min(3).max(300),
-  fecha: Fecha,
-}).strict();
-
-const DesembolsoBody = z.object({ idCredito: z.string().regex(/^CV-\d{4}-\d{4}$/), fecha: Fecha }).strict();
-
-const SimulacionPagoBody = z.object({
-  idCredito: z.string().min(1),
-  fechaPago: Fecha,
-  monto: Monto.optional(),
-  claveIdempotencia: z.string().min(1).max(64).optional(),
-}).strict();
-
-const PagoBody = z.object({
-  monto: Monto,
-  fechaPago: Fecha,
-  canal: z.enum(CANALES),
-  aprobacion: z.object({ aprobado: z.boolean(), aprobadoPor: z.string().trim().min(1) }).strict().optional(),
-}).strict();
+import {
+  AltaClienteBody, BusquedaQuery, CarteraMoraQuery, ConCorte, CreditosQuery, DesembolsoBody, PagoBody, PeriodoCierre,
+  Perfil, PlanBody, ResolucionBody, SimulacionPagoBody, SolicitudBody, VencimientosQuery,
+} from '../contratos/api.js';
 
 export interface OpcionesServidor {
   adaptador: AdaptadorNucleo;
@@ -117,7 +66,7 @@ export async function construirServidor(opciones: OpcionesServidor): Promise<Fas
   app.get('/api/politicas', async (_req, reply) => ok(reply, adaptador.politicas.parametros));
 
   app.get('/api/clientes', async (req, reply) => {
-    const { q } = z.object({ q: z.string().optional() }).parse(req.query);
+    const { q } = BusquedaQuery.parse(req.query);
     const texto = q?.trim().toLowerCase();
     const clientes = (await adaptador.listarClientes()).filter((c) =>
       !texto || c.idCliente.toLowerCase().includes(texto) || c.nombreCompleto.toLowerCase().includes(texto) || c.dpi.toLowerCase().includes(texto));
@@ -130,7 +79,7 @@ export async function construirServidor(opciones: OpcionesServidor): Promise<Fas
 
   // ---------------- Créditos ----------------
   app.get('/api/creditos', async (req, reply) => {
-    const { fechaCorte, q, idAsesor } = ConCorte.extend({ q: z.string().optional(), idAsesor: z.string().optional() }).parse(req.query);
+    const { fechaCorte, q, idAsesor } = CreditosQuery.parse(req.query);
     const texto = q?.trim().toLowerCase();
     const filas = (await adaptador.listarDetallesCreditos(fechaCorte))
       .filter((d) => !idAsesor || d.idAsesor === idAsesor)
@@ -184,15 +133,15 @@ export async function construirServidor(opciones: OpcionesServidor): Promise<Fas
     });
   });
   app.get('/api/cartera/mora', async (req, reply) => {
-    const { fechaCorte, tramo } = ConCorte.extend({ tramo: Tramo.optional() }).parse(req.query);
+    const { fechaCorte, tramo } = CarteraMoraQuery.parse(req.query);
     return ok(reply, await adaptador.listarCreditosEnMora(fechaCorte, tramo as TramoMora | undefined));
   });
   app.get('/api/vencimientos', async (req, reply) => {
-    const { fechaCorte, dias } = ConCorte.extend({ dias: z.coerce.number().int().min(1).max(366) }).parse(req.query);
+    const { fechaCorte, dias } = VencimientosQuery.parse(req.query);
     return ok(reply, await adaptador.verProximosVencimientos(fechaCorte, dias));
   });
   app.get('/api/cierres/:periodo', async (req, reply) => {
-    const { periodo } = z.object({ periodo: z.string().regex(/^\d{4}-\d{2}(-\d{2})?$/, 'Periodo AAAA-MM o AAAA-MM-DD') }).parse(req.params);
+    const { periodo } = z.object({ periodo: PeriodoCierre }).parse(req.params);
     return ok(reply, await adaptador.consultarCierre(periodo));
   });
 

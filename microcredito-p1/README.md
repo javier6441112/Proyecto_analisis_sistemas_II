@@ -97,3 +97,22 @@ npm run cargar:datos
 ```
 
 El núcleo se conserva. Esta fase almacena los datos y prepara vectores; la conexión de los registros al cálculo financiero se implementará después.
+
+## Interfaz web (React)
+
+La interfaz está en `web/` y replica el prototipo de Figma: vista móvil del asesor
+(clientes, solicitudes, créditos, mora y pagos) y vista de gerencia (tablero, comité,
+cierres y asistente). Habla solo con la API real; los tipos vienen del contrato
+`src/contratos/api.ts`, el mismo que valida el servidor y publica `docs/api/openapi.yaml`.
+
+```powershell
+npm run web:install   # una sola vez
+npm run web:build     # compila web/dist
+npm run api           # sirve la API y la interfaz en http://127.0.0.1:3000
+```
+
+Para desarrollar con recarga en caliente: `npm run api` en una terminal y
+`npm run web:dev` en otra (http://localhost:5173, redirige `/api` al puerto 3000).
+
+La interfaz no calcula dinero: todas las cifras salen del servidor. Toda consulta usa la
+fecha de operación elegida en pantalla (por defecto, 31 oct 2026, fecha de la cartera canónica).

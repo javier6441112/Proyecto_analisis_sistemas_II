@@ -12,7 +12,10 @@
     "cargar:datos": "node --import tsx src/persistencia/cargar.ts",
     "rag:ingestar": "node --import tsx src/rag/ingestar.ts",
     "api": "node --import tsx src/api/main.ts",
-    "evals": "node --import tsx tests/evals/ejecutar.ts"
+    "evals": "node --import tsx tests/evals/ejecutar.ts",
+    "web:install": "npm --prefix web install",
+    "web:dev": "npm --prefix web run dev",
+    "web:build": "npm --prefix web run build"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
