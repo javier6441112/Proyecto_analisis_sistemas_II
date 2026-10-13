@@ -83,36 +83,106 @@ Los diagramas Mermaid pueden visualizarse en la vista previa Markdown de VS Code
 
 La autoria, revision y validacion final del contenido corresponden al equipo del proyecto.
 
-## Proyecto Final — E2
+## Proyecto Final — Asistente gerencial
 
-Persistencia PGlite + pgvector y cargador canónico:
-[Guía de instalación, ejecución y pruebas](docs/E2-persistencia-carga.md).
+Sistema completo de Crédito Vecino: núcleo de cálculo (P1/P2) + persistencia (E2) + API + interfaz React (E1) + servidor MCP (E3) + RAG con citación (E4) + chat gerencial (E5). Todo corre en la computadora del equipo, **sin internet**.
 
-Desde esta carpeta, en PowerShell:
+| Pieza | Dónde | Detalle |
+|---|---|---|
+| Núcleo (no se reescribe) | `src/dominio/` | Cuotas, mora por tramo, prelación, cartera |
+| Persistencia y carga (E2) | `src/persistencia/` | PGlite + pgvector en `.cv-db`; operaciones en `bitacora_operaciones` |
+| API REST | `src/api/` | Fastify 5 + Zod; fecha de corte obligatoria |
+| Interfaz (E1) | `web/` (proyecto con su propio `package.json`) | React 19 + Vite + Tailwind; replica el prototipo de Figma; tipos del contrato `src/contratos/api.ts` |
+| Servidor MCP (E3) | `src/mcp/` | SDK oficial; solo lectura por defecto; pago con aprobación humana |
+| RAG (E4) | `src/rag/` | Fragmentos por sección, `bge-m3`, pgvector, citación por `doc_id` |
+| Chat (E5) | `src/chat/`, `web/src/gerencia/Asistente.tsx` | `qwen2.5:7b` local; guardias en código |
+| Pruebas (E6) | `tests/` | `npm test` (incluye el contrato OpenAPI) y `npm run evals` |
+
+Detalle técnico del asistente, la seguridad y los resultados de las evals: [docs/asistente-ia.md](docs/asistente-ia.md).
+
+Guía de la carga canónica (E2): [docs/E2-persistencia-carga.md](docs/E2-persistencia-carga.md).
+
+### Requisitos
+
+- Windows 10/11 (o macOS/Linux), **16 GB de RAM recomendados** (8 GB funciona, lento).
+- [Node.js 22 LTS](https://nodejs.org), [Git](https://git-scm.com) y [Ollama](https://ollama.com/download) instalados de forma nativa (sin Docker).
+
+### Instalación (una sola vez, con internet)
+
 ```powershell
+cd microcredito-p1
 npm install
-$env:CV_DATA_DIR = (Resolve-Path .\datos\datos-proyecto-final).Path
-$env:CV_DB_DIR = Join-Path $PWD.Path '.cv-db'
-npm run cargar:datos
+ollama pull qwen2.5:7b
+ollama pull bge-m3
+npm run web:install   # dependencias de la interfaz (web/)
 ```
 
-El núcleo se conserva. Esta fase almacena los datos y prepara vectores; la conexión de los registros al cálculo financiero se implementará después.
-
-## Interfaz web (React)
-
-La interfaz está en `web/` y replica el prototipo de Figma: vista móvil del asesor
-(clientes, solicitudes, créditos, mora y pagos) y vista de gerencia (tablero, comité,
-cierres y asistente). Habla solo con la API real; los tipos vienen del contrato
-`src/contratos/api.ts`, el mismo que valida el servidor y publica `docs/api/openapi.yaml`.
+### Carga de datos y arranque
 
 ```powershell
-npm run web:install   # una sola vez
-npm run web:build     # compila web/dist
-npm run api           # sirve la API y la interfaz en http://127.0.0.1:3000
+$env:CV_DATA_DIR = (Resolve-Path .\datos\datos-proyecto-final).Path
+$env:CV_DB_DIR   = Join-Path $PWD.Path '.cv-db'
+npm run cargar:datos     # Bloque 1: SHA-256 en verde · 60 clientes · 75 créditos · 228 pagos
+npm run rag:ingestar     # 7 documentos → 32 fragmentos con bge-m3
+npm run web:build        # compila la interfaz
+npm run api              # http://127.0.0.1:3000  (API + interfaz + /mcp + chat)
 ```
 
-Para desarrollar con recarga en caliente: `npm run api` en una terminal y
-`npm run web:dev` en otra (http://localhost:5173, redirige `/api` al puerto 3000).
+O todo de una vez: `.\iniciar.ps1` (verifica Ollama, modelos y base, y arranca).
 
-La interfaz no calcula dinero: todas las cifras salen del servidor. Toda consulta usa la
-fecha de operación elegida en pantalla (por defecto, 31 oct 2026, fecha de la cartera canónica).
+> Un solo proceso puede abrir `.cv-db`: no ejecute `cargar:datos` ni `rag:ingestar` con la API encendida. `npm test` y `npm run evals` trabajan sobre copias y no modifican la base.
+
+Para desarrollar la interfaz con recarga en caliente: `npm run api` en una terminal y `npm run web:dev` en otra (http://localhost:5173, redirige `/api` al puerto 3000).
+
+### Pruebas
+
+```powershell
+npm test            # Bloque 0: suite del P1/P2 + carga + adaptador + API + MCP + RAG + chat
+npm run typecheck   # TypeScript estricto del servidor (la interfaz se revisa en npm run web:build)
+npm run evals       # evals del asistente contra qwen2.5:7b real → tests/evals/resultados.md
+```
+
+### Variables de entorno
+
+| Variable | Por defecto | Uso |
+|---|---|---|
+| `CV_DATA_DIR` | — | Paquete canónico (solo para la carga) |
+| `CV_DB_DIR` | `./.cv-db` | Base PGlite |
+| `PORT` | `3000` | Puerto de la API y la interfaz |
+| `OLLAMA_URL` | `http://127.0.0.1:11434` | Ollama local |
+| `CV_LLM_MODELO` | `qwen2.5:7b` | Modelo de chat |
+| `CV_EMBEDDINGS` | `bge-m3` | Modelo de embeddings |
+| `CV_LLM_CONTEXTO` | `8192` | Contexto del modelo (4096 con 8 GB de RAM) |
+| `CV_RAG_UMBRAL` | `0.50` | Similitud mínima para citar un fragmento |
+
+### Modelo de lenguaje
+
+`qwen2.5:7b` vía Ollama, local. Se eligió midiendo: con las 7 herramientas reales y las preguntas del guion, `qwen2.5:7b` acertó herramienta y argumentos en 6/6 y `mistral` 7B en 0/5 (describía la función en vez de llamarla e inventaba cifras). Embeddings: `bge-m3` (multilingüe, buen español).
+
+### Tabla pantalla ↔ caso de uso (sección 6.1)
+
+Al entrar se elige el perfil (asesor con su nombre, o gerencia). El asesor ve la versión móvil con pestañas; la gerencia, la de escritorio.
+
+| Pantalla (pestaña) | Perfil · formato | Casos de uso | Operaciones / consultas del video |
+|---|---|---|---|
+| Inicio | Asesor · móvil | — (resumen de su cartera y accesos) | — |
+| Clientes (alta y búsqueda) | Asesor · móvil | UC-01 Registrar cliente | OP-3 |
+| Solicitudes (formulario → plan simulado → envío al comité → desembolso) | Asesor · móvil | UC-02 Solicitar crédito, UC-04 Desembolsar | OP-3 |
+| Comité | Gerencia · escritorio | UC-03 Evaluar y aprobar crédito | OP-3 |
+| Créditos (detalle → plan de amortización → detalle de la mora por tramo) | Asesor · móvil (también desde gerencia) | UC-06 Calcular mora (consulta) | OP-2, G-5 |
+| Pagos (prelación, aprobación, rechazos, reintento) | Asesor · móvil | UC-05 Registrar pago de cuota | OP-1, OP-2, OP-4, OP-5, OP-6 |
+| Tablero | Gerencia · escritorio | UC-08 Consultar cartera en riesgo | G-1, G-4 |
+| Cierres (diario / mensual) | Gerencia · escritorio | UC-07 Generar cierre | G-2, G-3 |
+| Asistente (chat) | Gerencia · escritorio | UC-05 a UC-08 vía MCP | G-1 a G-8, OP-7 |
+
+Flujos navegables: **originación** (Clientes → Solicitudes → Comité → Desembolso), **cobro en campo** (Créditos → Detalle → Mora → Pagos) y **consulta gerencial** (Tablero → cartera en riesgo por tramo → créditos).
+
+La fecha de operación elegida en pantalla es el puerto Reloj: arranca en 2026-10-31 y toda consulta la envía como fecha de corte. La interfaz no calcula dinero: todo monto y porcentaje viene de la API. La API se documenta en `docs/api/openapi.yaml`, generado desde el mismo contrato que valida el servidor.
+
+### Herramientas de IA del Proyecto Final
+
+- **Claude (Anthropic)**: apoyo en arquitectura, implementación de API, MCP, RAG, chat e interfaz, pruebas y documentación.
+- **Gemini (Google)**: borradores iniciales del cargador y del adaptador.
+- **qwen2.5:7b y bge-m3 (Ollama)**: modelos que usa el sistema en ejecución.
+
+El equipo revisó, probó y puede explicar todo lo entregado.

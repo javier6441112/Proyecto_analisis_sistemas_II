@@ -95,11 +95,7 @@ function Respuesta({ r }: { r: TRespuestaChat }) {
     <div className="self-start max-w-[92%] flex flex-col gap-2">
       <div className="bg-slate-100 rounded-2xl rounded-bl-md px-4 py-3 text-sm text-[#0f172a] whitespace-pre-wrap">{r.respuesta}</div>
       {r.alertasSeguridad.length > 0 && <Alert type="warning">{r.alertasSeguridad.join(' · ')}</Alert>}
-      {r.tarjetas.filter((t) => !t.error && t.herramienta !== 'proponer_pago').length > 0 && (
-        <p className="text-[11px] text-slate-500">
-          Datos consultados: {r.tarjetas.filter((t) => !t.error && t.herramienta !== 'proponer_pago').map((t) => t.herramienta).join(', ')}
-        </p>
-      )}
+      {r.tarjetas.filter((t) => !t.error && t.herramienta !== 'proponer_pago').map((t, i) => <TarjetaNucleo key={i} t={t} />)}
       {r.citas.length > 0 && (
         <p className="text-[11px] text-slate-500">Fuentes: {r.citas.map((c) => `[${c.docId}] ${c.titulo} (vigencia ${c.vigencia})`).join(' · ')}</p>
       )}
@@ -147,6 +143,37 @@ function PropuestaPago({ datos }: { datos: Record<string, unknown> }) {
         <Alert type={estado === 'aprobada' ? 'success' : 'info'}>{estado === 'aprobada' ? 'Pago aprobado y registrado.' : 'Propuesta rechazada; no se registró ningún pago.'}</Alert>
       )}
       {error && <Alert type="error">{error}</Alert>}
+    </div>
+  );
+}
+
+type Tarjeta = TRespuestaChat['tarjetas'][number];
+interface FilaCredito { idCredito: string; cliente?: string; diasAtraso?: number; tramo?: string; saldoCapital?: { valor: string; moneda: 'GTQ' } }
+
+/** Tarjeta con los datos tal como los devolvió el núcleo: el resumen y, si es una lista, todas sus filas. */
+function TarjetaNucleo({ t }: { t: Tarjeta }) {
+  const resumen = typeof t.datos.resumen === 'string' ? t.datos.resumen : '';
+  const filas = Array.isArray(t.datos.creditos) ? (t.datos.creditos as FilaCredito[]) : [];
+  return (
+    <div className="border border-teal-200 bg-teal-50/50 rounded-xl px-3 py-2 text-xs text-[#0f172a]">
+      <p className="text-[10px] font-bold uppercase tracking-wide text-teal-700">Datos del núcleo · {t.herramienta}</p>
+      {resumen && <p className="mt-1">{resumen}</p>}
+      {filas.length > 0 && (
+        <details className="mt-1">
+          <summary className="cursor-pointer text-teal-700 font-semibold">Ver los {filas.length} créditos</summary>
+          <table className="mt-1 w-full text-left">
+            <thead><tr className="text-slate-500"><th>Crédito</th><th>Cliente</th><th className="text-right">Días</th><th className="text-right">Saldo</th></tr></thead>
+            <tbody>
+              {filas.map((f) => (
+                <tr key={f.idCredito} className="border-t border-teal-100">
+                  <td className="py-0.5 font-mono">{f.idCredito}</td><td>{f.cliente ?? ''}</td>
+                  <td className="text-right">{f.diasAtraso ?? ''}</td><td className="text-right">{f.saldoCapital ? Q(f.saldoCapital) : ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
+      )}
     </div>
   );
 }
