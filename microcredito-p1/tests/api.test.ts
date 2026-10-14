@@ -152,6 +152,14 @@ describe('Bloque 2 · operaciones por la interfaz', () => {
   });
 
   it('OP-4 · reintentar OP-1 con la misma clave no vuelve a aplicar el pago', async () => {
+    const antes = {
+      credito: (await get('/api/creditos/CV-2026-0043?fechaCorte=' + F)).body,
+      cierre: (await get('/api/cierres/' + F)).body,
+      pagos: await adaptador.auditarPagos(),
+      eventos: await adaptador.leerEventosBitacora(),
+      canonicos: (await adaptador.db.query('SELECT * FROM eventos_canonicos ORDER BY seq')).rows,
+      pagosCanonicos: (await adaptador.db.query('SELECT * FROM pagos ORDER BY id')).rows,
+    };
     const r = await app.inject({
       method: 'POST', url: '/api/creditos/CV-2026-0043/pagos', headers: { ...ASESOR, 'idempotency-key': 'OP1-0043' },
       payload: { monto: '561.87', fechaPago: F, canal: 'campo', aprobacion: APROBACION },
@@ -160,6 +168,12 @@ describe('Bloque 2 · operaciones por la interfaz', () => {
     expect(r.json().resultado).toBe('DUPLICADO');
     expect(r.json().credito.saldoCapital.valor).toBe('2530.35');
     expect(r.json().credito.cuotasPagadas).toBe(1);
+    expect(r.json().credito).toEqual(antes.credito);
+    expect((await get('/api/cierres/' + F)).body).toEqual(antes.cierre);
+    expect(await adaptador.auditarPagos()).toEqual(antes.pagos);
+    expect(await adaptador.leerEventosBitacora()).toEqual(antes.eventos);
+    expect((await adaptador.db.query('SELECT * FROM eventos_canonicos ORDER BY seq')).rows).toEqual(antes.canonicos);
+    expect((await adaptador.db.query('SELECT * FROM pagos ORDER BY id')).rows).toEqual(antes.pagosCanonicos);
   });
 
   it('OP-5 · Q500.00 a CV-2026-0061 se rechaza e indica el monto correcto', async () => {

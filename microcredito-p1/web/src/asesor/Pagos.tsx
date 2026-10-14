@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Ir } from '../App';
 import {
   api, mensajeDeError, type TCanal, type TCreditoResumen, type TCuotaExigible, type TDetalleCredito, type TPagoAplicadoRespuesta,
-  type TPagoDuplicadoRespuesta, type TSimulacionPago,
+  type TPagoDuplicadoRespuesta, type TSimulacionPago, type TPagoBody,
 } from '../api';
 import { ETIQUETA_CANAL, ETIQUETA_ESTADO, ETIQUETA_TRAMO, Q, fecha, normalizarMonto } from '../formato';
 import { useSesion } from '../sesion';
@@ -13,6 +13,7 @@ import {
 
 type Aceptable = Extract<TSimulacionPago, { resultado: 'ACEPTABLE' }>;
 type Resultado = TPagoAplicadoRespuesta | TPagoDuplicadoRespuesta;
+type OperacionPago = { idCredito: string; cuerpo: TPagoBody; claveIdempotencia: string };
 
 export default function Pagos({ ir, idInicial }: { ir: Ir; idInicial?: string }) {
   const [id, setId] = useState(idInicial ?? '');
@@ -79,7 +80,7 @@ function FilaCobro({ c, onClick }: { c: TCreditoResumen; onClick: () => void }) 
 }
 
 // ── Pasos 2–4: exigible → revisión → comprobante ─────────────────────────
-function RegistrarPago({ id, volver, ir }: { id: string; volver: () => void; ir: Ir }) {
+export function RegistrarPago({ id, volver, ir }: { id: string; volver: () => void; ir: Ir }) {
   const s = useSesion();
   const [fechaPago, setFechaPago] = useState(s.fecha);
   const [monto, setMonto] = useState('');
@@ -91,6 +92,7 @@ function RegistrarPago({ id, volver, ir }: { id: string; volver: () => void; ir:
   const [error, setError] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const [resultado, setResultado] = useState<Resultado | null>(null);
+  const [operacion, setOperacion] = useState<OperacionPago | null>(null);
 
   const exigible = useCarga(async () => {
     const r = await api.exigible(id, fechaPago);
@@ -110,6 +112,7 @@ function RegistrarPago({ id, volver, ir }: { id: string; volver: () => void; ir:
         setMonto(m);
         setSimulacion(r);
         setClave(crypto.randomUUID()); // Una clave por pago revisado: los reintentos no cobran dos veces.
+        setOperacion(null);
         setAprobado(false);
         setPaso('revision');
       } else if ('resultado' in r && r.resultado === 'RECHAZADO') {
@@ -124,17 +127,12 @@ function RegistrarPago({ id, volver, ir }: { id: string; volver: () => void; ir:
     }
   };
 
-  const confirmar = async () => {
-    if (!simulacion || !aprobado) return;
+  const enviarOperacion = async (original: OperacionPago) => {
+    if (ocupado) return;
     setOcupado(true);
     setError('');
     try {
-      const r = await api.registrarPago(id, {
-        monto,
-        fechaPago,
-        canal,
-        aprobacion: { aprobado: true, aprobadoPor: s.usuario },
-      }, clave);
+      const r = await api.registrarPago(original.idCredito, original.cuerpo, original.claveIdempotencia);
       setResultado(r);
       setPaso('hecho');
     } catch (err) {
@@ -143,6 +141,23 @@ function RegistrarPago({ id, volver, ir }: { id: string; volver: () => void; ir:
       setOcupado(false);
     }
   };
+
+  const confirmar = async () => {
+    if (!simulacion || !aprobado || ocupado) return;
+    const original = operacion ?? {
+      idCredito: id,
+      cuerpo: { monto, fechaPago, canal, aprobacion: { aprobado: true, aprobadoPor: s.usuario } },
+      claveIdempotencia: clave,
+    };
+    // Guarda la solicitud antes de enviarla; incluso un error de red conserva el pago original.
+    setOperacion(original);
+    await enviarOperacion(original);
+  };
+
+  if (paso === 'hecho' && resultado && operacion) {
+    return <Comprobante r={resultado} d={resultado.credito} fechaPago={operacion.cuerpo.fechaPago} canal={operacion.cuerpo.canal} ir={ir}
+      reenviar={() => void enviarOperacion(operacion)} ocupado={ocupado} error={error} />;
+  }
 
   return (
     <ConCarga carga={exigible} texto="Consultando lo exigible…">
@@ -156,8 +171,6 @@ function RegistrarPago({ id, volver, ir }: { id: string; volver: () => void; ir:
             </p>
           </Cabecera>
         );
-
-        if (paso === 'hecho' && resultado) return <Comprobante r={resultado} d={d} fechaPago={fechaPago} canal={canal} ir={ir} />;
 
         if (paso === 'revision' && simulacion) {
           const a = simulacion.aplicacion.aplicado;
@@ -267,7 +280,10 @@ function Prelacion({ g, m, i, k, total }: { g: string; m: string; i: string; k: 
   );
 }
 
-function Comprobante({ r, d, fechaPago, canal, ir }: { r: Resultado; d: TDetalleCredito; fechaPago: string; canal: TCanal; ir: Ir }) {
+function Comprobante({ r, d, fechaPago, canal, ir, reenviar, ocupado, error }: {
+  r: Resultado; d: TDetalleCredito; fechaPago: string; canal: TCanal; ir: Ir;
+  reenviar: () => void; ocupado: boolean; error: string;
+}) {
   const duplicado = r.resultado === 'DUPLICADO';
   const aplicado = duplicado ? r.pagoOriginal.aplicado : r.aplicacion.aplicado;
   const monto = duplicado ? r.pagoOriginal.monto : r.cuota.total;
@@ -279,6 +295,7 @@ function Comprobante({ r, d, fechaPago, canal, ir }: { r: Resultado; d: TDetalle
         <p className="text-slate-500 text-sm">{d.nombreCliente} · {d.idCredito}</p>
       </Exito>
       <Filas filas={[
+        ['Resultado', r.resultado],
         ['N° de operación', <span className="font-mono text-xs break-all">{r.claveIdempotencia}</span>],
         ['Cliente', d.nombreCliente],
         ['Crédito', <span className="font-mono">{d.idCredito}</span>],
@@ -294,6 +311,8 @@ function Comprobante({ r, d, fechaPago, canal, ir }: { r: Resultado; d: TDetalle
         </Seccion>
       )}
       <Alert type="success"><span className="flex items-center gap-1.5">Registrado en el servidor con la clave de idempotencia mostrada.</span></Alert>
+      {error && <Alert type="error">{error}</Alert>}
+      <BtnSecondary label={ocupado ? 'Reenviando…' : 'Reenviar el mismo pago'} onClick={reenviar} disabled={ocupado} />
       <BtnPrimary label="Ver crédito" onClick={() => ir({ tab: 'creditos', idCredito: d.idCredito })} />
       <BtnSecondary label="Volver al inicio" onClick={() => ir({ tab: 'inicio' })} />
     </Pantalla>
