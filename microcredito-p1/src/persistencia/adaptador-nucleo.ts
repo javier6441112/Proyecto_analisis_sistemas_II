@@ -25,7 +25,9 @@ import { addDays, addMonths, endOfMonth, format, isValid, parseISO } from 'date-
 import { Decimal } from 'decimal.js';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { createHash } from 'node:crypto';
 import { abrirBaseDatos } from './base-datos.js';
+import { asegurarCierres, guardarCierre, leerCierre } from './cierres-persistidos.js';
 
 import { Dinero } from '../dominio/dinero.js';
 import { calcularDiasAtraso } from '../dominio/calculadora-mora.js';
@@ -102,6 +104,7 @@ export interface ConexionSql {
 
 /** Forma de `politicas.json` tal como la publica el paquete canónico. */
 export interface ParametrosPoliticas {
+  version?: string;
   moneda: string;
   base_conteo: string;
   politicas_mora: Record<string, {
@@ -243,6 +246,15 @@ export interface RecuperacionesPorConcepto {
 }
 
 export interface Cierre {
+  estado: 'PREVIA' | 'EJECUTADO';
+  fechaCorte: string;
+  ejecutadoPor?: string;
+  politicasUtilizadas: {
+    versionParametros?: string;
+    huellaParametros: string;
+    parametros: ParametrosPoliticas;
+    mora: Array<{ id: string; vigenteDesde: string; huellaDefinicion: string }>;
+  };
   tipo: 'DIARIO' | 'MENSUAL';
   periodo: string;
   desde: string;
@@ -912,6 +924,7 @@ export class AdaptadorNucleo {
     const esquema = await detectarEsquema(db);
     const politicas = new ContextoPoliticas(await leerParametros(db, dataDir));
     await asegurarBitacora(db);
+    await asegurarCierres(db);
     return new AdaptadorNucleo(db, esquema, politicas);
   }
 
@@ -1130,10 +1143,27 @@ export class AdaptadorNucleo {
 
   /**
    * G-2 / G-3 · cierre diario (AAAA-MM-DD) o mensual (AAAA-MM). La fecha de corte del
-   * cierre es el último día del periodo. Las recuperaciones se desglosan con la misma
-   * prelación con que el núcleo aplicó cada pago.
+   * cierre es el último día del periodo. Devuelve la instantánea ejecutada si existe;
+   * de lo contrario calcula una vista previa sin persistirla. Las recuperaciones se
+   * desglosan con la misma prelación con que el núcleo aplicó cada pago.
    */
   async consultarCierre(periodo: string): Promise<Cierre> {
+    const guardado = await leerCierre(this.db, periodo);
+    return guardado ?? this.calcularCierre(periodo);
+  }
+
+  /** Una ejecución por período; usa la misma exclusión mutua que las operaciones financieras. */
+  async ejecutarCierre(periodo: string, usuario: string): Promise<Cierre> {
+    if (!usuario.trim()) throw new ErrorNegocio('DATOS_INVALIDOS', 'El cierre requiere un usuario');
+    return this.exclusivo(async () => {
+      const guardado = await leerCierre(this.db, periodo);
+      if (guardado) return guardado;
+      const cierre = await this.calcularCierre(periodo);
+      return guardarCierre(this.db, { ...cierre, estado: 'EJECUTADO', ejecutadoPor: usuario.trim() });
+    });
+  }
+
+  private async calcularCierre(periodo: string): Promise<Cierre> {
     let tipo: Cierre['tipo'];
     let desde: string;
     let hasta: string;
@@ -1163,7 +1193,21 @@ export class AdaptadorNucleo {
       total: sumar(aplicados.map((p) => p.monto)),
     };
     const incobrables = detalles.filter((d) => d.fechaIncobrable && enRango(d.fechaIncobrable));
+    const parametros = structuredClone(this.politicas.parametros);
+    const huella = (valor: unknown): string => createHash('sha256').update(JSON.stringify(valor)).digest('hex');
+    const idsMora = [...new Set(detalles.map((d) => d.politicaMora))].sort();
     return {
+      estado: 'PREVIA',
+      fechaCorte: hasta,
+      politicasUtilizadas: {
+        ...(parametros.version ? { versionParametros: parametros.version } : {}),
+        huellaParametros: huella(parametros),
+        parametros,
+        mora: idsMora.map((id) => ({ id,
+          vigenteDesde: this.politicas.politicaParaOtorgamiento(detalles.find((d) => d.politicaMora === id)!.fechaDesembolso).vigenteDesde,
+          huellaDefinicion: huella(parametros.politicas_mora[id]),
+        })),
+      },
       tipo,
       periodo,
       desde,

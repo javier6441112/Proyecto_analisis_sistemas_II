@@ -1474,7 +1474,7 @@
         ],
         "operationId": "consultarCierre",
         "summary": "Cierre diario (AAAA-MM-DD) o mensual (AAAA-MM)",
-        "description": "Idempotente: consultar el mismo periodo devuelve siempre las mismas cifras y no genera movimientos.",
+        "description": "No ejecuta el cierre: devuelve una PREVIA calculada o el EJECUTADO guardado, sin recalcular sus cifras.",
         "parameters": [
           {
             "name": "periodo",
@@ -1510,6 +1510,97 @@
                   "title": "Datos inválidos",
                   "status": 400,
                   "detail": "La solicitud no cumple el esquema",
+                  "codigo": "DATOS_INVALIDOS"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cierres/{periodo}/ejecucion": {
+      "post": {
+        "tags": [
+          "Gerencia"
+        ],
+        "operationId": "ejecutarCierre",
+        "summary": "Ejecutar y guardar el cierre definitivo del periodo",
+        "description": "Solo gerencia. Idempotente por periodo: devuelve el resultado guardado si ya existe, sin recalcular ni generar movimientos. El corte sigue siendo el último día del periodo.",
+        "parameters": [
+          {
+            "name": "periodo",
+            "in": "path",
+            "required": true,
+            "description": "AAAA-MM o AAAA-MM-DD",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}(-\\d{2})?$"
+            }
+          },
+          {
+            "name": "X-Perfil",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asesor",
+                "gerencia"
+              ]
+            },
+            "description": "Perfil de quien opera"
+          },
+          {
+            "name": "X-Usuario",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Nombre de quien opera (auditoría)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cierre ejecutado o previamente guardado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cierre"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                },
+                "example": {
+                  "type": "https://creditovecino.local/problemas/datos-invalidos",
+                  "title": "Datos inválidos",
+                  "status": 400,
+                  "detail": "La solicitud no cumple el esquema",
+                  "codigo": "DATOS_INVALIDOS"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil no autorizado",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                },
+                "example": {
+                  "type": "https://creditovecino.local/problemas/datos-invalidos",
+                  "title": "Perfil no autorizado",
+                  "status": 403,
+                  "detail": "Solo el perfil gerencia puede ejecutar cierres",
                   "codigo": "DATOS_INVALIDOS"
                 }
               }
@@ -3810,6 +3901,74 @@
       "Cierre": {
         "type": "object",
         "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "PREVIA",
+              "EJECUTADO"
+            ]
+          },
+          "fechaCorte": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Fecha calendario AAAA-MM-DD",
+            "examples": [
+              "2026-10-31"
+            ]
+          },
+          "ejecutadoPor": {
+            "type": "string"
+          },
+          "politicasUtilizadas": {
+            "type": "object",
+            "properties": {
+              "versionParametros": {
+                "type": "string"
+              },
+              "huellaParametros": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "parametros": {
+                "$ref": "#/components/schemas/Politicas"
+              },
+              "mora": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "vigenteDesde": {
+                      "type": "string",
+                      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                      "description": "Fecha calendario AAAA-MM-DD",
+                      "examples": [
+                        "2026-10-31"
+                      ]
+                    },
+                    "huellaDefinicion": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "vigenteDesde",
+                    "huellaDefinicion"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "huellaParametros",
+              "parametros",
+              "mora"
+            ],
+            "additionalProperties": false
+          },
           "tipo": {
             "type": "string",
             "enum": [
@@ -3985,6 +4144,9 @@
           }
         },
         "required": [
+          "estado",
+          "fechaCorte",
+          "politicasUtilizadas",
           "tipo",
           "periodo",
           "desde",
@@ -3996,7 +4158,7 @@
           "cartera"
         ],
         "additionalProperties": false,
-        "description": "Cierre diario o mensual; consultarlo de nuevo devuelve las mismas cifras"
+        "description": "PREVIA calculada sin escribir o EJECUTADO persistido e inmutable, idempotente por periodo"
       },
       "Solicitud": {
         "type": "object",

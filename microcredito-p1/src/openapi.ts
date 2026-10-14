@@ -278,9 +278,18 @@ export const documentoOpenAPI = {
     '/api/cierres/{periodo}': {
       get: {
         tags: ['Gerencia'], operationId: 'consultarCierre', summary: 'Cierre diario (AAAA-MM-DD) o mensual (AAAA-MM)',
-        description: 'Idempotente: consultar el mismo periodo devuelve siempre las mismas cifras y no genera movimientos.',
+        description: 'No ejecuta el cierre: devuelve una PREVIA calculada o el EJECUTADO guardado, sin recalcular sus cifras.',
         parameters: [ruta('periodo', C.PeriodoCierre, 'AAAA-MM o AAAA-MM-DD')],
         responses: { '200': ok('Cierre del periodo.', ref('Cierre')), '400': ERROR_400 },
+      },
+    },
+    '/api/cierres/{periodo}/ejecucion': {
+      post: {
+        tags: ['Gerencia'], operationId: 'ejecutarCierre', summary: 'Ejecutar y guardar el cierre definitivo del periodo',
+        description: 'Solo gerencia. Idempotente por periodo: devuelve el resultado guardado si ya existe, sin recalcular ni generar movimientos. El corte sigue siendo el último día del periodo.',
+        parameters: [ruta('periodo', C.PeriodoCierre, 'AAAA-MM o AAAA-MM-DD'), ...OPERADOR],
+        responses: { '200': ok('Cierre ejecutado o previamente guardado.', ref('Cierre')), '400': ERROR_400,
+          '403': problema('Perfil no autorizado', 'DATOS_INVALIDOS', 403, 'Solo el perfil gerencia puede ejecutar cierres') },
       },
     },
     '/api/chat': {

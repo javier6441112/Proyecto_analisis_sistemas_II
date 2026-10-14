@@ -283,6 +283,7 @@ export function crearServidorMcp(dep: DependenciasMcp): McpServer {
     return ok({
       resumen: `Cierre ${c.tipo === 'MENSUAL' ? 'mensual' : 'diario'} ${c.periodo}: ${c.desembolsos.cantidad} desembolsos por ${qx(c.desembolsos.monto)}; recuperaciones de ${r.pagos} pagos por ${qx(r.total)} (gastos ${qx(r.gastos)}, interés moratorio ${qx(r.interesMoratorio)}, interés corriente ${qx(r.interesCorriente)}, capital ${qx(r.capital)}).`,
       tipo: c.tipo, periodo: c.periodo, desde: c.desde, hasta: c.hasta,
+      estado: c.estado, fechaCorte: c.fechaCorte, politicasUtilizadas: c.politicasUtilizadas,
       desembolsos: { cantidad: c.desembolsos.cantidad, monto: q(c.desembolsos.monto), creditos: c.desembolsos.creditos.map((d) => ({ idCredito: d.idCredito, fecha: d.fecha, capital: q(d.capital) })) },
       recuperaciones: {
         pagos: c.recuperaciones.pagos,

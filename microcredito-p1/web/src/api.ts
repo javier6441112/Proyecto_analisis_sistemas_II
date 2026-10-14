@@ -99,6 +99,7 @@ export const api = {
   carteraMora: (fechaCorte: string, tramo?: string) => pedir<TListadoMora>('GET', `/api/cartera/mora${q({ fechaCorte, tramo })}`),
   vencimientos: (fechaCorte: string, dias: number) => pedir<TVencimientos>('GET', `/api/vencimientos${q({ fechaCorte, dias })}`),
   cierre: (periodo: string) => pedir<TCierre>('GET', `/api/cierres/${e(periodo)}`),
+  ejecutarCierre: (periodo: string) => pedir<TCierre>('POST', `/api/cierres/${e(periodo)}/ejecucion`),
 
   chat: (mensaje: string, fechaOperacion: string, sesionId?: string) =>
     pedir<TRespuestaChat>('POST', '/api/chat', { mensaje, fechaOperacion, ...(sesionId ? { sesionId } : {}) }),

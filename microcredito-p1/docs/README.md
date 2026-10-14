@@ -18,3 +18,5 @@ Los diagramas de este directorio estan escritos en Mermaid y son editables como 
 - `adr/ADR-002.md`: dinero encapsulado y calculos financieros deterministas.
 
 Las entidades de originacion, pagos persistentes, movimientos y cierres son parte del modelo conceptual E1. El codigo ejecutable actual corresponde al nucleo puro E4 y esta identificado como tal en el modelo de clases y la matriz.
+
+Actualización de cierres del Proyecto Final: la consulta y ejecución persistida se implementan según [ADR-003](adr/ADR-003.md). GET devuelve una vista previa o el resultado congelado; el POST de Gerencia guarda una única ejecución por período con sus políticas. Los esquemas conceptuales E1 no añaden fórmulas de intereses devengados ni provisiones a esta implementación.

@@ -44,11 +44,25 @@ export default function Cierres() {
   };
 
   const reejecutar = async () => {
-    if (!cierre) return;
+    if (!cierre || cierre.estado !== 'EJECUTADO') return;
     setCargando(true);
+    setError('');
     try {
-      const otra = await api.cierre(cierre.periodo);
+      const otra = await api.ejecutarCierre(cierre.periodo);
       setVerificacion(JSON.stringify(otra) === JSON.stringify(cierre) ? 'igual' : 'distinto');
+    } catch (err) {
+      setError(mensajeDeError(err));
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const ejecutar = async () => {
+    setCargando(true);
+    setError('');
+    setVerificacion(null);
+    try {
+      setCierre(await api.ejecutarCierre(periodo));
     } catch (err) {
       setError(mensajeDeError(err));
     } finally {
@@ -68,18 +82,19 @@ export default function Cierres() {
           <div className="flex gap-3" role="group" aria-label="Tipo de cierre">
             {(['diario', 'mensual'] as const).map((t) => (
               <button key={t} onClick={() => cambiarTipo(t)} aria-pressed={tipo === t}
-                className={`flex-1 py-3 rounded-xl text-sm font-semibold border ${FOCO} ${tipo === t ? 'bg-[#0f172a] text-white border-[#0f172a]' : 'bg-white text-slate-600 border-slate-200'}`}>
+                disabled={cargando} className={`flex-1 py-3 rounded-xl text-sm font-semibold border ${FOCO} ${tipo === t ? 'bg-[#0f172a] text-white border-[#0f172a]' : 'bg-white text-slate-600 border-slate-200'}`}>
                 {t === 'diario' ? 'Diario' : 'Mensual'}
               </button>
             ))}
           </div>
         </div>
         <Field id="periodo-cierre" label={tipo === 'diario' ? 'Fecha de corte' : 'Mes del cierre'}
-          hint="Las cifras salen de la bitácora de operaciones; consultar el mismo periodo siempre devuelve el mismo resultado.">
-          <input id="periodo-cierre" type={tipo === 'diario' ? 'date' : 'month'} className={inputCls} value={periodo}
+          hint="Consultar muestra una vista previa o el resultado guardado. Ejecutar congela las cifras del período definitivamente.">
+          <input id="periodo-cierre" type={tipo === 'diario' ? 'date' : 'month'} className={inputCls} value={periodo} disabled={cargando}
             onChange={(e) => { setPeriodo(e.target.value); setCierre(null); setVerificacion(null); }} />
         </Field>
-        <BtnPrimary label="Ejecutar cierre" onClick={() => void consultar()} busy={cargando && !cierre} disabled={!periodo} />
+        <BtnSecondary label="Consultar período" onClick={() => void consultar()} disabled={cargando || !periodo} />
+        <BtnPrimary label="Ejecutar cierre definitivo" onClick={() => void ejecutar()} busy={cargando} disabled={!periodo} />
       </div>
 
       {error && <Alert type="error">{error}</Alert>}
@@ -91,21 +106,26 @@ export default function Cierres() {
             <div>
               <p className="font-bold text-emerald-800" style={DISPLAY}>Cierre {cierre.tipo === 'DIARIO' ? 'diario' : 'mensual'} · {fecha(cierre.periodo)}</p>
               <p className="text-emerald-700 text-xs mt-0.5">
-                Del {fecha(cierre.desde)} al {fecha(cierre.hasta)} · {movimientos(cierre)} movimientos incluidos. Las cifras son reproducibles: una nueva ejecución devuelve el mismo resultado y no genera movimientos adicionales.
+                Del {fecha(cierre.desde)} al {fecha(cierre.hasta)} · {movimientos(cierre)} movimientos incluidos.
+                {cierre.estado === 'EJECUTADO' ? ' Resultado guardado: una nueva ejecución devuelve este mismo cierre.' : ' Vista previa: las cifras pueden cambiar hasta ejecutar el cierre.'}
               </p>
             </div>
           </div>
-          {abierto && (
-            <Alert type="warning">El periodo termina el {fecha(cierre.hasta)}, después de la fecha de operación ({fecha(s.fecha)}). Incluye solo lo registrado hasta hoy; las operaciones posteriores dentro del periodo cambiarán las cifras.</Alert>
+          {abierto && cierre.estado === 'PREVIA' && (
+            <Alert type="warning">El período termina el {fecha(cierre.hasta)}, después de la fecha de operación ({fecha(s.fecha)}). La vista previa incluye las operaciones registradas; al ejecutar se congelará ese resultado.</Alert>
           )}
+          {cierre.estado === 'EJECUTADO' && <Alert type="info">Cierre guardado por {cierre.ejecutadoPor}, con corte al {fecha(cierre.fechaCorte)}. Las operaciones posteriores no modifican este resultado.</Alert>}
 
           <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-1">
             <div className="flex items-center justify-between mb-2">
               <p className="font-bold text-[#0f172a] text-sm" style={DISPLAY}>Cifras del cierre</p>
-              <Badge label="Generado" color="green" />
+              <Badge label={cierre.estado === 'EJECUTADO' ? 'Ejecutado' : 'Vista previa'} color={cierre.estado === 'EJECUTADO' ? 'green' : 'amber'} />
             </div>
             {([
               ['Periodo', `${fecha(cierre.desde)} – ${fecha(cierre.hasta)}`],
+              ['Fecha de corte', fecha(cierre.fechaCorte)],
+              ['Versión de parámetros', cierre.politicasUtilizadas.versionParametros ?? 'Identificada por SHA-256'],
+              ['Políticas de mora', cierre.politicasUtilizadas.mora.map((p) => p.id).join(', ') || 'Sin créditos al corte'],
               ['Desembolsos', `${Q(cierre.desembolsos.monto)} (${cierre.desembolsos.cantidad})`],
               ['Recuperaciones totales', `${Q(cierre.recuperaciones.total)} (${cierre.recuperaciones.pagos} pagos)`],
               ['· Gastos de gestión', Q(cierre.recuperaciones.gastos)],
@@ -141,12 +161,12 @@ export default function Cierres() {
             </details>
           )}
 
-          {verificacion === 'igual' && <Alert type="success">Idempotencia verificada: se devolvió el mismo cierre y no se duplicaron movimientos. Las cifras son idénticas antes y después de la comprobación.</Alert>}
-          {verificacion === 'distinto' && <Alert type="error">La segunda ejecución devolvió cifras distintas. Revise si se registraron operaciones dentro del periodo entre ambas consultas.</Alert>}
+          {verificacion === 'igual' && <Alert type="success">Se devolvió el mismo cierre guardado, con cifras idénticas.</Alert>}
+          {verificacion === 'distinto' && <Alert type="error">La segunda ejecución devolvió un cierre distinto al guardado.</Alert>}
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <BtnSecondary label={cargando ? 'Comprobando…' : 'Reejecutar comprobación'} onClick={() => void reejecutar()} disabled={cargando} />
-            <BtnSecondary label="Nuevo cierre" onClick={() => cambiarTipo(tipo)} />
+            {cierre.estado === 'EJECUTADO' && <BtnSecondary label={cargando ? 'Comprobando…' : 'Reejecutar comprobación'} onClick={() => void reejecutar()} disabled={cargando} />}
+            <BtnSecondary label="Nuevo cierre" onClick={() => cambiarTipo(tipo)} disabled={cargando} />
           </div>
         </>
       )}

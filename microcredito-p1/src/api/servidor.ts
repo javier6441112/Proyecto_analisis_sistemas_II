@@ -36,9 +36,9 @@ function quien(req: FastifyRequest): { perfil: z.infer<typeof Perfil>; usuario: 
   return { perfil: perfil.data, usuario };
 }
 
-function soloGerencia(req: FastifyRequest): string {
+function soloGerencia(req: FastifyRequest, accion = 'resolver solicitudes'): string {
   const q = quien(req);
-  if (q.perfil !== 'gerencia') throw Object.assign(new Error('Solo el perfil gerencia puede resolver solicitudes'), { statusCode: 403 });
+  if (q.perfil !== 'gerencia') throw Object.assign(new Error(`Solo el perfil gerencia puede ${accion}`), { statusCode: 403 });
   return q.usuario;
 }
 
@@ -143,6 +143,11 @@ export async function construirServidor(opciones: OpcionesServidor): Promise<Fas
   app.get('/api/cierres/:periodo', async (req, reply) => {
     const { periodo } = z.object({ periodo: PeriodoCierre }).parse(req.params);
     return ok(reply, await adaptador.consultarCierre(periodo));
+  });
+  app.post('/api/cierres/:periodo/ejecucion', async (req, reply) => {
+    const usuario = soloGerencia(req, 'ejecutar cierres');
+    const { periodo } = z.object({ periodo: PeriodoCierre }).parse(req.params);
+    return ok(reply, await adaptador.ejecutarCierre(periodo, usuario));
   });
 
   // ---------------- Originación (OP-3) ----------------

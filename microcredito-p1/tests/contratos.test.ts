@@ -56,8 +56,13 @@ describe('contratos Zod del SGMC', () => {
     expect(GenerarCierreRequestSchema.safeParse({ periodo: '2026-08-32', fechaCorte: '2026-08-22' }).success).toBe(false);
     expect(CierreResponseSchema.safeParse({ periodo: '2026-08', fechaCorte: '2026-08-22', carteraActiva: { valor: '800000.00', moneda: 'GTQ' }, saldoEnRiesgo: { valor: '56000.00', moneda: 'GTQ' }, incobrable: { valor: '15000.00', moneda: 'GTQ' }, recuperaciones: [], interesesDevengados: { valor: '12000.00', moneda: 'GTQ' }, porTramo: [], provisiones: { valor: '18000.00', moneda: 'GTQ' }, creditosActivos: 20, proximosVencimientos: [], montoDeclaradoIncobrableEnElPeriodo: { valor: '5000.00', moneda: 'GTQ' } }).success).toBe(true);
     const cierre = documentoOpenAPI.paths['/api/cierres/{periodo}'].get;
-    expect(cierre.description).toContain('Idempotente');
+    expect(cierre.description).toContain('No ejecuta el cierre');
+    expect(cierre.description).toContain('PREVIA');
+    expect(cierre.description).toContain('EJECUTADO');
     expect('409' in cierre.responses).toBe(false);
+    const ejecucion = documentoOpenAPI.paths['/api/cierres/{periodo}/ejecucion'].post;
+    expect(ejecucion.description).toContain('Idempotente por periodo');
+    expect('403' in ejecucion.responses).toBe(true);
   });
 
   it('acepta un pago valido y rechaza importes no positivos', () => {

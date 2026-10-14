@@ -177,6 +177,8 @@ Al entrar se elige el perfil (asesor con su nombre, o gerencia). El asesor ve la
 
 Flujos navegables: **originación** (Clientes → Solicitudes → Comité → Desembolso), **cobro en campo** (Créditos → Detalle → Mora → Pagos) y **consulta gerencial** (Tablero → cartera en riesgo por tramo → créditos).
 
+En Gerencia → Cierres, **Consultar período** obtiene una vista previa o un cierre ya guardado. **Ejecutar cierre definitivo** congela las cifras y políticas del período; **Reejecutar comprobación** devuelve ese mismo resultado mediante POST. Los cierres se conservan al reiniciar. La migración añade `cierres_ejecutados` al abrir la base, sin reconstruir datos. Véase [ADR-003](docs/adr/ADR-003.md) para el contrato y la decisión pendiente sobre operaciones posteriores en períodos cerrados.
+
 La fecha de operación elegida en pantalla es el puerto Reloj: arranca en 2026-10-31 y toda consulta la envía como fecha de corte. La interfaz no calcula dinero: todo monto y porcentaje viene de la API. La API se documenta en `docs/api/openapi.yaml`, generado desde el mismo contrato que valida el servidor.
 
 ### Herramientas de IA del Proyecto Final

@@ -365,6 +365,15 @@ const Recuperaciones = z.object({
 }).strict();
 
 export const Cierre = z.object({
+  estado: z.enum(['PREVIA', 'EJECUTADO']),
+  fechaCorte: Fecha,
+  ejecutadoPor: z.string().optional(),
+  politicasUtilizadas: z.object({
+    versionParametros: z.string().optional(),
+    huellaParametros: z.string().regex(/^[a-f0-9]{64}$/),
+    parametros: Politicas,
+    mora: z.array(z.object({ id: z.string(), vigenteDesde: Fecha, huellaDefinicion: z.string().regex(/^[a-f0-9]{64}$/) }).strict()),
+  }).strict(),
   tipo: z.enum(['DIARIO', 'MENSUAL']),
   periodo: z.string(),
   desde: Fecha,
@@ -381,7 +390,7 @@ export const Cierre = z.object({
     monto: Dinero,
   }).strict(),
   cartera: CarteraConsolidada,
-}).strict().meta({ id: 'Cierre', description: 'Cierre diario o mensual; consultarlo de nuevo devuelve las mismas cifras' });
+}).strict().meta({ id: 'Cierre', description: 'PREVIA calculada sin escribir o EJECUTADO persistido e inmutable, idempotente por periodo' });
 
 export const Solicitud = z.object({
   idSolicitud: z.string(),
