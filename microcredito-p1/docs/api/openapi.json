@@ -4542,10 +4542,169 @@
             "type": "array",
             "items": {
               "type": "object",
-              "propertyNames": {
-                "type": "string"
+              "properties": {
+                "propuestaId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "estado": {
+                  "type": "string",
+                  "const": "PENDIENTE_DE_APROBACION_HUMANA"
+                },
+                "idCredito": {
+                  "type": "string"
+                },
+                "fechaPago": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                  "description": "Fecha calendario AAAA-MM-DD",
+                  "examples": [
+                    "2026-10-31"
+                  ]
+                },
+                "cuota": {
+                  "type": "object",
+                  "properties": {
+                    "numero": {
+                      "type": "number"
+                    },
+                    "fechaVencimiento": {
+                      "type": "string",
+                      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                      "description": "Fecha calendario AAAA-MM-DD",
+                      "examples": [
+                        "2026-10-31"
+                      ]
+                    },
+                    "diasAtraso": {
+                      "type": "number"
+                    },
+                    "tramo": {
+                      "type": "string"
+                    },
+                    "gastos": {
+                      "type": "string",
+                      "pattern": "^\\d{1,13}(\\.\\d{1,2})?$",
+                      "description": "Monto en quetzales como texto, con hasta dos decimales",
+                      "examples": [
+                        "1004.62"
+                      ]
+                    },
+                    "interesMoratorio": {
+                      "type": "string",
+                      "pattern": "^\\d{1,13}(\\.\\d{1,2})?$",
+                      "description": "Monto en quetzales como texto, con hasta dos decimales",
+                      "examples": [
+                        "1004.62"
+                      ]
+                    },
+                    "interesCorriente": {
+                      "type": "string",
+                      "pattern": "^\\d{1,13}(\\.\\d{1,2})?$",
+                      "description": "Monto en quetzales como texto, con hasta dos decimales",
+                      "examples": [
+                        "1004.62"
+                      ]
+                    },
+                    "capital": {
+                      "type": "string",
+                      "pattern": "^\\d{1,13}(\\.\\d{1,2})?$",
+                      "description": "Monto en quetzales como texto, con hasta dos decimales",
+                      "examples": [
+                        "1004.62"
+                      ]
+                    },
+                    "totalExigible": {
+                      "type": "string",
+                      "pattern": "^\\d{1,13}(\\.\\d{1,2})?$",
+                      "description": "Monto en quetzales como texto, con hasta dos decimales",
+                      "examples": [
+                        "1004.62"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "numero",
+                    "fechaVencimiento",
+                    "diasAtraso",
+                    "tramo",
+                    "gastos",
+                    "interesMoratorio",
+                    "interesCorriente",
+                    "capital",
+                    "totalExigible"
+                  ]
+                },
+                "aplicacion": {
+                  "type": "object",
+                  "properties": {
+                    "gastos": {
+                      "type": "string",
+                      "pattern": "^\\d{1,13}(\\.\\d{1,2})?$",
+                      "description": "Monto en quetzales como texto, con hasta dos decimales",
+                      "examples": [
+                        "1004.62"
+                      ]
+                    },
+                    "interesMoratorio": {
+                      "type": "string",
+                      "pattern": "^\\d{1,13}(\\.\\d{1,2})?$",
+                      "description": "Monto en quetzales como texto, con hasta dos decimales",
+                      "examples": [
+                        "1004.62"
+                      ]
+                    },
+                    "interesCorriente": {
+                      "type": "string",
+                      "pattern": "^\\d{1,13}(\\.\\d{1,2})?$",
+                      "description": "Monto en quetzales como texto, con hasta dos decimales",
+                      "examples": [
+                        "1004.62"
+                      ]
+                    },
+                    "capital": {
+                      "type": "string",
+                      "pattern": "^\\d{1,13}(\\.\\d{1,2})?$",
+                      "description": "Monto en quetzales como texto, con hasta dos decimales",
+                      "examples": [
+                        "1004.62"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "gastos",
+                    "interesMoratorio",
+                    "interesCorriente",
+                    "capital"
+                  ]
+                },
+                "saldoCapitalResultante": {
+                  "type": "string",
+                  "pattern": "^\\d{1,13}(\\.\\d{1,2})?$",
+                  "description": "Monto en quetzales como texto, con hasta dos decimales",
+                  "examples": [
+                    "1004.62"
+                  ]
+                },
+                "instruccionParaElUsuario": {
+                  "type": "string"
+                },
+                "moneda": {
+                  "type": "string",
+                  "const": "GTQ"
+                }
               },
-              "additionalProperties": {}
+              "required": [
+                "propuestaId",
+                "estado",
+                "idCredito",
+                "fechaPago",
+                "cuota",
+                "aplicacion",
+                "saldoCapitalResultante",
+                "instruccionParaElUsuario",
+                "moneda"
+              ]
             }
           },
           "citas": {
