@@ -449,6 +449,23 @@ export const PagoDuplicadoRespuesta = z.object({
   credito: DetalleCredito,
 }).strict().meta({ id: 'PagoDuplicadoRespuesta', description: 'Misma Idempotency-Key: devuelve el pago original sin cobrar de nuevo (200)' });
 
+/** Salida estructurada de proponer_pago (distinta de la propuesta interna REST). */
+export const PropuestaPagoChat = z.object({
+  propuestaId: z.string().min(1),
+  estado: z.literal('PENDIENTE_DE_APROBACION_HUMANA'),
+  idCredito: z.string(),
+  fechaPago: Fecha,
+  cuota: z.object({
+    numero: z.number(), fechaVencimiento: Fecha, diasAtraso: z.number(), tramo: z.string(),
+    gastos: Monto, interesMoratorio: Monto, interesCorriente: Monto, capital: Monto, totalExigible: Monto,
+  }),
+  aplicacion: z.object({ gastos: Monto, interesMoratorio: Monto, interesCorriente: Monto, capital: Monto }),
+  saldoCapitalResultante: Monto,
+  instruccionParaElUsuario: z.string(),
+  moneda: z.literal('GTQ'),
+});
+export type TPropuestaPagoChat = z.infer<typeof PropuestaPagoChat>;
+
 export const RespuestaChat = z.object({
   sesionId: z.string(),
   respuesta: z.string(),
@@ -458,7 +475,7 @@ export const RespuestaChat = z.object({
     datos: z.record(z.string(), z.unknown()),
     error: z.boolean(),
   })),
-  propuestas: z.array(z.record(z.string(), z.unknown())),
+  propuestas: z.array(PropuestaPagoChat),
   citas: z.array(z.object({ docId: z.string(), titulo: z.string(), vigencia: z.string() })),
   alertasSeguridad: z.array(z.string()),
   control: z.record(z.string(), z.unknown()),

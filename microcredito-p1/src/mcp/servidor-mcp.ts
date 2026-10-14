@@ -25,6 +25,7 @@ import type { TramoMora } from '../dominio/politica-mora/politica-mora.js';
 import type { Dinero } from '../dominio/dinero.js';
 import { aJson } from '../api/serializacion.js';
 import { ServicioAprobaciones } from './aprobaciones.js';
+import { PropuestaPagoChat } from '../contratos/api.js';
 
 export interface FragmentoRecuperado {
   docId: string;
@@ -343,7 +344,7 @@ export function crearServidorMcp(dep: DependenciasMcp): McpServer {
       idCredito: s.idCredito, monto: s.cuota.total,
       fechaPago: s.fechaPago, canal: a.canal, cuota: s.cuota, aplicacion: s.aplicacion, saldoCapitalResultante: s.saldoCapitalResultante,
     });
-    return ok({
+    return ok(PropuestaPagoChat.parse({
       propuestaId: p.id,
       estado: 'PENDIENTE_DE_APROBACION_HUMANA',
       idCredito: p.idCredito,
@@ -353,7 +354,7 @@ export function crearServidorMcp(dep: DependenciasMcp): McpServer {
       saldoCapitalResultante: q(p.saldoCapitalResultante),
       instruccionParaElUsuario: 'Revise el desglose y pulse «Aprobar» en la interfaz para registrar el pago. El asistente no puede registrarlo por su cuenta.',
       moneda: 'GTQ',
-    });
+    }));
   }));
 
   mcp.registerTool('registrar_pago', {

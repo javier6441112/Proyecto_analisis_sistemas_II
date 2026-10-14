@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { EncabezadoPagina } from '../App';
-import { api, mensajeDeError, type TRespuestaChat } from '../api';
+import { api, mensajeDeError, type TRespuestaChat, type TPropuestaPagoChat } from '../api';
 import { Q, fecha } from '../formato';
 import { useSesion } from '../sesion';
 import { Alert, DISPLAY, FOCO, Ico } from '../ui';
@@ -90,35 +90,37 @@ export default function Asistente() {
   );
 }
 
-function Respuesta({ r }: { r: TRespuestaChat }) {
+export function Respuesta({ r }: { r: TRespuestaChat }) {
   return (
     <div className="self-start max-w-[92%] flex flex-col gap-2">
       <div className="bg-slate-100 rounded-2xl rounded-bl-md px-4 py-3 text-sm text-[#0f172a] whitespace-pre-wrap">{r.respuesta}</div>
       {r.alertasSeguridad.length > 0 && <Alert type="warning">{r.alertasSeguridad.join(' · ')}</Alert>}
+      {r.tarjetas.filter((t) => t.error).map((t, i) => {
+        const error = t.datos.error as { mensaje?: unknown } | undefined;
+        return <Alert key={`error-${i}`} type="error">{typeof error?.mensaje === 'string' ? error.mensaje : `No se pudo ejecutar ${t.herramienta}.`}</Alert>;
+      })}
       {r.tarjetas.filter((t) => !t.error && t.herramienta !== 'proponer_pago').map((t, i) => <TarjetaNucleo key={i} t={t} />)}
       {r.citas.length > 0 && (
         <p className="text-[11px] text-slate-500">Fuentes: {r.citas.map((c) => `[${c.docId}] ${c.titulo} (vigencia ${c.vigencia})`).join(' · ')}</p>
       )}
-      {r.propuestas.map((p, i) => <PropuestaPago key={i} datos={p} />)}
+      {r.propuestas.map((p) => <PropuestaPago key={p.propuestaId} datos={p} />)}
     </div>
   );
 }
 
 /** Propuesta de pago del chat: solo una persona puede aprobarla (emite el token que exige el registro). */
-function PropuestaPago({ datos }: { datos: Record<string, unknown> }) {
+export function PropuestaPago({ datos: p }: { datos: TPropuestaPagoChat }) {
   const s = useSesion();
-  const p = datos as { id?: string; idCredito?: string; monto?: { valor: string; moneda: 'GTQ' }; fechaPago?: string; canal?: string; saldoCapitalResultante?: { valor: string; moneda: 'GTQ' } };
   const [estado, setEstado] = useState<'pendiente' | 'aprobada' | 'rechazada'>('pendiente');
   const [error, setError] = useState('');
   const [ocupado, setOcupado] = useState(false);
-  if (!p.id) return null;
 
   const decidir = async (aprobar: boolean) => {
     setOcupado(true);
     setError('');
     try {
-      if (aprobar) await api.aprobarPropuesta(p.id!);
-      else await api.rechazarPropuesta(p.id!);
+      if (aprobar) await api.aprobarPropuesta(p.propuestaId);
+      else await api.rechazarPropuesta(p.propuestaId);
       setEstado(aprobar ? 'aprobada' : 'rechazada');
     } catch (err) {
       setError(mensajeDeError(err));
@@ -131,8 +133,11 @@ function PropuestaPago({ datos }: { datos: Record<string, unknown> }) {
     <div className="border border-amber-200 bg-amber-50 rounded-2xl p-4 flex flex-col gap-2 text-sm">
       <p className="font-bold text-amber-900" style={DISPLAY}>Propuesta de pago · requiere aprobación</p>
       <p className="text-amber-800 text-xs">
-        Crédito <span className="font-mono">{p.idCredito}</span> · {Q(p.monto)} · {fecha(p.fechaPago)} · {p.canal}
-        {p.saldoCapitalResultante && ` · saldo resultante ${Q(p.saldoCapitalResultante)}`}
+        Crédito <span className="font-mono">{p.idCredito}</span> · Total {Q(p.cuota.totalExigible)} · {fecha(p.fechaPago)}
+        {` · saldo resultante ${Q(p.saldoCapitalResultante)}`}
+      </p>
+      <p className="text-amber-800 text-xs">
+        Gastos {Q(p.aplicacion.gastos)} · Interés moratorio {Q(p.aplicacion.interesMoratorio)} · Interés corriente {Q(p.aplicacion.interesCorriente)} · Capital {Q(p.aplicacion.capital)}
       </p>
       {estado === 'pendiente' ? (
         <div className="flex gap-2">

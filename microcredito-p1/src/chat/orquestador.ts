@@ -11,6 +11,7 @@
  * Aunque pidiera `registrar_pago`, el orquestador no la ejecuta.
  */
 import { randomUUID } from 'node:crypto';
+import { PropuestaPagoChat, type TPropuestaPagoChat } from '../contratos/api.js';
 import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { HERRAMIENTAS_PARA_EL_MODELO } from '../mcp/servidor-mcp.js';
 import type { ClienteMcpLocal } from '../mcp/cliente-local.js';
@@ -39,7 +40,7 @@ export interface RespuestaChat {
   sesionId: string;
   respuesta: string;
   tarjetas: Tarjeta[];
-  propuestas: Array<Record<string, unknown>>;
+  propuestas: TPropuestaPagoChat[];
   citas: FuenteCitable[];
   alertasSeguridad: string[];
   control: {
@@ -294,7 +295,7 @@ export class OrquestadorChat {
       sesionId,
       respuesta: texto,
       tarjetas,
-      propuestas: tarjetas.filter((t) => t.herramienta === 'proponer_pago' && !t.error).map((t) => t.datos),
+      propuestas: tarjetas.filter((t) => t.herramienta === 'proponer_pago' && !t.error).map((t) => PropuestaPagoChat.parse(t.datos)),
       citas,
       alertasSeguridad: [...alertas],
       control: {

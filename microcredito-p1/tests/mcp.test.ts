@@ -164,6 +164,19 @@ describe('Aprobación humana para registrar un pago', () => {
     expect(otraVez.statusCode).toBe(409);
     expect((await adaptador.obtenerDetalleCredito('CV-2026-0043', F)).cuotasPagadas).toBe(1);
   });
+
+  it('rechazar con propuestaId no registra ningún pago y bloquea su aprobación', async () => {
+    const antes = await adaptador.obtenerDetalleCredito('CV-2026-0061', F);
+    const { datos } = await llamar('proponer_pago', { idCredito: antes.idCredito, fechaPago: F });
+    const rechazo = await app.inject({ method: 'POST', url: `/api/propuestas/${datos.propuestaId}/rechazo`, headers: { 'x-usuario': 'Elena Morales' } });
+    expect(rechazo.statusCode).toBe(200);
+    expect(rechazo.json()).toMatchObject({ id: datos.propuestaId, estado: 'RECHAZADA' });
+    const aprobacion = await app.inject({ method: 'POST', url: `/api/propuestas/${datos.propuestaId}/aprobacion`, headers: { 'x-usuario': 'Elena Morales' } });
+    expect(aprobacion.statusCode).toBe(409);
+    const despues = await adaptador.obtenerDetalleCredito(antes.idCredito, F);
+    expect(despues.cuotasPagadas).toBe(antes.cuotasPagadas);
+    expect(despues.saldoCapital.formato()).toBe(antes.saldoCapital.formato());
+  });
 });
 
 describe('Privacidad y transporte', () => {
