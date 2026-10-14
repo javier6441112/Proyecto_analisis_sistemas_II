@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AltaClienteBody } from '../../../src/contratos/api';
 import type { Ir } from '../App';
 import { api, ErrorApi, mensajeDeError, type TCliente } from '../api';
 import { ETIQUETA_ESTADO, ETIQUETA_TRAMO, Q, colorEstado, colorTramo, fecha, siguienteCodigo } from '../formato';
@@ -164,8 +165,9 @@ function DetalleCliente({ id, ir, volver }: { id: string; ir: Ir; volver: () => 
   );
 }
 
-function AltaCliente({ volver, registrado }: { volver: () => void; registrado: (c: TCliente) => void }) {
+export function AltaCliente({ volver, registrado }: { volver: () => void; registrado: (c: TCliente) => void }) {
   const s = useSesion();
+  const [codigo, setCodigo] = useState('');
   const [nombre, setNombre] = useState('');
   const [dpi, setDpi] = useState('');
   const [tel, setTel] = useState('');
@@ -176,8 +178,12 @@ function AltaCliente({ volver, registrado }: { volver: () => void; registrado: (
 
   const validar = () => {
     const e: Record<string, string> = {};
+    if (codigo.trim() && !AltaClienteBody.shape.idCliente.safeParse(codigo.trim()).success) e.codigo = 'El código debe tener el formato CL-0000.';
     if (nombre.trim().length < 3) e.nombre = 'Ingresa el nombre completo (mínimo 3 letras).';
-    if (!/^\d{13}$/.test(dpi.replace(/\s/g, ''))) e.dpi = 'El DPI debe tener 13 dígitos.';
+    const identificacion = dpi.trim();
+    const dpiNormal = /^\d{13}$/.test(identificacion.replace(/\s/g, ''));
+    const dpiDemostracion = /^DPI-FICT-\d{6}$/.test(identificacion);
+    if (!dpiNormal && !dpiDemostracion) e.dpi = 'El DPI debe tener 13 dígitos o el formato ficticio DPI-FICT-000000 para demostración.';
     if (tel.trim().length > 20) e.tel = 'Máximo 20 caracteres.';
     if (municipio.trim().length < 2) e.municipio = 'Ingresa el municipio.';
     return e;
@@ -190,10 +196,10 @@ function AltaCliente({ volver, registrado }: { volver: () => void; registrado: (
     setEnviando(true);
     setFalla('');
     try {
-      // El código lo asigna la interfaz con el siguiente correlativo libre; el servidor rechaza duplicados.
-      const existentes = await api.clientes();
+      // Conserva el correlativo automático cuando no se indica un código; el servidor valida duplicados.
+      const idCliente = codigo.trim() || siguienteCodigo('CL-', (await api.clientes()).map((c) => c.idCliente));
       const cliente = await api.registrarCliente({
-        idCliente: siguienteCodigo('CL-', existentes.map((c) => c.idCliente)),
+        idCliente,
         nombreCompleto: nombre.trim(),
         dpi: dpi.replace(/\s/g, ''),
         ...(tel.trim() ? { telefono: tel.trim() } : {}),
@@ -212,12 +218,16 @@ function AltaCliente({ volver, registrado }: { volver: () => void; registrado: (
   return (
     <Pantalla barra={<TopBar title="Registrar cliente" onBack={volver} />}>
       <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); void guardar(); }} noValidate>
+        <Field id="codigo-cliente" label="Código de cliente (opcional)" hint="Formato CL-0000. Déjalo vacío para asignar el siguiente correlativo al guardar." error={errores.codigo}>
+          <input id="codigo-cliente" className={`${inputCls} font-mono`} placeholder="Ej. CL-9001" value={codigo} maxLength={7}
+            onChange={(e) => { setCodigo(e.target.value.toUpperCase()); limpiar('codigo'); }} aria-invalid={Boolean(errores.codigo)} />
+        </Field>
         <Field id="nombre" label="Nombre completo" error={errores.nombre}>
           <input id="nombre" className={inputCls} placeholder="Ej. Carmen López Torres" value={nombre} autoComplete="off"
             onChange={(e) => { setNombre(e.target.value); limpiar('nombre'); }} aria-invalid={Boolean(errores.nombre)} />
         </Field>
-        <Field id="dpi" label="DPI" hint="13 dígitos. Ejemplo: 2598 11234 0101" error={errores.dpi}>
-          <input id="dpi" className={inputCls} placeholder="2598 11234 0101" value={dpi} inputMode="numeric" maxLength={16}
+        <Field id="dpi" label="DPI" hint="13 dígitos. Para demostración: DPI-FICT- seguido de 6 dígitos (ej. DPI-FICT-009001)." error={errores.dpi}>
+          <input id="dpi" className={inputCls} placeholder="2598 11234 0101" value={dpi} maxLength={16}
             onChange={(e) => { setDpi(e.target.value); limpiar('dpi'); }} aria-invalid={Boolean(errores.dpi)} />
         </Field>
         <Field id="tel" label="Número de teléfono (opcional)" hint="Celular donde contactar al cliente" error={errores.tel}>
@@ -228,7 +238,7 @@ function AltaCliente({ volver, registrado }: { volver: () => void; registrado: (
           <input id="municipio" className={inputCls} placeholder="Ej. Cobán" value={municipio}
             onChange={(e) => { setMunicipio(e.target.value); limpiar('municipio'); }} aria-invalid={Boolean(errores.municipio)} />
         </Field>
-        <p className="text-[11px] text-slate-500">Fecha de alta: {fecha(s.fecha)} (fecha de operación). El código de cliente se asigna al guardar.</p>
+        <p className="text-[11px] text-slate-500">Fecha de alta: {fecha(s.fecha)} (fecha de operación). Si no indicas un código, se asigna al guardar.</p>
         {falla && <Alert type="error">{falla}</Alert>}
         <div className="flex gap-3 mt-1">
           <BtnSecondary label="Cancelar" onClick={volver} />
