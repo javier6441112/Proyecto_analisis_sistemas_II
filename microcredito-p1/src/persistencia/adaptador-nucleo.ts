@@ -16,8 +16,7 @@
  *    idempotencia se aplica aquí: la primera aparición de cada clave se consume y las
  *    repeticiones se ignoran (226 únicos de 228 registros del paquete canónico).
  *  - Los parámetros de política son datos (`parametros_politicas`). Al abrir se
- *    contrastan con el núcleo; si no coinciden, se detiene en lugar de calcular con
- *    reglas distintas a las publicadas.
+ *    validan y construyen las estrategias del núcleo con las tasas y vigencias publicadas.
  *  - La carga canónica no se modifica nunca. Lo que entra por la interfaz se guarda en
  *    `bitacora_operaciones` (ver `bitacora-operaciones.ts`) y se fusiona al leer.
  */
@@ -41,11 +40,10 @@ import {
   type ResumenCartera,
   type ResumenCarteraPorTramo,
 } from '../dominio/cartera.js';
-import { resolverPoliticaMoraPorFecha } from '../dominio/politica-mora/catalogo-politicas.js';
+import { crearCatalogoMora, seleccionarPoliticaMora } from '../dominio/politica-mora/catalogo-politicas.js';
 import { clasificarTramo } from '../dominio/politica-mora/clasificacion-tramo.js';
 import { gastoGestionCobro } from '../dominio/politica-mora/gasto-gestion-cobro.js';
 import { PoliticaEscalonada } from '../dominio/politica-mora/politica-escalonada.js';
-import { PoliticaPlana } from '../dominio/politica-mora/politica-plana.js';
 import type { PoliticaMora, TramoMora } from '../dominio/politica-mora/politica-mora.js';
 import {
   asegurarBitacora,
@@ -108,6 +106,7 @@ export interface ParametrosPoliticas {
   moneda: string;
   base_conteo: string;
   politicas_mora: Record<string, {
+    nombre?: string; version?: string; autor?: string; motivo?: string;
     tipo: 'plana' | 'escalonada';
     tna_bps?: number;
     vigencia_otorgamiento: { desde?: string; hasta?: string };
@@ -394,61 +393,34 @@ function tasaMensualDe(tnaBps: number): Decimal {
 }
 
 // ---------------------------------------------------------------------------
-// Políticas: parámetros (datos) contrastados con el núcleo
+// Políticas: estrategias del núcleo construidas con los parámetros cargados
 // ---------------------------------------------------------------------------
 
-const NOMBRE_TRAMO: Record<string, TramoMora> = {
-  mora_1: 'MORA_1',
-  mora_2: 'MORA_2',
-  mora_3: 'MORA_3',
-  vencido: 'VENCIDO',
-};
 
-/** Una fecha representativa de la vigencia publicada, para preguntarle al núcleo qué política aplica. */
-function fechaDentroDeVigencia(v: { desde?: string; hasta?: string }): string {
-  return v.desde ?? v.hasta ?? '2026-01-01';
-}
-
-/**
- * Contexto de cálculo: las políticas son las instancias del núcleo
- * (`resolverPoliticaMoraPorFecha`); `parametros_politicas` solo se usa para comprobar que
- * el núcleo calcula con lo publicado. Si difieren, se detiene: nunca se calcula con dos
- * fuentes de verdad.
- */
+/** Configuración cargada: construye estrategias y selecciona por fecha explícita. */
 export class ContextoPoliticas {
-  private readonly porId = new Map<string, PoliticaMora>();
+  readonly parametros: ParametrosPoliticas;
+  private readonly catalogo: PoliticaMora[];
 
-  constructor(readonly parametros: ParametrosPoliticas) {
-    if (parametros.base_conteo !== 'Actual/360') {
-      throw new ErrorIntegridadCartera(`Base de conteo no soportada por el núcleo: ${parametros.base_conteo}`);
+  constructor(parametros: ParametrosPoliticas) {
+    this.parametros = structuredClone(parametros);
+    try {
+      if (parametros.base_conteo !== 'Actual/360' || parametros.moneda !== 'GTQ') throw new Error('Base de conteo o moneda no soportada');
+      if (parametros.regla_incobrable_dias !== 120) throw new Error('La regla incobrable debe conservar el límite de 120 días');
+      if (!Number.isSafeInteger(parametros.regla_riesgo_dias) || parametros.regla_riesgo_dias < 0 || parametros.regla_riesgo_dias > 120) throw new Error('Regla de riesgo inválida');
+      this.catalogo = crearCatalogoMora(this.parametros.politicas_mora);
+      const g = parametros.gasto_gestion_cobro;
+      if (!g || !Number.isSafeInteger(g.monto_centavos) || g.monto_centavos < 0 || !Number.isSafeInteger(g.dia_generacion) || g.dia_generacion < 1 || g.dia_generacion > 120 || !Array.isArray(g.aplica_a_politicas) || g.aplica_a_politicas.some(id => !parametros.politicas_mora[id])) throw new Error('Parámetros de gasto de gestión inválidos');
+    } catch (error) {
+      throw new ErrorIntegridadCartera('Configuración de políticas inválida: ' + (error as Error).message);
     }
-    for (const [id, definicion] of Object.entries(parametros.politicas_mora)) {
-      const politica = resolverPoliticaMoraPorFecha(fechaDentroDeVigencia(definicion.vigencia_otorgamiento));
-      if (politica.id !== id) {
-        throw new ErrorIntegridadCartera(`Para la vigencia de ${id} el núcleo resuelve ${politica.id}`);
-      }
-      this.verificarTasas(id, definicion, politica);
-      this.porId.set(id, politica);
-    }
-    this.verificarGasto();
   }
 
-  get diasIncobrable(): number {
-    return this.parametros.regla_incobrable_dias;
-  }
+  get diasIncobrable(): number { return this.parametros.regla_incobrable_dias; }
 
-  /** El núcleo decide qué política rige según la fecha de otorgamiento. */
-  politicaParaOtorgamiento(fechaDesembolso: string): PoliticaMora {
-    const delNucleo = resolverPoliticaMoraPorFecha(fechaDesembolso);
-    const definicion = this.parametros.politicas_mora[delNucleo.id];
-    if (!definicion) throw new ErrorIntegridadCartera(`La política ${delNucleo.id} no existe en parametros_politicas`);
-    const { desde, hasta } = definicion.vigencia_otorgamiento;
-    if ((desde && fechaDesembolso < desde) || (hasta && fechaDesembolso > hasta)) {
-      throw new ErrorIntegridadCartera(
-        `El núcleo asigna ${delNucleo.id} a un otorgamiento del ${fechaDesembolso}, fuera de su vigencia en parametros_politicas`,
-      );
-    }
-    return delNucleo;
+  politicaParaOtorgamiento(fecha: string): PoliticaMora {
+    try { return seleccionarPoliticaMora(fecha, this.catalogo, this.parametros.politicas_mora); }
+    catch (error) { throw new ErrorIntegridadCartera((error as Error).message); }
   }
 
   /** Desglose por tramo recorrido: `PoliticaMora.desglosar` del núcleo (CP-04.3). */
@@ -471,38 +443,6 @@ export class ContextoPoliticas {
     return { tramos, totalSinRedondear: desglose.totalSinRedondear, total: desglose.totalMoratorio, diasEfectivos: desglose.diasEfectivos };
   }
 
-  private verificarTasas(id: string, definicion: ParametrosPoliticas['politicas_mora'][string], politica: PoliticaMora): void {
-    if (definicion.tipo === 'plana') {
-      if (!(politica instanceof PoliticaPlana)) throw new ErrorIntegridadCartera(`${id} es plana en los parámetros pero no en el núcleo`);
-      const esperada = new Decimal(definicion.tna_bps ?? NaN).div(10000).div(360);
-      if (!politica.tasaDiaria.equals(esperada)) {
-        throw new ErrorIntegridadCartera(`La tasa de ${id} en el núcleo no coincide con ${definicion.tna_bps} bps publicados`);
-      }
-      return;
-    }
-    if (!(politica instanceof PoliticaEscalonada)) throw new ErrorIntegridadCartera(`${id} es escalonada en los parámetros pero no en el núcleo`);
-    const publicados = definicion.tramos ?? [];
-    const coinciden = publicados.length === politica.tramos.length && publicados.every((t, i) => {
-      const n = politica.tramos[i];
-      return NOMBRE_TRAMO[t.id] === n.nombre && t.ini === n.desde && t.fin === n.hasta && n.tasaNominalAnual.times(10000).equals(t.bps);
-    });
-    if (!coinciden) throw new ErrorIntegridadCartera(`Los tramos de ${id} en el núcleo no coinciden con los publicados en parametros_politicas`);
-  }
-
-  private verificarGasto(): void {
-    const gasto = this.parametros.gasto_gestion_cobro;
-    const uno = Dinero.de('1');
-    for (const id of this.porId.keys()) {
-      const antes = gastoGestionCobro(uno, gasto.dia_generacion - 1, id);
-      const ese = gastoGestionCobro(uno, gasto.dia_generacion, id);
-      const esperado = gasto.aplica_a_politicas.includes(id) ? centavosADinero(gasto.monto_centavos) : Dinero.cero();
-      if (!antes.esCero() || !iguales(ese, esperado)) {
-        throw new ErrorIntegridadCartera(
-          `El gasto de gestión del núcleo para ${id} (${ese.formato()} al día ${gasto.dia_generacion}) no coincide con parametros_politicas`,
-        );
-      }
-    }
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -546,9 +486,9 @@ function exigibleDeCuota(
   // El núcleo devenga hasta el día 120 (regla de incobrable) y redondea una sola vez.
   const { tramos, totalSinRedondear, total: interesMoratorio, diasEfectivos } = contexto.desglosar(politica, cuota.amortizacion, diasAtraso);
   const diasDevengo = diasEfectivos;
-  // Gasto de gestión: el núcleo lo genera desde el día 31 y solo para POL-2026-10. Se
+  // Gasto de gestión: el núcleo usa el monto, día y políticas configurados. Se
   // cobra una vez por cuota (una cuota se salda completa con un solo pago).
-  const gastoGestion = gastoGestionCobro(cuota.amortizacion, diasAtraso, politica.id);
+  const gastoGestion = gastoGestionCobro(cuota.amortizacion, diasAtraso, politica.id, contexto.parametros.gasto_gestion_cobro);
   return {
     numero: cuota.numero,
     fechaVencimiento,

@@ -134,6 +134,12 @@ O todo de una vez: `.\iniciar.ps1` (verifica Ollama, modelos y base, y arranca).
 
 Para desarrollar la interfaz con recarga en caliente: `npm run api` en una terminal y `npm run web:dev` en otra (http://localhost:5173, redirige `/api` al puerto 3000).
 
+La configuración de mora se lee de `parametros_politicas` al abrir el adaptador; si no contiene parámetros, se usa `CV_DATA_DIR/politicas.json`. Las estrategias del núcleo se construyen con `tna_bps` (100 bps = 1 % anual), los límites `ini`/`fin` y tasas `bps` de `tramos`, y `gasto_gestion_cobro` (`monto_centavos`, `dia_generacion`, `aplica_a_politicas`). Una tasa válida no necesita coincidir con una constante. Cambiar un archivo después de cargarlo no sustituye los parámetros ya persistidos: hay que actualizar la configuración de la base correspondiente y reabrir el adaptador.
+
+La fecha explícita de otorgamiento selecciona la política mediante `vigencia_otorgamiento`, con extremos inclusivos. Se rechazan fechas inválidas, vigencias superpuestas, tasas negativas o fraccionarias en bps, tramos con huecos o solapamientos y gastos inválidos. Los tramos cubren los días 1 a 120; se conserva el límite de devengo de 120 días, Actual/360, redondeo y reglas de pago existentes. Un día sin política aplicable produce un error, sin recurrir al reloj del sistema.
+
+Los identificadores, versión disponible, vigencia, autor y motivo se conservan en la configuración; el cierre definitivo guarda una copia completa y sus huellas. Consultarlo o repetir su ejecución devuelve el resultado histórico aunque cambie la configuración vigente. Para comprobar la carga sin tocar los archivos canónicos ni la base habitual: `npm test -- tests/parametros-mora.test.ts`. La prueba escribe configuraciones temporales, cambia la tasa plana a 3600 bps y verifica Q30.00 de mora para Q1000 durante 30 días; también prueba vigencias, gastos y un cierre en una base temporal.
+
 ### Pruebas
 
 ```powershell

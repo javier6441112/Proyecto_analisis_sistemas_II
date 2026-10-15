@@ -314,22 +314,22 @@ describe('Fecha de corte estricta', () => {
   });
 });
 
-describe('Parámetros de política contrastados con el núcleo', () => {
+describe('Parámetros de política cargados en el núcleo', () => {
   const clonar = (): ParametrosPoliticas => JSON.parse(JSON.stringify(adaptador.politicas.parametros)) as ParametrosPoliticas;
 
   it('acepta los parámetros cargados', () => {
     expect(() => new ContextoPoliticas(clonar())).not.toThrow();
   });
 
-  it('detiene el cálculo si la tasa plana publicada no coincide con el núcleo', () => {
+  it('detiene el cálculo si la tasa plana es inválida', () => {
     const p = clonar();
-    p.politicas_mora['POL-2024-01'].tna_bps = 2500;
+    p.politicas_mora['POL-2024-01'].tna_bps = -1;
     expect(() => new ContextoPoliticas(p)).toThrow(ErrorIntegridadCartera);
   });
 
-  it('detiene el cálculo si el gasto de gestión publicado no coincide con el núcleo', () => {
+  it('detiene el cálculo si el gasto de gestión es inválido', () => {
     const p = clonar();
-    p.gasto_gestion_cobro.monto_centavos = 3000;
+    p.gasto_gestion_cobro.monto_centavos = -1;
     expect(() => new ContextoPoliticas(p)).toThrow(ErrorIntegridadCartera);
   });
 });

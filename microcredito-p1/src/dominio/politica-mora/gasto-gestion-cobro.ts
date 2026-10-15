@@ -1,3 +1,4 @@
+import { Decimal } from 'decimal.js';
 import { Dinero } from '../dinero.js';
 
 const MONTO_GASTO = Dinero.de('25.00');
@@ -7,11 +8,11 @@ export function debeGenerarGastoGestion(diasAtraso: number): boolean {
   return Number.isInteger(diasAtraso) && diasAtraso >= 31;
 }
 
-export function gastoGestionCobro(capitalEnMora: Dinero, diasAtraso: number, politicaId = POLITICA_CON_GASTO): Dinero {
+export function gastoGestionCobro(capitalEnMora: Dinero, diasAtraso: number, politicaId = POLITICA_CON_GASTO, configuracion = { monto_centavos: 2500, dia_generacion: 31, aplica_a_politicas: [POLITICA_CON_GASTO] }): Dinero {
   if (capitalEnMora.valor.isNegative()) throw new Error('El capital en mora no puede ser negativo');
   if (!Number.isInteger(diasAtraso) || diasAtraso < 0) throw new Error('Los días de atraso deben ser enteros no negativos');
-  return politicaId === POLITICA_CON_GASTO && debeGenerarGastoGestion(diasAtraso)
-    ? Dinero.de(MONTO_GASTO.valor, capitalEnMora.moneda)
+  return configuracion.aplica_a_politicas.includes(politicaId) && diasAtraso >= configuracion.dia_generacion
+    ? Dinero.de(new Decimal(configuracion.monto_centavos).div(100).toString(), capitalEnMora.moneda)
     : Dinero.cero(capitalEnMora.moneda);
 }
 
