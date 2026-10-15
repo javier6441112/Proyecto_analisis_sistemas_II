@@ -11,6 +11,7 @@ import { conectarClienteLocal, type ClienteMcpLocal } from '../../../src/mcp/cli
 import { PropuestaPagoChat, type TPropuestaPagoChat } from '../../../src/contratos/api.js';
 import { api } from '../api';
 import { PropuestaPago, Respuesta } from './Asistente';
+import { OrquestadorChat } from '../../../src/chat/orquestador.js';
 
 // Estado controlado para inspeccionar los botones reales sin agregar un DOM de pruebas.
 const estado = vi.hoisted(() => ({ valores: [] as unknown[], indice: 0 }));
@@ -69,6 +70,19 @@ it('renderiza la propuesta real del MCP y no registra al mostrarla', async () =>
   expect((await adaptador.obtenerDetalleCredito(propuesta.idCredito, propuesta.fechaPago)).cuotasPagadas).toBe(0);
 });
 
+it('muestra Aprobar y el exigible real cuando el modelo intenta quedarse en políticas', async () => {
+  const antes = await adaptador.leerEventosBitacora();
+  const chat = new OrquestadorChat(mcp, { nombre: 'regresion-politicas', async conversar() {
+    return { texto: 'El ejemplo documental exige Q1047.76.', llamadas: [{ nombre: 'buscar_politicas', argumentos: { pregunta: 'POL-2026-10' } }] };
+  } });
+  const r = await chat.preguntar({ mensaje: 'Genera una propuesta de pago para CV-2026-0043 al 2026-10-31', fechaOperacion: '2026-10-31' });
+  const html = renderToStaticMarkup(createElement(Respuesta, { r }));
+  expect(html).toContain('Q561.87');
+  expect(html).toContain('Aprobar como Elena Morales');
+  expect(html).not.toContain('1047.76');
+  expect(await adaptador.leerEventosBitacora()).toEqual(antes);
+});
+
 it.each([true, false])('la decisión humana aprobar=%s utiliza propuestaId', async (aprobar) => {
   const aprobacion = vi.spyOn(api, 'aprobarPropuesta').mockResolvedValue({ resultado: 'APLICADO' });
   const rechazo = vi.spyOn(api, 'rechazarPropuesta').mockResolvedValue({} as never);
@@ -93,4 +107,15 @@ it('muestra el error de proponer_pago en la respuesta del chat', () => {
     tarjetas: [{ herramienta: 'proponer_pago', argumentos: {}, error: true, datos: { error: { codigo: 'MONTO_NO_EXACTO', mensaje: 'El monto debe ser exacto' } } }],
   } }));
   expect(html).toContain('El monto debe ser exacto');
+});
+
+it('las fuentes documentales no se presentan como tarjetas del núcleo financiero', () => {
+  const html = renderToStaticMarkup(createElement(Respuesta, { r: {
+    sesionId: 'documentos', respuesta: 'Política consultada.', propuestas: [], alertasSeguridad: [], control: {},
+    citas: [{ docId: 'POL-2026-10', titulo: 'Mora escalonada', vigencia: 'Desde octubre' }],
+    tarjetas: [{ herramienta: 'buscar_politicas', argumentos: {}, error: false, datos: { fragmentos: [] } }],
+  } }));
+  expect(html).toContain('Fuentes:');
+  expect(html).not.toContain('Datos del núcleo');
+  expect(html).not.toContain('Aprobar');
 });

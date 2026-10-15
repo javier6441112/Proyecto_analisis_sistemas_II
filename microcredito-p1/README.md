@@ -165,6 +165,10 @@ npm run evals       # evals del asistente contra qwen2.5:7b real → tests/evals
 
 `qwen2.5:7b` vía Ollama, local. Se eligió midiendo: con las 7 herramientas reales y las preguntas del guion, `qwen2.5:7b` acertó herramienta y argumentos en 6/6 y `mistral` 7B en 0/5 (describía la función en vez de llamarla e inventaba cifras). Embeddings: `bge-m3` (multilingüe, buen español).
 
+Para una solicitud concreta de propuesta de pago, el chat ejecuta `calcular_deuda_cuota` y después `proponer_pago` con el crédito y la fecha indicados. Si no se indicó monto, lo obtiene el núcleo; si se indicó uno, se valida sin sustituirlo silenciosamente. Los ejemplos del corpus y los importes de respuestas anteriores no determinan la deuda. La propuesta válida muestra el desglose y el botón **Aprobar**; consultar documentos solo muestra fuentes. Proponer no registra un pago: sigue siendo necesaria la aprobación humana en la interfaz.
+
+Comprobación con Ollama real: `node --import tsx tests/evals/propuestas-ollama.ts` desde `microcredito-p1`. Requiere los modelos locales de chat y embeddings. Trabaja sobre una copia temporal de `CV_DB_DIR` (o `.cv-db`), verifica los importes contra el núcleo y que la bitácora no cambie; no aprueba ni registra pagos y elimina la copia al terminar.
+
 ### Tabla pantalla ↔ caso de uso (sección 6.1)
 
 Al entrar se elige el perfil (asesor con su nombre, o gerencia). El asesor ve la versión móvil con pestañas; la gerencia, la de escritorio.

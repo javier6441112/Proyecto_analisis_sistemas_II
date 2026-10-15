@@ -13,7 +13,7 @@ import { ServicioAprobaciones } from '../src/mcp/aprobaciones.js';
 import { conectarClienteLocal, type ClienteMcpLocal } from '../src/mcp/cliente-local.js';
 import { EmbebedorDePrueba } from '../src/rag/embeddings.js';
 import { BuscadorCorpus, ingestarCorpus } from '../src/rag/buscador.js';
-import { OrquestadorChat, inferirSeguimiento } from '../src/chat/orquestador.js';
+import { OrquestadorChat, inferirSeguimiento, esConsultaDePoliticas } from '../src/chat/orquestador.js';
 import { MENSAJE_CANARIO, MENSAJE_CIFRAS_NO_VERIFICADAS, MENSAJE_FUERA_DE_ALCANCE, cifrasNoVerificadas, filtrarSalida } from '../src/chat/guardias.js';
 import { llamadasEnTexto, type LlamadaHerramienta, type MensajeChat, type ModeloLenguaje, type RespuestaModelo } from '../src/chat/modelo.js';
 
@@ -107,6 +107,19 @@ describe('Menor privilegio y aprobación humana', () => {
 });
 
 describe('Corpus, citas y OP-7', () => {
+  it('un crédito no se interpreta como un documento de políticas', () => {
+    expect(esConsultaDePoliticas('Propuesta para CV-2026-0043 al 2026-10-31')).toBe(false);
+    expect(esConsultaDePoliticas('Consulta POL-2026-10')).toBe(true);
+  });
+
+  it('si solo recuperó documentos no anuncia tarjetas financieras ni aprobación', async () => {
+    const r = await preguntar(new ModeloGuionado([{ nombre: 'buscar_politicas', argumentos: { pregunta: 'POL-2026-10' } }],
+      'La propuesta está preparada en la tarjeta financiera. Pulse Aprobar.'), 'Consulta la política POL-2026-10');
+    expect(r.control.herramientasUsadas).toEqual(['buscar_politicas']);
+    expect(r.respuesta).not.toMatch(/tarjeta|pulse aprobar/i);
+    expect(r.respuesta).toContain('No se consultó una deuda real');
+    expect(r.propuestas).toEqual([]);
+  });
   it('una pregunta normativa sin herramienta fuerza la recuperación y agrega la cita', async () => {
     const r = await preguntar(new ModeloGuionado([], 'Se calcula con una tasa del 24 % anual sobre el capital en mora.'),
       'Según las políticas vigentes, ¿cómo se calcula el interés moratorio de un crédito otorgado en agosto de 2026?');
@@ -135,6 +148,76 @@ describe('Corpus, citas y OP-7', () => {
   it('fuera de tema y sin herramientas: respuesta fija, no la del modelo', async () => {
     const r = await preguntar(new ModeloGuionado([], 'Ganó Argentina.'), '¿Quién ganó el mundial?');
     expect(r.respuesta).toBe(MENSAJE_FUERA_DE_ALCANCE);
+  });
+});
+
+describe('Propuestas con exigible actual, sin importes documentales', () => {
+  it('completa la propuesta aunque el modelo solo quiera buscar políticas y use el ejemplo documental', async () => {
+    const modelo = new ModeloGuionado([{ nombre: 'buscar_politicas', argumentos: { pregunta: 'POL-2026-10' } }],
+      'El cliente debe Q1047.76. Encontrará su tarjeta de pago.');
+    const r = await preguntar(modelo, 'Genera una propuesta de pago para CV-2026-0043 al 2026-10-31');
+    expect(r.control.herramientasUsadas).toEqual(['calcular_deuda_cuota', 'proponer_pago']);
+    expect(r.propuestas).toHaveLength(1);
+    expect(r.propuestas[0]).toMatchObject({ idCredito: 'CV-2026-0043', fechaPago: F, cuota: { totalExigible: '561.87' }, estado: 'PENDIENTE_DE_APROBACION_HUMANA' });
+    expect(r.tarjetas[1].argumentos).not.toHaveProperty('monto');
+    expect(r.respuesta).toContain('Q561.87');
+    expect(r.respuesta).not.toContain('1047.76');
+    expect(r.respuesta).toContain('Todavía no se ha registrado');
+  });
+
+  it('consulta y propone aunque el modelo no emita ninguna llamada', async () => {
+    const r = await preguntar(new ModeloGuionado([], 'Consulte las políticas de mora.'), 'Prepara una propuesta para CV-2026-0043');
+    expect(r.control.herramientasUsadas).toEqual(['calcular_deuda_cuota', 'proponer_pago']);
+    expect(r.propuestas[0].cuota.totalExigible).toBe('561.87');
+  });
+
+  it('usa el monto explícito del usuario aunque el modelo proponga el de un ejemplo', async () => {
+    const r = await preguntar(new ModeloGuionado([{ nombre: 'proponer_pago', argumentos: { idCredito: 'CV-2026-0410', fechaPago: '2027-01-24', monto: '1047.76' } }], 'Listo.'),
+      'Propón el pago de Q561.87 para CV-2026-0043 al 2026-10-31');
+    expect(r.tarjetas[1].argumentos).toMatchObject({ idCredito: 'CV-2026-0043', fechaPago: F, monto: '561.87' });
+    expect(r.propuestas[0].cuota.totalExigible).toBe('561.87');
+  });
+
+  it('un importe incorrecto explícito se rechaza; no se sustituye silenciosamente', async () => {
+    const r = await preguntar(new ModeloGuionado([], 'Pago listo para aprobar.'), 'Propón Q1047.76 para CV-2026-0043 al 2026-10-31');
+    expect(r.propuestas).toEqual([]);
+    expect(r.tarjetas.at(-1)).toMatchObject({ herramienta: 'proponer_pago', error: true, datos: { error: { codigo: 'MONTO_NO_EXACTO' } } });
+    expect(r.respuesta).not.toMatch(/tarjeta|listo para aprobar/i);
+  });
+
+  it('no fija crédito, fecha, canal o monto: utiliza los de la nueva solicitud', async () => {
+    const fecha = '2026-10-30';
+    const r = await preguntar(new ModeloGuionado([], 'Listo.'), 'Genera una propuesta para CV-2026-0035 al 30 de octubre de 2026 en campo');
+    const exigible = await adaptador.consultarExigible('CV-2026-0035', fecha);
+    expect(r.propuestas[0]).toMatchObject({ idCredito: 'CV-2026-0035', fechaPago: fecha, cuota: { totalExigible: exigible.cuota!.total.formato() } });
+    expect(r.tarjetas[1].argumentos.canal).toBe('campo');
+  });
+
+  it('un ejemplo presente en el historial no se reutiliza como deuda', async () => {
+    const chat = new OrquestadorChat(mcp, new ModeloGuionado([{ nombre: 'explicar_mora', argumentos: { idCredito: 'CV-2026-0410', numeroCuota: 2, fechaCorte: '2027-01-24' } }], 'Total Q1047.76.'));
+    const anterior = await chat.preguntar({ mensaje: 'Explica esa mora', fechaOperacion: F });
+    const r = await chat.preguntar({ sesionId: anterior.sesionId, mensaje: 'Genera una propuesta de pago para CV-2026-0043', fechaOperacion: F });
+    expect(r.propuestas[0].cuota.totalExigible).toBe('561.87');
+    expect(r.respuesta).not.toContain('1047.76');
+  });
+
+  it('un seguimiento con monto vuelve a consultar el mismo crédito y fecha, sin registrar', async () => {
+    const chat = new OrquestadorChat(mcp, new ModeloGuionado([], 'Listo.'));
+    const anterior = await chat.preguntar({ mensaje: 'Prepara una propuesta para CV-2026-0043 al 2026-10-31', fechaOperacion: F });
+    const antes = await adaptador.leerEventosBitacora();
+    const r = await chat.preguntar({ sesionId: anterior.sesionId, mensaje: 'Usa Q561.87', fechaOperacion: '2026-11-01' });
+    expect(r.control.herramientasUsadas).toEqual(['calcular_deuda_cuota', 'proponer_pago']);
+    expect(r.propuestas[0]).toMatchObject({ idCredito: 'CV-2026-0043', fechaPago: F, cuota: { totalExigible: '561.87' } });
+    expect(await adaptador.leerEventosBitacora()).toEqual(antes);
+  });
+
+  it('no crea una propuesta para un incobrable ni registra pagos', async () => {
+    const antes = await adaptador.leerEventosBitacora();
+    const r = await preguntar(new ModeloGuionado([], 'Preparé el pago.'), 'Genera una propuesta de pago para CV-2026-0015 al 2026-10-31');
+    expect(r.control.herramientasUsadas).toEqual(['calcular_deuda_cuota']);
+    expect(r.propuestas).toEqual([]);
+    expect(r.respuesta).toMatch(/incobrable/i);
+    expect(await adaptador.leerEventosBitacora()).toEqual(antes);
   });
 });
 

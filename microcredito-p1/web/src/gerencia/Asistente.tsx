@@ -99,7 +99,7 @@ export function Respuesta({ r }: { r: TRespuestaChat }) {
         const error = t.datos.error as { mensaje?: unknown } | undefined;
         return <Alert key={`error-${i}`} type="error">{typeof error?.mensaje === 'string' ? error.mensaje : `No se pudo ejecutar ${t.herramienta}.`}</Alert>;
       })}
-      {r.tarjetas.filter((t) => !t.error && t.herramienta !== 'proponer_pago').map((t, i) => <TarjetaNucleo key={i} t={t} />)}
+      {r.tarjetas.filter((t) => !t.error && t.herramienta !== 'proponer_pago' && t.herramienta !== 'buscar_politicas').map((t, i) => <TarjetaNucleo key={i} t={t} />)}
       {r.citas.length > 0 && (
         <p className="text-[11px] text-slate-500">Fuentes: {r.citas.map((c) => `[${c.docId}] ${c.titulo} (vigencia ${c.vigencia})`).join(' · ')}</p>
       )}
