@@ -1,47 +1,12 @@
-# Proyecto 1 - Sistema de Gestion de Microcredito
+# Crédito Vecino — Sistema de Gestión de Microcrédito
 
-Nucleo de calculo financiero para el Sistema de Gestion de Microcredito de Credito Vecino, S. A. El proyecto implementa el entregable E4 como funciones y modelos de dominio puros, sin servidor web ni base de datos.
+Proyecto integrador de Análisis de Sistemas II (037), desarrollado incrementalmente desde el Proyecto 1 hasta el Proyecto Final. Incluye el núcleo financiero en TypeScript, persistencia PGlite, API REST, interfaz React y un asistente gerencial con MCP y RAG sobre modelos locales de Ollama.
 
-## Requisitos
+El núcleo de dominio conserva las funciones puras del P1 y las estrategias de mora del P2; la API, la persistencia y la interfaz se incorporan en el Proyecto Final. Las instrucciones de instalación y ejecución están en la sección **Proyecto Final — Asistente gerencial**.
 
-- Node.js 20 o superior
-- npm
+## Video de defensa
 
-## Instalacion
-
-Desde esta carpeta:
-
-```powershell
-npm install
-```
-
-## Comandos
-
-Ejecutar las pruebas unitarias:
-
-```powershell
-npm test
-```
-
-Verificar tipos y compilacion estricta:
-
-```powershell
-npm run typecheck
-```
-
-Generar los contratos OpenAPI:
-
-```powershell
-npm run generar
-```
-
-Validar el contrato OpenAPI:
-
-```powershell
-npm run validar
-```
-
-El comando `npm run build` es equivalente a `npm run typecheck`.
+**Enlace:** <!-- Pegar aquí el enlace compartible del video. -->
 
 ## Funcionalidad actual
 
@@ -61,31 +26,33 @@ El comando `npm run build` es equivalente a `npm run typecheck`.
 src/dominio/       Nucleo financiero puro.
 src/contratos/     Esquemas Zod para los contratos.
 src/openapi.ts     Documento OpenAPI generado desde los esquemas.
-tests/             Pruebas unitarias y casos de referencia.
+src/api/           API REST y rutas del asistente.
+src/persistencia/  Base de datos, carga canonica y operaciones.
+src/mcp/           Herramientas del nucleo y aprobacion humana.
+src/rag/           Ingesta, embeddings y recuperacion documental.
+src/chat/          Orquestacion del asistente y guardias de salida.
+web/               Interfaz React y pruebas de sus componentes.
+tests/             Pruebas unitarias, integracion y casos de referencia.
+tests/evals/       Comprobaciones del asistente con Ollama real.
 docs/diagramas/    Diagramas UML y C4 editables en Markdown.
 docs/adr/          Decisiones de arquitectura.
 docs/api/          Contratos OpenAPI y documentacion de API.
 ```
 
-## Documentacion
+## Documentación
 
 - [Diagramas y trazabilidad](docs/README.md)
 - [Resultados de pruebas](RESULTADOS-PRUEBAS.md)
 - [Contrato OpenAPI en YAML](docs/api/openapi.yaml)
-- [Decisiones de arquitectura](docs/adr/ADR-001.md) y [ADR-002](docs/adr/ADR-002.md)
+- [Decisiones de arquitectura](docs/adr/ADR-001.md), [ADR-002](docs/adr/ADR-002.md) y [ADR-003: cierres persistidos](docs/adr/ADR-003.md)
 
 Los diagramas Mermaid pueden visualizarse en la vista previa Markdown de VS Code, en GitHub o en Mermaid Live Editor.
 
-## Herramientas de IA utilizadas
-
-- GitHub Copilot para apoyar el analisis, diseno, implementacion, documentacion y revision del proyecto.
-- Mermaid para representar los diagramas editables de arquitectura, UML y flujos.
-
-La autoria, revision y validacion final del contenido corresponden al equipo del proyecto.
+La declaración de herramientas de IA utilizadas se encuentra al final de este README.
 
 ## Proyecto Final — Asistente gerencial
 
-Sistema completo de Crédito Vecino: núcleo de cálculo (P1/P2) + persistencia (E2) + API + interfaz React (E1) + servidor MCP (E3) + RAG con citación (E4) + chat gerencial (E5). Todo corre en la computadora del equipo, **sin internet**.
+La aplicación integra el núcleo de cálculo (P1/P2), persistencia (E2), API, interfaz React (E1), servidor MCP (E3), RAG con citación (E4) y chat gerencial (E5). Después de instalar las dependencias y descargar los modelos, se ejecuta en la computadora del equipo **sin conexión a internet**.
 
 | Pieza | Dónde | Detalle |
 |---|---|---|
@@ -106,16 +73,19 @@ Guía de la carga canónica (E2): [docs/E2-persistencia-carga.md](docs/E2-persis
 
 - Windows 10/11 (o macOS/Linux), **16 GB de RAM recomendados** (8 GB funciona, lento).
 - [Node.js 22 LTS](https://nodejs.org), [Git](https://git-scm.com) y [Ollama](https://ollama.com/download) instalados de forma nativa (sin Docker).
+- npm, incluido con Node.js. Los comandos siguientes están escritos para PowerShell en Windows; `iniciar.ps1` es el arranque automático para ese entorno.
 
 ### Instalación (una sola vez, con internet)
 
 ```powershell
-cd microcredito-p1
+cd microcredito-p1       # desde la raíz del repositorio; omitir si ya está en esta carpeta
 npm install
 ollama pull qwen2.5:7b
 ollama pull bge-m3
 npm run web:install   # dependencias de la interfaz (web/)
 ```
+
+Abra la aplicación Ollama y manténgala ejecutándose antes de ingerir el corpus o utilizar el chat. Si PowerShell bloquea `npm.ps1`, use `npm.cmd` en lugar de `npm` en los comandos manuales, sin cambiar la política de ejecución.
 
 ### Carga de datos y arranque
 
@@ -142,23 +112,30 @@ Los identificadores, versión disponible, vigencia, autor y motivo se conservan 
 
 ### Pruebas
 
+Ejecute primero la instalación de dependencias del servidor y de `web/`, y la carga canónica descritas arriba. La suite completa necesita una base cargada en `CV_DB_DIR` (o `.cv-db`) para crear sus copias temporales; no necesita Ollama. Detenga la API antes de copiar la base. Las evals del asistente sí necesitan Ollama y ambos modelos descargados.
+
 ```powershell
 npm test            # Bloque 0: suite del P1/P2 + carga + adaptador + API + MCP + RAG + chat
 npm run typecheck   # TypeScript estricto del servidor (la interfaz se revisa en npm run web:build)
+npm run web:build   # verifica tipos de la interfaz y genera web/dist
 npm run evals       # evals del asistente contra qwen2.5:7b real → tests/evals/resultados.md
 ```
+
+Otros comandos de documentación: `npm run generar` actualiza OpenAPI desde Zod y `npm run validar` valida la especificación. `npm run build` equivale a `npm run typecheck`; para compilar la interfaz se usa `npm run web:build`. No existe un script `npm run web`.
 
 ### Variables de entorno
 
 | Variable | Por defecto | Uso |
 |---|---|---|
-| `CV_DATA_DIR` | — | Paquete canónico (solo para la carga) |
+| `CV_DATA_DIR` | — | Ruta del paquete canónico para la carga y respaldo de lectura de `politicas.json` si la base no contiene parámetros |
 | `CV_DB_DIR` | `./.cv-db` | Base PGlite |
 | `PORT` | `3000` | Puerto de la API y la interfaz |
 | `OLLAMA_URL` | `http://127.0.0.1:11434` | Ollama local |
 | `CV_LLM_MODELO` | `qwen2.5:7b` | Modelo de chat |
 | `CV_EMBEDDINGS` | `bge-m3` | Modelo de embeddings |
 | `CV_LLM_CONTEXTO` | `8192` | Contexto del modelo (4096 con 8 GB de RAM) |
+| `CV_LLM_MAX_TOKENS` | `600` | Máximo de tokens generados por respuesta del modelo |
+| `CV_LLM_LIMITE_MS` | `900000` | Tiempo máximo de espera por inactividad de la petición HTTP a Ollama, en milisegundos |
 | `CV_RAG_UMBRAL` | `0.50` | Similitud mínima para citar un fragmento |
 
 ### Modelo de lenguaje
@@ -168,6 +145,13 @@ npm run evals       # evals del asistente contra qwen2.5:7b real → tests/evals
 Para una solicitud concreta de propuesta de pago, el chat ejecuta `calcular_deuda_cuota` y después `proponer_pago` con el crédito y la fecha indicados. Si no se indicó monto, lo obtiene el núcleo; si se indicó uno, se valida sin sustituirlo silenciosamente. Los ejemplos del corpus y los importes de respuestas anteriores no determinan la deuda. La propuesta válida muestra el desglose y el botón **Aprobar**; consultar documentos solo muestra fuentes. Proponer no registra un pago: sigue siendo necesaria la aprobación humana en la interfaz.
 
 Comprobación con Ollama real: `node --import tsx tests/evals/propuestas-ollama.ts` desde `microcredito-p1`. Requiere los modelos locales de chat y embeddings. Trabaja sobre una copia temporal de `CV_DB_DIR` (o `.cv-db`), verifica los importes contra el núcleo y que la bitácora no cambie; no aprueba ni registra pagos y elimina la copia al terminar.
+
+### Estrategia de RAG y citación
+
+- **Fragmentación:** se separa cada documento por secciones Markdown (`##`) y se conserva su introducción como otro fragmento. El corpus canónico produce 32 fragmentos a partir de siete documentos. Cada sección desarrolla una regla concreta: recuperarla completa conserva su contexto y permite citar una unidad reconocible, sin mezclar políticas de distintas vigencias. Cada fragmento incorpora `doc_id`, título y vigencia.
+- **Embeddings:** se utiliza `bge-m3` mediante Ollama porque es multilingüe, permite trabajar con el corpus en español y se ejecuta localmente; además, es una de las opciones sugeridas por el enunciado. Su función es recuperar documentos, no calcular cifras financieras.
+- **Recuperación:** los vectores se guardan en pgvector y se consultan por similitud coseno. El umbral predeterminado es `0.50`, configurable con `CV_RAG_UMBRAL`. La respuesta normativa cita el documento recuperado; sin fragmentos suficientes se indica que no se encontró una fuente verificable.
+- **Seguridad:** el corpus se trata como dato. Se filtran instrucciones incrustadas y datos personales, y los borradores sin aprobar no se citan como política normativa. Los importes reales de un crédito proceden de las herramientas del núcleo.
 
 ### Tabla pantalla ↔ caso de uso (sección 6.1)
 
@@ -187,14 +171,16 @@ Al entrar se elige el perfil (asesor con su nombre, o gerencia). El asesor ve la
 
 Flujos navegables: **originación** (Clientes → Solicitudes → Comité → Desembolso), **cobro en campo** (Créditos → Detalle → Mora → Pagos) y **consulta gerencial** (Tablero → cartera en riesgo por tramo → créditos).
 
-En Gerencia → Cierres, **Consultar período** obtiene una vista previa o un cierre ya guardado. **Ejecutar cierre definitivo** congela las cifras y políticas del período; **Reejecutar comprobación** devuelve ese mismo resultado mediante POST. Los cierres se conservan al reiniciar. La migración añade `cierres_ejecutados` al abrir la base, sin reconstruir datos. Véase [ADR-003](docs/adr/ADR-003.md) para el contrato y la decisión pendiente sobre operaciones posteriores en períodos cerrados.
+En Gerencia → Cierres, **Consultar período** obtiene una vista previa o un cierre ya guardado. **Ejecutar cierre definitivo** congela las cifras y políticas del período; **Reejecutar comprobación** devuelve ese mismo resultado mediante POST. Los cierres se conservan al reiniciar. La migración añade `cierres_ejecutados` al abrir la base, sin reconstruir datos. Véase [ADR-003](docs/adr/ADR-003.md) para el contrato y el comportamiento ante operaciones posteriores en períodos cerrados.
 
 La fecha de operación elegida en pantalla es el puerto Reloj: arranca en 2026-10-31 y toda consulta la envía como fecha de corte. La interfaz no calcula dinero: todo monto y porcentaje viene de la API. La API se documenta en `docs/api/openapi.yaml`, generado desde el mismo contrato que valida el servidor.
 
-### Herramientas de IA del Proyecto Final
+### Herramientas de IA utilizadas
 
+- **GitHub Copilot**: apoyo en análisis, diseño, implementación, documentación y revisión del proyecto.
 - **Claude (Anthropic)**: apoyo en arquitectura, implementación de API, MCP, RAG, chat e interfaz, pruebas y documentación.
 - **Gemini (Google)**: borradores iniciales del cargador y del adaptador.
+- **Codex (OpenAI)**: revisión de requisitos y código, correcciones de políticas configurables y propuestas de pago, pruebas de regresión, comprobaciones con Ollama real y actualización de documentación.
 - **qwen2.5:7b y bge-m3 (Ollama)**: modelos que usa el sistema en ejecución.
 
 El equipo revisó, probó y puede explicar todo lo entregado.
