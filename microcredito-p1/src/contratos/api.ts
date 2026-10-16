@@ -8,6 +8,7 @@
  * Los esquemas con `id` se publican como componentes reutilizables (`#/components/schemas/<id>`).
  */
 import { z } from 'zod';
+import { DevengoCierreSchema } from './devengo.js';
 import { DineroSchema } from './comunes.js';
 import { ProvisionesCierreSchema, ContabilizacionProvisionesSchema } from './provisiones.js';
 import { AperturaProvisionesBodySchema, AperturaProvisionSchema, RegistroProvisionesSchema } from './provisiones.js';
@@ -367,6 +368,7 @@ const Recuperaciones = z.object({
 }).strict();
 
 export const Cierre = z.object({
+  devengo: DevengoCierreSchema.optional(),
   contabilizacionProvisiones: ContabilizacionProvisionesSchema.optional(),
   provisiones: ProvisionesCierreSchema.optional().meta({ description: 'Opcional para formatos históricos; su ausencia significa no disponible, nunca cero.' }),
   estado: z.enum(['PREVIA', 'EJECUTADO']),

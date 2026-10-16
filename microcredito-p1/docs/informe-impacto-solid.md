@@ -37,7 +37,7 @@ Evidencia: `src/dominio/politica-mora/politica-mora.ts` y `src/dominio/politica-
 
 `Credito.registrarDevengoInteresCorriente(periodoId, importe)` registra una sola vez cada período: mientras el crédito está suspendido, el importe va a `interesEnSuspenso`, no al acumulado reconocido ni al adeudo exigible. `Credito.calcularAdeudoCuota(...)` integra esta clasificación al flujo del núcleo y exige un identificador estable del corte. `Credito.regularizar(...)` reactiva el devengo, transfiere el acumulado de suspenso al reconocido, vacía la cuenta de orden y devuelve el importe reconocido en esa operación. Una segunda reactivación no vuelve a reconocerlo. Los acumuladores internos conservan `Decimal`; esta capa no redondea el devengo recibido. Los valores `Dinero` de salida siguen la representación monetaria general del núcleo.
 
-La búsqueda de archivos del repositorio y del directorio del curso no encontró el enunciado P1 (PDF/DOCX). El código P1 disponible sí muestra que el plan francés calcula el interés de cuota multiplicando el saldo inicial por la tasa ordinaria mensual en `src/dominio/plan-amortizacion.ts`; no define el cálculo prorrateado entre dos cortes arbitrarios, sus días de inicio/fin ni la política de redondeo para ese devengo. Por tanto, la nueva operación recibe el importe del período ya calculado por el llamador y **no deriva fórmula, base ni redondeo**. Esta parte de CP-04.2 permanece pendiente hasta localizar el enunciado P1 o confirmar esas reglas con el docente.
+Actualización del Proyecto Final: el equipo adoptó una convención académica de interés contractual por días reales, acumulado por cuota redondeado y diferencias entre cortes. No se atribuye al docente. El cálculo puro y su integración con apertura, suspenso y movimientos persistentes se describen en [Devengo corriente](devengo-corriente.md).
 
 La prueba usa importes de ejemplo para verificar la clasificación, idempotencia y transferencia contable; dichos valores no son una especificación de la fórmula financiera.
 
@@ -89,15 +89,6 @@ Ejecución desde `microcredito-p1/`:
 - `npm run typecheck`: **correcto**, `tsc --noEmit` con `strict: true`.
 - Las suites heredadas del P1 se mantuvieron intactas; las expectativas revisadas corresponden únicamente a pruebas del comportamiento agregado P2 (entre ellas el resultado retroactivo, que antes era idéntico a la plana).
 
-## 5. Limitación pendiente
+## 5. Evolución del devengo en el Proyecto Final
 
-El destino del suspenso al regularizar ya está implementado. Solo queda pendiente confirmar el cálculo del importe de interés corriente devengado entre cortes; no se encontró el enunciado P1 y los documentos de dominio disponibles no resuelven esa fórmula.
-
-Preguntas abiertas que deben confirmar el docente:
-
-1. ¿Cuál es la base del interés corriente durante cada intervalo: saldo de capital vigente, capital de cuota u otra base?
-2. ¿Cómo se deriva la tasa del período desde `tasaOrdinariaMensual` y `baseDias`, y qué convención define si el día inicial/final del corte cuenta?
-3. ¿Cuándo y con qué precisión se redondean los importes reconocidos y los trasladados a suspenso?
-4. ¿El devengo entre cortes aplica la tasa mensual contractual directamente sobre el saldo inicial de la cuota, o el enunciado P1 especifica otra base/prorrateo?
-
-La transferencia al regularizar no espera aclaración adicional: está definida por la regla aportada para P2. El cálculo entre cortes sigue **pendiente**; no se presenta CP-04.2 como completamente cerrado mientras falten su fórmula, período y redondeo.
+La fórmula entre cortes y su redondeo son ahora decisiones académicas del equipo, implementadas y versionadas según [Devengo corriente](devengo-corriente.md). Las cifras de pruebas anteriores describen la etapa P2. La integración actual usa movimientos únicos, apertura histórica separada y transacciones de cierre. Siguen fuera de alcance la conciliación manual con contabilidad externa y los ajustes automáticos por operaciones retroactivas; estos casos bloquean nueva contabilización hasta conciliarse.

@@ -30,6 +30,9 @@ import { asegurarCierres, leerCierre } from './cierres-persistidos.js';
 import { asegurarMovimientosProvisiones, abrirDesdeHistorico, guardarCierreConMovimientos,
   consultarRegistroProvisiones, type ContabilizacionProvisiones } from './movimientos-provisiones.js';
 import { cargarPoliticaProvisiones } from '../configuracion/provisiones.js';
+import { cargarPoliticasDevengo, politicaDevengoPara } from '../configuracion/devengo.js';
+import type { CreditoDevengo } from '../dominio/devengo.js';
+import { prepararDevengo, asegurarDevengo, type ResultadoDevengoCierre } from './devengo-persistido.js';
 import { calcularProvisiones, type PoliticaProvisiones } from '../dominio/provisiones.js';
 
 import { Dinero } from '../dominio/dinero.js';
@@ -250,6 +253,7 @@ export interface RecuperacionesPorConcepto {
 }
 
 export interface Cierre {
+  devengo?: ResultadoDevengoCierre;
   contabilizacionProvisiones?: ContabilizacionProvisiones;
   provisiones?: ProvisionesCierre;
   estado: 'PREVIA' | 'EJECUTADO';
@@ -864,25 +868,27 @@ export class AdaptadorNucleo {
     private readonly esquema: EsquemaDetectado,
     readonly politicas: ContextoPoliticas,
     private readonly provisionesDir?: string,
+    private readonly devengoDir?: string,
   ) {}
 
-  static async abrir(opciones: { dbDir?: string; dataDir?: string; provisionesDir?: string } = {}): Promise<AdaptadorNucleo> {
+  static async abrir(opciones: { dbDir?: string; dataDir?: string; provisionesDir?: string; devengoDir?: string } = {}): Promise<AdaptadorNucleo> {
     const db = await abrirBaseLocal(opciones.dbDir);
     try {
-      return await AdaptadorNucleo.desdeConexion(db, opciones.dataDir, opciones.provisionesDir);
+      return await AdaptadorNucleo.desdeConexion(db, opciones.dataDir, opciones.provisionesDir, opciones.devengoDir);
     } catch (error) {
       await db.close();
       throw error;
     }
   }
 
-  static async desdeConexion(db: ConexionSql, dataDir?: string, provisionesDir?: string): Promise<AdaptadorNucleo> {
+  static async desdeConexion(db: ConexionSql, dataDir?: string, provisionesDir?: string, devengoDir?: string): Promise<AdaptadorNucleo> {
     const esquema = await detectarEsquema(db);
     const politicas = new ContextoPoliticas(await leerParametros(db, dataDir));
     await asegurarBitacora(db);
     await asegurarCierres(db);
     await asegurarMovimientosProvisiones(db);
-    return new AdaptadorNucleo(db, esquema, politicas, provisionesDir);
+    await asegurarDevengo(db);
+    return new AdaptadorNucleo(db, esquema, politicas, provisionesDir, devengoDir);
   }
 
   async cerrar(): Promise<void> {
@@ -1116,7 +1122,8 @@ export class AdaptadorNucleo {
       const guardado = await leerCierre(this.db, periodo);
       if (guardado) return guardado;
       const cierre = await this.calcularCierre(periodo);
-      return guardarCierreConMovimientos(this.db, { ...cierre, estado: 'EJECUTADO', ejecutadoPor: usuario.trim() });
+      const fuentes = this.fuentesDevengo(await this.listarDetallesCreditos(cierre.hasta));
+      return guardarCierreConMovimientos(this.db, { ...cierre, estado: 'EJECUTADO', ejecutadoPor: usuario.trim() }, fuentes);
     });
   }
 
@@ -1127,6 +1134,20 @@ export class AdaptadorNucleo {
 
   async consultarRegistroProvisiones(fechaCorte: string) {
     return consultarRegistroProvisiones(this.db, validarFecha(fechaCorte));
+  }
+
+  private fuentesDevengo(detalles: DetalleCredito[]): CreditoDevengo[] {
+    const politicas = cargarPoliticasDevengo(this.devengoDir);
+    return detalles.map(d => {
+      const plan = generarPlanFrances(d.capitalOriginal, tasaMensualDe(d.tnaBps), d.plazoMeses);
+      return { id: d.idCredito, desembolso: d.fechaDesembolso, politica: politicaDevengoPara(d.fechaDesembolso, politicas),
+        cuotas: plan.cuotas.map((q, i) => ({ numero: q.numero, inicio: i ? vencimiento(d.fechaDesembolso, i) : d.fechaDesembolso,
+          vencimiento: vencimiento(d.fechaDesembolso, q.numero), interes: q.interes })),
+        eventos: d.pagos.filter(p => p.tipo === 'APLICACION').map((p, orden) => ({
+          id: p.claveIdempotencia, fecha: p.fecha, orden, tipo: 'PAGO' as const, cuota: p.numeroCuota!,
+        })),
+      };
+    });
   }
 
   private async calcularCierre(periodo: string): Promise<Cierre> {
@@ -1162,6 +1183,9 @@ export class AdaptadorNucleo {
     const parametros = structuredClone(this.politicas.parametros);
     const huella = (valor: unknown): string => createHash('sha256').update(JSON.stringify(valor)).digest('hex');
     const idsMora = [...new Set(detalles.map((d) => d.politicaMora))].sort();
+    let devengo: ResultadoDevengoCierre;
+    try { devengo = await prepararDevengo(this.db, { desde, hasta, periodo }, this.fuentesDevengo(detalles), 'VISTA_PREVIA'); }
+    catch (error) { devengo = { estado: 'NO_DISPONIBLE', motivo: error instanceof Error ? error.message : String(error) }; }
     let provisiones: ProvisionesCierre = { estado: 'NO_DISPONIBLE', motivo: 'Provisiones disponibles únicamente en el cierre mensual' };
     if (tipo === 'MENSUAL') {
       try {
@@ -1177,6 +1201,7 @@ export class AdaptadorNucleo {
       }
     }
     return {
+      devengo,
       provisiones,
       estado: 'PREVIA',
       fechaCorte: hasta,

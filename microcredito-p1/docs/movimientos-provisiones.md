@@ -2,7 +2,7 @@
 
 Decisión académica del equipo para Crédito Vecino: la reserva es un saldo por crédito. Cada cierre definitivo registra **variación = objetivo al corte − saldo anterior reconstruido**. Q100 anteriores y Q150 objetivo constituyen Q50; Q150 anteriores y Q120 objetivo reducen Q30 (importe −Q30). Un objetivo sin cambio no genera filas. Si un crédito deja de estar en el objetivo, su objetivo es cero y se libera su reserva anterior. Se conservan la política versionada, las exclusiones de cancelados e incobrables y el redondeo del cálculo puro.
 
-El registro de provisiones no modifica deuda, cuotas, capital, pagos, intereses ni cartera bruta. Se presenta separado de recuperaciones e intereses cobrados. **No se implementa devengo de intereses**. Los movimientos son el registro auxiliar de reservas; no se introduce aquí un plan de cuentas de partida doble ni se vuelve a imputar el objetivo completo como gasto mensual.
+El registro de provisiones no modifica deuda, cuotas, capital, pagos, intereses ni cartera bruta. Se presenta separado de recuperaciones e intereses cobrados. El [devengo de interés corriente](devengo-corriente.md) tiene su propio registro, guardado atómicamente junto al cierre y las provisiones. Los movimientos de provisiones son el registro auxiliar de reservas; no se introduce aquí un plan de cuentas de partida doble ni se vuelve a imputar el objetivo completo como gasto mensual.
 
 ## Registro, atomicidad y trazabilidad
 

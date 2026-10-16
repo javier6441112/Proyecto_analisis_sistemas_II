@@ -1639,7 +1639,7 @@
         ],
         "operationId": "consultarCierre",
         "summary": "Cierre diario (AAAA-MM-DD) o mensual (AAAA-MM)",
-        "description": "No ejecuta el cierre: devuelve una PREVIA calculada o el EJECUTADO guardado, sin recalcular sus cifras.",
+        "description": "No ejecuta el cierre: devuelve una PREVIA calculada o el EJECUTADO guardado, sin recalcular sus cifras. Devengo corriente separado de intereses cobrados: generado, ingreso, suspenso, regularización, retiro y saldo final; apertura histórica fuera del ingreso del período. Los formatos anteriores indican no disponible.",
         "parameters": [
           {
             "name": "periodo",
@@ -4066,6 +4066,606 @@
       "Cierre": {
         "type": "object",
         "properties": {
+          "devengo": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "estado": {
+                    "type": "string",
+                    "const": "DISPONIBLE"
+                  },
+                  "desde": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "hasta": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "huellaFuentes": {
+                    "type": "string"
+                  },
+                  "apertura": {
+                    "type": "object",
+                    "properties": {
+                      "generado": {
+                        "type": "object",
+                        "properties": {
+                          "valor": {
+                            "type": "string",
+                            "pattern": "^\\d{1,13}\\.\\d{2}$",
+                            "description": "Importe no negativo con exactamente dos decimales",
+                            "examples": [
+                              "1004.62"
+                            ]
+                          },
+                          "moneda": {
+                            "type": "string",
+                            "const": "GTQ"
+                          }
+                        },
+                        "required": [
+                          "valor",
+                          "moneda"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                      },
+                      "ingresoReconocido": {
+                        "type": "object",
+                        "properties": {
+                          "valor": {
+                            "type": "string",
+                            "pattern": "^\\d{1,13}\\.\\d{2}$",
+                            "description": "Importe no negativo con exactamente dos decimales",
+                            "examples": [
+                              "1004.62"
+                            ]
+                          },
+                          "moneda": {
+                            "type": "string",
+                            "const": "GTQ"
+                          }
+                        },
+                        "required": [
+                          "valor",
+                          "moneda"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                      },
+                      "enviadoSuspenso": {
+                        "type": "object",
+                        "properties": {
+                          "valor": {
+                            "type": "string",
+                            "pattern": "^\\d{1,13}\\.\\d{2}$",
+                            "description": "Importe no negativo con exactamente dos decimales",
+                            "examples": [
+                              "1004.62"
+                            ]
+                          },
+                          "moneda": {
+                            "type": "string",
+                            "const": "GTQ"
+                          }
+                        },
+                        "required": [
+                          "valor",
+                          "moneda"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                      },
+                      "suspensoRegularizado": {
+                        "type": "object",
+                        "properties": {
+                          "valor": {
+                            "type": "string",
+                            "pattern": "^\\d{1,13}\\.\\d{2}$",
+                            "description": "Importe no negativo con exactamente dos decimales",
+                            "examples": [
+                              "1004.62"
+                            ]
+                          },
+                          "moneda": {
+                            "type": "string",
+                            "const": "GTQ"
+                          }
+                        },
+                        "required": [
+                          "valor",
+                          "moneda"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                      },
+                      "suspensoRetirado": {
+                        "type": "object",
+                        "properties": {
+                          "valor": {
+                            "type": "string",
+                            "pattern": "^\\d{1,13}\\.\\d{2}$",
+                            "description": "Importe no negativo con exactamente dos decimales",
+                            "examples": [
+                              "1004.62"
+                            ]
+                          },
+                          "moneda": {
+                            "type": "string",
+                            "const": "GTQ"
+                          }
+                        },
+                        "required": [
+                          "valor",
+                          "moneda"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                      },
+                      "saldoSuspenso": {
+                        "type": "object",
+                        "properties": {
+                          "valor": {
+                            "type": "string",
+                            "pattern": "^\\d{1,13}\\.\\d{2}$",
+                            "description": "Importe no negativo con exactamente dos decimales",
+                            "examples": [
+                              "1004.62"
+                            ]
+                          },
+                          "moneda": {
+                            "type": "string",
+                            "const": "GTQ"
+                          }
+                        },
+                        "required": [
+                          "valor",
+                          "moneda"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                      }
+                    },
+                    "required": [
+                      "generado",
+                      "ingresoReconocido",
+                      "enviadoSuspenso",
+                      "suspensoRegularizado",
+                      "suspensoRetirado",
+                      "saldoSuspenso"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "periodo": {
+                    "type": "object",
+                    "properties": {
+                      "generado": {
+                        "type": "object",
+                        "properties": {
+                          "valor": {
+                            "type": "string",
+                            "pattern": "^\\d{1,13}\\.\\d{2}$",
+                            "description": "Importe no negativo con exactamente dos decimales",
+                            "examples": [
+                              "1004.62"
+                            ]
+                          },
+                          "moneda": {
+                            "type": "string",
+                            "const": "GTQ"
+                          }
+                        },
+                        "required": [
+                          "valor",
+                          "moneda"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                      },
+                      "ingresoReconocido": {
+                        "type": "object",
+                        "properties": {
+                          "valor": {
+                            "type": "string",
+                            "pattern": "^\\d{1,13}\\.\\d{2}$",
+                            "description": "Importe no negativo con exactamente dos decimales",
+                            "examples": [
+                              "1004.62"
+                            ]
+                          },
+                          "moneda": {
+                            "type": "string",
+                            "const": "GTQ"
+                          }
+                        },
+                        "required": [
+                          "valor",
+                          "moneda"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                      },
+                      "enviadoSuspenso": {
+                        "type": "object",
+                        "properties": {
+                          "valor": {
+                            "type": "string",
+                            "pattern": "^\\d{1,13}\\.\\d{2}$",
+                            "description": "Importe no negativo con exactamente dos decimales",
+                            "examples": [
+                              "1004.62"
+                            ]
+                          },
+                          "moneda": {
+                            "type": "string",
+                            "const": "GTQ"
+                          }
+                        },
+                        "required": [
+                          "valor",
+                          "moneda"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                      },
+                      "suspensoRegularizado": {
+                        "type": "object",
+                        "properties": {
+                          "valor": {
+                            "type": "string",
+                            "pattern": "^\\d{1,13}\\.\\d{2}$",
+                            "description": "Importe no negativo con exactamente dos decimales",
+                            "examples": [
+                              "1004.62"
+                            ]
+                          },
+                          "moneda": {
+                            "type": "string",
+                            "const": "GTQ"
+                          }
+                        },
+                        "required": [
+                          "valor",
+                          "moneda"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                      },
+                      "suspensoRetirado": {
+                        "type": "object",
+                        "properties": {
+                          "valor": {
+                            "type": "string",
+                            "pattern": "^\\d{1,13}\\.\\d{2}$",
+                            "description": "Importe no negativo con exactamente dos decimales",
+                            "examples": [
+                              "1004.62"
+                            ]
+                          },
+                          "moneda": {
+                            "type": "string",
+                            "const": "GTQ"
+                          }
+                        },
+                        "required": [
+                          "valor",
+                          "moneda"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                      }
+                    },
+                    "required": [
+                      "generado",
+                      "ingresoReconocido",
+                      "enviadoSuspenso",
+                      "suspensoRegularizado",
+                      "suspensoRetirado"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "saldoFinalSuspenso": {
+                    "type": "object",
+                    "properties": {
+                      "valor": {
+                        "type": "string",
+                        "pattern": "^\\d{1,13}\\.\\d{2}$",
+                        "description": "Importe no negativo con exactamente dos decimales",
+                        "examples": [
+                          "1004.62"
+                        ]
+                      },
+                      "moneda": {
+                        "type": "string",
+                        "const": "GTQ"
+                      }
+                    },
+                    "required": [
+                      "valor",
+                      "moneda"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                  },
+                  "politicas": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "creditoId": {
+                          "type": "string"
+                        },
+                        "politica": {
+                          "type": "object",
+                          "properties": {
+                            "version": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "vigenteDesde": {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            "vigenteHasta": {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            "autor": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "motivo": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "convencion": {
+                              "type": "string",
+                              "const": "CONTRACTUAL_DIAS_REALES"
+                            },
+                            "suspensionDesdeDias": {
+                              "type": "number",
+                              "const": 91
+                            },
+                            "bajaDesdeDias": {
+                              "type": "number",
+                              "const": 121
+                            }
+                          },
+                          "required": [
+                            "version",
+                            "vigenteDesde",
+                            "autor",
+                            "motivo",
+                            "convencion",
+                            "suspensionDesdeDias",
+                            "bajaDesdeDias"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "creditoId",
+                        "politica"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "aperturaRegistro": {
+                    "type": "object",
+                    "properties": {
+                      "fecha": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      "cierreId": {
+                        "type": "string"
+                      },
+                      "motivo": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "fecha",
+                      "cierreId",
+                      "motivo"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "movimientosNuevos": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "movimientos": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "creditoId": {
+                          "type": "string"
+                        },
+                        "cuota": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "desde": {
+                          "type": "string",
+                          "format": "date",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                        },
+                        "hasta": {
+                          "type": "string",
+                          "format": "date",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                        },
+                        "fechaContable": {
+                          "type": "string",
+                          "format": "date",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                        },
+                        "concepto": {
+                          "type": "string",
+                          "enum": [
+                            "DEVENGO",
+                            "SUSPENSO",
+                            "REGULARIZACION",
+                            "RETIRO_SUSPENSO"
+                          ]
+                        },
+                        "importe": {
+                          "type": "object",
+                          "properties": {
+                            "valor": {
+                              "type": "string",
+                              "pattern": "^\\d{1,13}\\.\\d{2}$",
+                              "description": "Importe no negativo con exactamente dos decimales",
+                              "examples": [
+                                "1004.62"
+                              ]
+                            },
+                            "moneda": {
+                              "type": "string",
+                              "const": "GTQ"
+                            }
+                          },
+                          "required": [
+                            "valor",
+                            "moneda"
+                          ],
+                          "additionalProperties": false,
+                          "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                        },
+                        "versionPolitica": {
+                          "type": "string"
+                        },
+                        "politica": {
+                          "type": "object",
+                          "properties": {
+                            "version": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "vigenteDesde": {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            "vigenteHasta": {
+                              "type": "string",
+                              "format": "date",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                            },
+                            "autor": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "motivo": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "convencion": {
+                              "type": "string",
+                              "const": "CONTRACTUAL_DIAS_REALES"
+                            },
+                            "suspensionDesdeDias": {
+                              "type": "number",
+                              "const": 91
+                            },
+                            "bajaDesdeDias": {
+                              "type": "number",
+                              "const": 121
+                            }
+                          },
+                          "required": [
+                            "version",
+                            "vigenteDesde",
+                            "autor",
+                            "motivo",
+                            "convencion",
+                            "suspensionDesdeDias",
+                            "bajaDesdeDias"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "cierreId": {
+                          "type": "string"
+                        },
+                        "origen": {
+                          "type": "string",
+                          "enum": [
+                            "APERTURA",
+                            "PERIODO"
+                          ]
+                        },
+                        "usuario": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "creditoId",
+                        "cuota",
+                        "desde",
+                        "hasta",
+                        "fechaContable",
+                        "concepto",
+                        "importe",
+                        "versionPolitica",
+                        "politica",
+                        "cierreId",
+                        "origen",
+                        "usuario"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "estado",
+                  "desde",
+                  "hasta",
+                  "huellaFuentes",
+                  "apertura",
+                  "periodo",
+                  "saldoFinalSuspenso",
+                  "politicas",
+                  "movimientosNuevos",
+                  "movimientos"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "estado": {
+                    "type": "string",
+                    "const": "NO_DISPONIBLE"
+                  },
+                  "motivo": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "estado",
+                  "motivo"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "Devengo contractual por competencia. Apertura histórica separada de los flujos del período y de intereses cobrados."
+          },
           "contabilizacionProvisiones": {
             "type": "object",
             "properties": {

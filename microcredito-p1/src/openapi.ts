@@ -294,7 +294,7 @@ export const documentoOpenAPI = {
     '/api/cierres/{periodo}': {
       get: {
         tags: ['Gerencia'], operationId: 'consultarCierre', summary: 'Cierre diario (AAAA-MM-DD) o mensual (AAAA-MM)',
-        description: 'No ejecuta el cierre: devuelve una PREVIA calculada o el EJECUTADO guardado, sin recalcular sus cifras.',
+        description: 'No ejecuta el cierre: devuelve una PREVIA calculada o el EJECUTADO guardado, sin recalcular sus cifras. Devengo corriente separado de intereses cobrados: generado, ingreso, suspenso, regularización, retiro y saldo final; apertura histórica fuera del ingreso del período. Los formatos anteriores indican no disponible.',
         parameters: [ruta('periodo', C.PeriodoCierre, 'AAAA-MM o AAAA-MM-DD')],
         responses: { '200': ok('Cierre del periodo.', ref('Cierre')), '400': ERROR_400 },
       },

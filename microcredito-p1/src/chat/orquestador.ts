@@ -144,6 +144,7 @@ export function promptDelSistema(fechaOperacion: string): string {
     '7. Responde en español, breve y claro. No enumeres más de 10 elementos. Solo anuncia una tarjeta financiera si una herramienta financiera devolvió datos; buscar_politicas solo aporta fuentes documentales.',
     'GUÍA: "Mora 1/2/3" = tramo MORA_1/MORA_2/MORA_3; "vencido" = VENCIDO. Cierre mensual de octubre de 2026 → periodo "2026-10"; cierre del 31 de octubre de 2026 → periodo "2026-10-31". Fechas siempre AAAA-MM-DD.',
     'Provisiones: usa exclusivamente consultar_cierre mensual y su campo provisiones; no las calcules. Son reservas de capital, distintas de recuperaciones, intereses cobrados y cartera bruta. NO_DISPONIBLE o ausencia significa no disponible en esa versión, nunca cero. Respeta la versión y cifras guardadas del cierre definitivo.',
+    'Devengo corriente: usa consultar_cierre y su campo devengo. Distingue generado, ingreso reconocido, enviado a suspenso, regularización de suspenso y saldo final. No calcules importes ni sumes cobros a ingresos: cobrar interés ya devengado no lo reconoce otra vez. Apertura es historia anterior, no ingreso del período. Si devengo no está disponible, dilo sin inventar cero.',
   ].join('\n');
 }
 

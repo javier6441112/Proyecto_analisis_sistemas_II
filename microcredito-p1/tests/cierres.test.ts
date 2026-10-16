@@ -79,7 +79,10 @@ describe('Cierres persistidos sobre una copia temporal', () => {
     const registros = await registrosFinancieros();
     const previa = await consultar('2026-10');
     mensual = await ejecutar('2026-10');
-    expect(mensual).toEqual({ ...previa, estado: 'EJECUTADO', ejecutadoPor: 'Elena Morales', contabilizacionProvisiones: mensual.contabilizacionProvisiones });
+    expect(mensual).toEqual({ ...previa, estado: 'EJECUTADO', ejecutadoPor: 'Elena Morales', contabilizacionProvisiones: mensual.contabilizacionProvisiones, devengo: mensual.devengo });
+    if (mensual.devengo?.estado !== 'DISPONIBLE' || previa.devengo?.estado !== 'DISPONIBLE') throw new Error('Devengo mensual no disponible');
+    expect(mensual.devengo.periodo).toEqual(previa.devengo.periodo);
+    expect(mensual.devengo.apertura).toEqual(previa.devengo.apertura);
     expect(mensual.contabilizacionProvisiones?.saldoFinal).toEqual(mensual.provisiones?.estado === 'DISPONIBLE' ? mensual.provisiones.total : undefined);
     expect(mensual.politicasUtilizadas.versionParametros).toBe('1.0');
     expect(mensual.politicasUtilizadas.parametros).toEqual(adaptador.politicas.parametros);

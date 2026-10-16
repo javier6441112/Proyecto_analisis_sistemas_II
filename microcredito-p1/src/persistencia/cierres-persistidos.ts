@@ -36,6 +36,7 @@ export async function leerCierre(db: Pick<ConexionSql, 'query'>, periodo: string
   if (!r.rows[0]) return null;
   const resultado = r.rows[0].resultado;
   const cierre = decodificar(typeof resultado === 'string' ? JSON.parse(resultado) : resultado) as Cierre;
+  if (!cierre.devengo) cierre.devengo = { estado: 'NO_DISPONIBLE', motivo: 'Devengo no disponible en esta versión del cierre histórico' };
   // Compatibilidad de lectura: no se calcula ni se modifica el JSON histórico almacenado.
   return cierre.provisiones ? cierre : { ...cierre, provisiones: {
     estado: 'NO_DISPONIBLE', motivo: 'Provisiones no disponibles en esta versión del cierre histórico',

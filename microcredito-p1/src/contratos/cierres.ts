@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { DevengoCierreSchema } from './devengo.js';
 import { DineroSchema, FechaISOSchema } from './comunes.js';
 import { ProvisionesCierreSchema, ContabilizacionProvisionesSchema } from './provisiones.js';
 
@@ -33,6 +34,7 @@ export const GenerarCierreRequestSchema = z.object({
 }).strict().meta({ description: 'Datos para generar un cierre diario o mensual' });
 
 export const CierreResponseSchema = z.object({
+  devengo: DevengoCierreSchema.optional(),
   contabilizacionProvisiones: ContabilizacionProvisionesSchema.optional(),
   periodo: PeriodoCierreSchema,
   fechaCorte: FechaISOSchema,

@@ -18,6 +18,7 @@ import { conectarClienteLocal, type ClienteMcpLocal } from '../src/mcp/cliente-l
 import { HERRAMIENTAS_PARA_EL_MODELO } from '../src/mcp/servidor-mcp.js';
 import { registrarMcpHttp } from '../src/mcp/http.js';
 import { construirServidor } from '../src/api/servidor.js';
+import { aJson } from '../src/api/serializacion.js';
 import { registrarRutasPropuestas } from '../src/api/rutas-propuestas.js';
 
 const F = '2026-10-31';
@@ -118,6 +119,10 @@ describe('Las herramientas devuelven lo mismo que el núcleo', () => {
     const n = await adaptador.consultarCierre('2026-10');
     expect(c.datos.recuperaciones.total).toBe(n.recuperaciones.total.formato());
     expect(c.datos.desembolsos.monto).toBe(n.desembolsos.monto.formato());
+    if (n.devengo?.estado !== 'DISPONIBLE') throw new Error('Falta devengo');
+    expect(c.datos.devengo.periodo).toEqual(aJson(n.devengo.periodo));
+    expect(c.datos.devengo.apertura).toEqual(aJson(n.devengo.apertura));
+    expect(c.datos.devengo.saldoFinalSuspenso).toEqual(aJson(n.devengo.saldoFinalSuspenso));
   });
 });
 

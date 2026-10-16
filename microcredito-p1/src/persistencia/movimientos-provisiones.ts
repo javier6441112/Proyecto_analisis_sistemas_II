@@ -3,6 +3,8 @@ import { variacionesProvisiones, type SaldoProvision } from '../dominio/movimien
 import type { PoliticaProvisiones } from '../dominio/provisiones.js';
 import { ErrorNegocio, type Cierre, type ConexionSql } from './adaptador-nucleo.js';
 import { guardarCierre, leerCierre } from './cierres-persistidos.js';
+import { prepararDevengo, persistirDevengo } from './devengo-persistido.js';
+import type { CreditoDevengo } from '../dominio/devengo.js';
 
 type Sql = Pick<ConexionSql, 'query'>;
 export interface MovimientoProvision {
@@ -139,14 +141,22 @@ export async function abrirDesdeHistorico(db: ConexionSql, periodo: string, usua
   });
 }
 
-export async function guardarCierreConMovimientos(db: ConexionSql, cierre: Cierre): Promise<Cierre> {
+export async function guardarCierreConMovimientos(db: ConexionSql, cierre: Cierre, fuentesDevengo?: CreditoDevengo[]): Promise<Cierre> {
   return atomico(db, async tx => {
     const existente = await leerCierre(tx, cierre.periodo);
     if (existente) return existente;
     if (cierre.estado !== 'EJECUTADO' || !cierre.ejecutadoPor?.trim()) {
       throw new ErrorNegocio('DATOS_INVALIDOS', 'Solo un cierre definitivo con usuario puede registrar movimientos');
     }
-    if (cierre.tipo !== 'MENSUAL') return guardarCierre(tx, cierre);
+    if (fuentesDevengo) {
+      await tx.query('LOCK TABLE aperturas_devengo, movimientos_devengo, cortes_devengo IN EXCLUSIVE MODE');
+      cierre = { ...cierre, devengo: await prepararDevengo(tx, cierre, fuentesDevengo, cierre.ejecutadoPor!) };
+    }
+    if (cierre.tipo !== 'MENSUAL') {
+      const guardado = await guardarCierre(tx, cierre);
+      if (fuentesDevengo) await persistirDevengo(tx, cierre, fuentesDevengo, cierre.ejecutadoPor!);
+      return guardado;
+    }
     if (cierre.provisiones?.estado !== 'DISPONIBLE') throw new ErrorNegocio('DATOS_INVALIDOS', 'Faltan provisiones del cierre mensual');
     const ultimo = await ultimoMensual(tx);
     if (ultimo && cierre.periodo <= ultimo) throw new ErrorNegocio('TRANSICION_INVALIDA', 'Corte fuera de orden: ya existe un cierre mensual igual o posterior');
@@ -175,6 +185,7 @@ export async function guardarCierreConMovimientos(db: ConexionSql, cierre: Cierr
       apertura, saldoAnterior, variacion, saldoFinal: p.total, movimientos,
     } });
     for (const m of movimientos) await insertarMovimiento(tx, m);
+    if (fuentesDevengo) await persistirDevengo(tx, { ...cierre, contabilizacionProvisiones: resultado.contabilizacionProvisiones }, fuentesDevengo, cierre.ejecutadoPor!);
     return resultado;
   });
 }

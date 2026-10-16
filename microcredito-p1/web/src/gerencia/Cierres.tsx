@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ProvisionesCierre } from './ProvisionesCierre';
 import { MovimientosProvisiones } from './MovimientosProvisiones';
+import { DevengoCierre } from './DevengoCierre';
 import { EncabezadoPagina } from '../App';
 import { api, mensajeDeError, type TCierre, type TRegistroProvisiones } from '../api';
 import { Q, fecha } from '../formato';
@@ -155,6 +156,7 @@ export default function Cierres() {
           </div>
 
           <ProvisionesCierre provisiones={cierre.provisiones} />
+          <DevengoCierre devengo={cierre.devengo} />
           <MovimientosProvisiones contabilizacion={cierre.contabilizacionProvisiones} />
           {cierre.tipo === 'MENSUAL' && cierre.estado === 'EJECUTADO' && <section className="bg-white rounded-2xl border border-slate-200 p-5 text-sm">
             <BtnSecondary label="Consultar registro de provisiones al corte" disabled={cargando} onClick={() => void (async () => {

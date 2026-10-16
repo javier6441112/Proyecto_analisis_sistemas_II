@@ -9,6 +9,7 @@ import { AdaptadorNucleo } from '../../../src/persistencia/adaptador-nucleo';
 import { construirServidor } from '../../../src/api/servidor';
 import { Cierre } from '../../../src/contratos/api';
 import { ProvisionesCierre } from './ProvisionesCierre';
+import { DevengoCierre } from './DevengoCierre';
 import { Q } from '../formato';
 
 it('presenta total, versión y cada importe de la API de una base temporal sin calcularlos en pantalla', async () => {
@@ -20,7 +21,14 @@ it('presenta total, versión y cada importe de la API de una base temporal sin c
   try {
     const respuesta = await app.inject({ method: 'GET', url: '/api/cierres/2026-10' });
     expect(respuesta.statusCode).toBe(200);
-    const p = Cierre.parse(respuesta.json()).provisiones;
+    const respuestaCierre = Cierre.parse(respuesta.json());
+    const d = respuestaCierre.devengo;
+    if (d?.estado !== 'DISPONIBLE') throw new Error('Falta devengo mensual');
+    const htmlDevengo = renderToStaticMarkup(<DevengoCierre devengo={d} />);
+    for (const importe of [d.periodo.generado, d.periodo.ingresoReconocido, d.periodo.enviadoSuspenso,
+      d.periodo.suspensoRegularizado, d.saldoFinalSuspenso, d.apertura.ingresoReconocido]) expect(htmlDevengo).toContain(Q(importe));
+    expect(htmlDevengo).toContain('separados de intereses cobrados');
+    const p = respuestaCierre.provisiones;
     expect(p?.estado).toBe('DISPONIBLE');
     if (p?.estado !== 'DISPONIBLE') throw new Error('Falta provisión mensual');
     const html = renderToStaticMarkup(<ProvisionesCierre provisiones={p} />);

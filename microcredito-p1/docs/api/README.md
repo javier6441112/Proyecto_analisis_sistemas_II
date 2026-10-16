@@ -28,4 +28,4 @@ npm test
 
 Todos los importes viajan como `{ valor: "100.00", moneda: "GTQ" }`. Los errores usan `application/problem+json`.
 
-El contrato ejecutable de cierres está en `src/contratos/api.ts`. Conserva las cifras anteriores y añade estado, corte, operador y políticas utilizadas. El esquema conceptual antiguo de `src/contratos/cierres.ts` no describe esta ruta: sus campos de intereses devengados y provisiones no se implementan en esta tarea. Véase [ADR-003](../adr/ADR-003.md) para persistencia, migración y la decisión pendiente sobre operaciones en períodos cerrados.
+El contrato ejecutable de cierres está en `src/contratos/api.ts`. Conserva las cifras anteriores, estado, corte, operador y políticas utilizadas, e incorpora `provisiones`, `contabilizacionProvisiones` y `devengo`. Este último separa apertura, flujos del período y suspenso final. El esquema conceptual antiguo de `src/contratos/cierres.ts` no describe esta ruta: su campo plano `interesesDevengados` no sustituye el objeto `devengo` real. Véanse [devengo corriente](../devengo-corriente.md) y [ADR-003](../adr/ADR-003.md) para históricos, cronología y restricciones de retroactividad.
