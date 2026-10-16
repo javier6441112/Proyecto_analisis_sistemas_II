@@ -274,7 +274,7 @@ export function crearServidorMcp(dep: DependenciasMcp): McpServer {
 
   mcp.registerTool('consultar_cierre', {
     title: 'Consultar un cierre',
-    description: 'Cierre diario (periodo AAAA-MM-DD) o mensual (periodo AAAA-MM): desembolsos y recuperaciones por concepto.',
+    description: 'Cierre diario (AAAA-MM-DD) o mensual (AAAA-MM). El mensual incluye provisiones calculadas por el núcleo, total, detalle y política. No calcularlas ni confundirlas con recuperaciones, intereses cobrados o cartera bruta. NO_DISPONIBLE significa que no existe ese concepto en esa versión, nunca cero.',
     inputSchema: { periodo: z.string().regex(/^\d{4}-\d{2}(-\d{2})?$/).describe('AAAA-MM-DD para cierre diario o AAAA-MM para mensual') },
     annotations: soloLectura,
   }, async (a) => seguro(async () => {
@@ -284,6 +284,7 @@ export function crearServidorMcp(dep: DependenciasMcp): McpServer {
       resumen: `Cierre ${c.tipo === 'MENSUAL' ? 'mensual' : 'diario'} ${c.periodo}: ${c.desembolsos.cantidad} desembolsos por ${qx(c.desembolsos.monto)}; recuperaciones de ${r.pagos} pagos por ${qx(r.total)} (gastos ${qx(r.gastos)}, interés moratorio ${qx(r.interesMoratorio)}, interés corriente ${qx(r.interesCorriente)}, capital ${qx(r.capital)}).`,
       tipo: c.tipo, periodo: c.periodo, desde: c.desde, hasta: c.hasta,
       estado: c.estado, fechaCorte: c.fechaCorte, politicasUtilizadas: c.politicasUtilizadas,
+      provisiones: aJson(c.provisiones),
       desembolsos: { cantidad: c.desembolsos.cantidad, monto: q(c.desembolsos.monto), creditos: c.desembolsos.creditos.map((d) => ({ idCredito: d.idCredito, fecha: d.fecha, capital: q(d.capital) })) },
       recuperaciones: {
         pagos: c.recuperaciones.pagos,

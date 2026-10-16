@@ -9,6 +9,7 @@
  */
 import { z } from 'zod';
 import { DineroSchema } from './comunes.js';
+import { ProvisionesCierreSchema } from './provisiones.js';
 
 const CANALES = ['agencia', 'campo', 'transferencia'] as const;
 
@@ -365,6 +366,7 @@ const Recuperaciones = z.object({
 }).strict();
 
 export const Cierre = z.object({
+  provisiones: ProvisionesCierreSchema.optional().meta({ description: 'Opcional para formatos históricos; su ausencia significa no disponible, nunca cero.' }),
   estado: z.enum(['PREVIA', 'EJECUTADO']),
   fechaCorte: Fecha,
   ejecutadoPor: z.string().optional(),

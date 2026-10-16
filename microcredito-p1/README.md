@@ -187,4 +187,4 @@ El equipo revisó, probó y puede explicar todo lo entregado.
 
 ## Política de provisiones
 
-El cálculo puro y la configuración versionada de reservas se describen en [Política de provisiones](docs/politica-provisiones.md). Son decisiones académicas del equipo para Crédito Vecino.
+El cálculo puro, la configuración versionada de reservas y su integración en el cierre mensual se describen en [Política de provisiones](docs/politica-provisiones.md). Son decisiones académicas del equipo para Crédito Vecino. La pantalla de Cierres muestra total, detalle y versión; los cierres definitivos conservan su resultado y parámetros originales. No se generan movimientos contables de provisiones ni devengo de intereses.

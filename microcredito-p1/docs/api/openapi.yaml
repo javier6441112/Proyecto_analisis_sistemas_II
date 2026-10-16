@@ -2387,6 +2387,172 @@ components:
     Cierre:
       type: object
       properties:
+        provisiones:
+          description: Opcional para formatos históricos; su ausencia significa no
+            disponible, nunca cero.
+          oneOf:
+            - type: object
+              properties:
+                estado:
+                  type: string
+                  const: DISPONIBLE
+                fechaCorte:
+                  type: string
+                  format: date
+                  pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+                version:
+                  type: string
+                  minLength: 1
+                parametros:
+                  type: object
+                  properties:
+                    version:
+                      type: string
+                    vigenteDesde:
+                      type: string
+                    vigenteHasta:
+                      type: string
+                    institucion:
+                      type: string
+                    autor:
+                      type: string
+                    motivo:
+                      type: string
+                    porcentajes:
+                      type: object
+                      properties:
+                        AL_DIA:
+                          type: string
+                        MORA_1:
+                          type: string
+                        MORA_2:
+                          type: string
+                        MORA_3:
+                          type: string
+                        VENCIDO:
+                          type: string
+                      required:
+                        - AL_DIA
+                        - MORA_1
+                        - MORA_2
+                        - MORA_3
+                        - VENCIDO
+                      additionalProperties: false
+                    minimoReestructurado:
+                      type: string
+                  required:
+                    - version
+                    - vigenteDesde
+                    - institucion
+                    - autor
+                    - motivo
+                    - porcentajes
+                    - minimoReestructurado
+                  additionalProperties: false
+                total:
+                  type: object
+                  properties:
+                    valor:
+                      type: string
+                      pattern: ^\d{1,13}\.\d{2}$
+                      description: Importe no negativo con exactamente dos decimales
+                      examples:
+                        - "1004.62"
+                    moneda:
+                      type: string
+                      const: GTQ
+                  required:
+                    - valor
+                    - moneda
+                  additionalProperties: false
+                  description: Importe en quetzales expresado como texto para evitar punto
+                    flotante
+                detalles:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                      tramo:
+                        type: string
+                        enum:
+                          - AL_DIA
+                          - MORA_1
+                          - MORA_2
+                          - MORA_3
+                          - VENCIDO
+                          - INCOBRABLE
+                      excluido:
+                        type: boolean
+                      base:
+                        type: object
+                        properties:
+                          valor:
+                            type: string
+                            pattern: ^\d{1,13}\.\d{2}$
+                            description: Importe no negativo con exactamente dos decimales
+                            examples:
+                              - "1004.62"
+                          moneda:
+                            type: string
+                            const: GTQ
+                        required:
+                          - valor
+                          - moneda
+                        additionalProperties: false
+                        description: Importe en quetzales expresado como texto para evitar punto
+                          flotante
+                      porcentaje:
+                        type: string
+                        pattern: ^\d+(\.\d+)?$
+                      provision:
+                        type: object
+                        properties:
+                          valor:
+                            type: string
+                            pattern: ^\d{1,13}\.\d{2}$
+                            description: Importe no negativo con exactamente dos decimales
+                            examples:
+                              - "1004.62"
+                          moneda:
+                            type: string
+                            const: GTQ
+                        required:
+                          - valor
+                          - moneda
+                        additionalProperties: false
+                        description: Importe en quetzales expresado como texto para evitar punto
+                          flotante
+                    required:
+                      - id
+                      - tramo
+                      - excluido
+                      - base
+                      - porcentaje
+                      - provision
+                    additionalProperties: false
+              required:
+                - estado
+                - fechaCorte
+                - version
+                - parametros
+                - total
+                - detalles
+              additionalProperties: false
+            - type: object
+              properties:
+                estado:
+                  type: string
+                  const: NO_DISPONIBLE
+                motivo:
+                  type: string
+                  minLength: 1
+              required:
+                - estado
+                - motivo
+              additionalProperties: false
         estado:
           type: string
           enum:

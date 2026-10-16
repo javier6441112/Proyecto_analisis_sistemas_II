@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { DineroSchema, FechaISOSchema } from './comunes.js';
+import { ProvisionesCierreSchema } from './provisiones.js';
 
 const DesgloseTramoCierreSchema = z.object({
   tramo: z.enum(['AL_DIA', 'MORA_1', 'MORA_2', 'MORA_3', 'VENCIDO']),
@@ -40,7 +41,7 @@ export const CierreResponseSchema = z.object({
   recuperaciones: z.array(RecuperacionCierreSchema),
   interesesDevengados: DineroSchema,
   porTramo: z.array(DesgloseTramoCierreSchema),
-  provisiones: DineroSchema,
+  provisiones: ProvisionesCierreSchema.optional(),
   creditosActivos: z.number().int().nonnegative(),
   proximosVencimientos: z.array(ProximoVencimientoSchema),
   montoDeclaradoIncobrableEnElPeriodo: DineroSchema,

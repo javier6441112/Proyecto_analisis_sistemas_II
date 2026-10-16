@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ProvisionesCierre } from './ProvisionesCierre';
 import { EncabezadoPagina } from '../App';
 import { api, mensajeDeError, type TCierre } from '../api';
 import { Q, fecha } from '../formato';
@@ -146,6 +147,8 @@ export default function Cierres() {
               </div>
             ))}
           </div>
+
+          <ProvisionesCierre provisiones={cierre.provisiones} />
 
           {cierre.desembolsos.creditos.length > 0 && (
             <details className="bg-white rounded-2xl border border-slate-200 p-4">

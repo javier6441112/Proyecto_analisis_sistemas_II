@@ -27,6 +27,8 @@ import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { abrirBaseDatos } from './base-datos.js';
 import { asegurarCierres, guardarCierre, leerCierre } from './cierres-persistidos.js';
+import { cargarPoliticaProvisiones } from '../configuracion/provisiones.js';
+import { calcularProvisiones, type PoliticaProvisiones } from '../dominio/provisiones.js';
 
 import { Dinero } from '../dominio/dinero.js';
 import { calcularDiasAtraso } from '../dominio/calculadora-mora.js';
@@ -245,6 +247,7 @@ export interface RecuperacionesPorConcepto {
 }
 
 export interface Cierre {
+  provisiones?: ProvisionesCierre;
   estado: 'PREVIA' | 'EJECUTADO';
   fechaCorte: string;
   ejecutadoPor?: string;
@@ -264,6 +267,14 @@ export interface Cierre {
   incobrablesDelPeriodo: { creditos: Array<{ idCredito: string; fechaIncobrable: string; saldoCapital: Dinero }>; monto: Dinero };
   cartera: CarteraConsolidada;
 }
+
+export type ProvisionesCierre = {
+  estado: 'DISPONIBLE';
+  parametros: PoliticaProvisiones;
+} & ReturnType<typeof calcularProvisiones> | {
+  estado: 'NO_DISPONIBLE';
+  motivo: string;
+};
 
 export interface ExplicacionMora {
   idCredito: string;
@@ -848,24 +859,25 @@ export class AdaptadorNucleo {
     readonly db: ConexionSql,
     private readonly esquema: EsquemaDetectado,
     readonly politicas: ContextoPoliticas,
+    private readonly provisionesDir?: string,
   ) {}
 
-  static async abrir(opciones: { dbDir?: string; dataDir?: string } = {}): Promise<AdaptadorNucleo> {
+  static async abrir(opciones: { dbDir?: string; dataDir?: string; provisionesDir?: string } = {}): Promise<AdaptadorNucleo> {
     const db = await abrirBaseLocal(opciones.dbDir);
     try {
-      return await AdaptadorNucleo.desdeConexion(db, opciones.dataDir);
+      return await AdaptadorNucleo.desdeConexion(db, opciones.dataDir, opciones.provisionesDir);
     } catch (error) {
       await db.close();
       throw error;
     }
   }
 
-  static async desdeConexion(db: ConexionSql, dataDir?: string): Promise<AdaptadorNucleo> {
+  static async desdeConexion(db: ConexionSql, dataDir?: string, provisionesDir?: string): Promise<AdaptadorNucleo> {
     const esquema = await detectarEsquema(db);
     const politicas = new ContextoPoliticas(await leerParametros(db, dataDir));
     await asegurarBitacora(db);
     await asegurarCierres(db);
-    return new AdaptadorNucleo(db, esquema, politicas);
+    return new AdaptadorNucleo(db, esquema, politicas, provisionesDir);
   }
 
   async cerrar(): Promise<void> {
@@ -1136,7 +1148,22 @@ export class AdaptadorNucleo {
     const parametros = structuredClone(this.politicas.parametros);
     const huella = (valor: unknown): string => createHash('sha256').update(JSON.stringify(valor)).digest('hex');
     const idsMora = [...new Set(detalles.map((d) => d.politicaMora))].sort();
+    let provisiones: ProvisionesCierre = { estado: 'NO_DISPONIBLE', motivo: 'Provisiones disponibles únicamente en el cierre mensual' };
+    if (tipo === 'MENSUAL') {
+      try {
+        const politica = cargarPoliticaProvisiones(hasta, this.provisionesDir);
+        provisiones = { estado: 'DISPONIBLE', parametros: politica,
+          ...calcularProvisiones(politica, hasta, detalles.map(d => ({
+            id: d.idCredito, saldoCapital: d.saldoCapital, estado: d.estado,
+            diasAtraso: d.diasAtraso, dadoDeBaja: d.estado === 'INCOBRABLE',
+          }))),
+        };
+      } catch (error) {
+        throw new ErrorNegocio('DATOS_INVALIDOS', `Política de provisiones: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
     return {
+      provisiones,
       estado: 'PREVIA',
       fechaCorte: hasta,
       politicasUtilizadas: {
