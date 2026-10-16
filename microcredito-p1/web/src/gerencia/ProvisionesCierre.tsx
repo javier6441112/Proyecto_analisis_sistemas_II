@@ -9,7 +9,7 @@ export function ProvisionesCierre({ provisiones }: { provisiones: TCierre['provi
       <p className="text-sm mt-2">{provisiones?.motivo ?? 'Provisiones no disponibles en esta versión del cierre histórico'}</p> : <>
         <p className="text-sm mt-2">Reserva de capital: <strong>{Q(provisiones.total)}</strong></p>
         <p className="text-xs mt-2">Corte {fecha(provisiones.fechaCorte)} · Política {provisiones.version} · Vigencia {provisiones.parametros.vigenteDesde} a {provisiones.parametros.vigenteHasta ?? 'abierta'}</p>
-        <p className="text-xs mt-2">Concepto separado de recuperaciones, intereses cobrados y cartera bruta. No representa un movimiento contable.</p>
+        <p className="text-xs mt-2">Concepto separado de recuperaciones, intereses cobrados y cartera bruta. El objetivo de reserva no es un gasto repetido: solo se registra su variación al ejecutar el cierre definitivo.</p>
         <details className="mt-3">
           <summary>Detalle de provisiones por crédito ({provisiones.detalles.length})</summary>
           <div className="overflow-x-auto"><table className="w-full text-xs mt-2">

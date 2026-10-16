@@ -31,7 +31,7 @@ function decodificar(valor: unknown): unknown {
   return valor;
 }
 
-export async function leerCierre(db: ConexionSql, periodo: string): Promise<Cierre | null> {
+export async function leerCierre(db: Pick<ConexionSql, 'query'>, periodo: string): Promise<Cierre | null> {
   const r = await db.query<{ resultado: unknown }>('SELECT resultado FROM cierres_ejecutados WHERE periodo = $1', [periodo]);
   if (!r.rows[0]) return null;
   const resultado = r.rows[0].resultado;
@@ -42,7 +42,7 @@ export async function leerCierre(db: ConexionSql, periodo: string): Promise<Cier
   } };
 }
 
-export async function guardarCierre(db: ConexionSql, cierre: Cierre): Promise<Cierre> {
+export async function guardarCierre(db: Pick<ConexionSql, 'query'>, cierre: Cierre): Promise<Cierre> {
   // Si otra ejecución ganó, se conserva su resultado, nunca se actualiza un cierre guardado.
   await db.query(`INSERT INTO cierres_ejecutados (periodo, fecha_corte, resultado)
     VALUES ($1, $2, $3) ON CONFLICT (periodo) DO NOTHING`,

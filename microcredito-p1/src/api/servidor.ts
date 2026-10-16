@@ -16,7 +16,7 @@ import type { TramoMora } from '../dominio/politica-mora/politica-mora.js';
 import { aJson } from './serializacion.js';
 import { aProblema } from './errores.js';
 import {
-  AltaClienteBody, BusquedaQuery, CarteraMoraQuery, ConCorte, CreditosQuery, DesembolsoBody, PagoBody, PeriodoCierre,
+  AltaClienteBody, AperturaProvisionesBody, BusquedaQuery, CarteraMoraQuery, ConCorte, CreditosQuery, DesembolsoBody, PagoBody, PeriodoCierre,
   Perfil, PlanBody, ResolucionBody, SimulacionPagoBody, SolicitudBody, VencimientosQuery,
 } from '../contratos/api.js';
 
@@ -148,6 +148,16 @@ export async function construirServidor(opciones: OpcionesServidor): Promise<Fas
     const usuario = soloGerencia(req, 'ejecutar cierres');
     const { periodo } = z.object({ periodo: PeriodoCierre }).parse(req.params);
     return ok(reply, await adaptador.ejecutarCierre(periodo, usuario));
+  });
+
+  app.get('/api/provisiones', async (req, reply) => {
+    const { fechaCorte } = ConCorte.parse(req.query);
+    return ok(reply, await adaptador.consultarRegistroProvisiones(fechaCorte));
+  });
+  app.post('/api/provisiones/apertura', async (req, reply) => {
+    const usuario = soloGerencia(req, 'abrir el registro de provisiones');
+    const b = AperturaProvisionesBody.parse(req.body);
+    return ok(reply, await adaptador.abrirProvisionesDesdeHistorico(b.periodoCierre, usuario, b.motivo));
   });
 
   // ---------------- Originación (OP-3) ----------------

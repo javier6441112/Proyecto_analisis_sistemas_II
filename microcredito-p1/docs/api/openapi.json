@@ -774,6 +774,171 @@
         }
       }
     },
+    "/api/provisiones": {
+      "get": {
+        "tags": [
+          "Gerencia"
+        ],
+        "operationId": "consultarRegistroProvisiones",
+        "summary": "Saldos reconstruidos y movimientos de provisiones al corte explícito",
+        "parameters": [
+          {
+            "name": "fechaCorte",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Fecha calendario AAAA-MM-DD",
+              "examples": [
+                "2026-10-31"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registro acumulativo; sin apertura se indica no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistroProvisiones"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                },
+                "example": {
+                  "type": "https://creditovecino.local/problemas/datos-invalidos",
+                  "title": "Datos inválidos",
+                  "status": 400,
+                  "detail": "La solicitud no cumple el esquema",
+                  "codigo": "DATOS_INVALIDOS"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/provisiones/apertura": {
+      "post": {
+        "tags": [
+          "Gerencia"
+        ],
+        "operationId": "abrirProvisionesHistoricas",
+        "summary": "Apertura explícita desde el último cierre mensual histórico (Gerencia)",
+        "description": "Importa los saldos congelados por crédito, sin registrar gasto ni modificar el cierre. Requiere detalle histórico; no acepta saldos inventados.",
+        "parameters": [
+          {
+            "name": "X-Perfil",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asesor",
+                "gerencia"
+              ]
+            },
+            "description": "Perfil de quien opera"
+          },
+          {
+            "name": "X-Usuario",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Nombre de quien opera (auditoría)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AperturaProvisionesBody"
+              },
+              "example": {
+                "periodoCierre": "2026-10",
+                "motivo": "Conciliación documentada del último cierre histórico"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Apertura trazable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AperturaProvision"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                },
+                "example": {
+                  "type": "https://creditovecino.local/problemas/datos-invalidos",
+                  "title": "Datos inválidos",
+                  "status": 400,
+                  "detail": "La solicitud no cumple el esquema",
+                  "codigo": "DATOS_INVALIDOS"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No autorizado",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                },
+                "example": {
+                  "type": "https://creditovecino.local/problemas/no-autorizado",
+                  "title": "No autorizado",
+                  "status": 403,
+                  "detail": "Solo Gerencia puede abrir provisiones",
+                  "codigo": "NO_AUTORIZADO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                },
+                "example": {
+                  "type": "https://creditovecino.local/problemas/transicion-invalida",
+                  "title": "Conflicto de estado",
+                  "status": 409,
+                  "detail": "La operación no es válida en el estado actual",
+                  "codigo": "TRANSICION_INVALIDA"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/solicitudes/{idSolicitud}/resolucion": {
       "post": {
         "tags": [
@@ -3901,6 +4066,258 @@
       "Cierre": {
         "type": "object",
         "properties": {
+          "contabilizacionProvisiones": {
+            "type": "object",
+            "properties": {
+              "apertura": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "const": "INICIAL"
+                  },
+                  "fechaContable": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "cierreId": {
+                    "type": "string"
+                  },
+                  "usuario": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "motivo": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "origen": {
+                    "type": "string",
+                    "enum": [
+                      "CERO_SIN_HISTORICOS",
+                      "CIERRE_HISTORICO"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "fechaContable",
+                  "cierreId",
+                  "usuario",
+                  "motivo",
+                  "origen"
+                ],
+                "additionalProperties": false
+              },
+              "saldoAnterior": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "string",
+                    "pattern": "^\\d{1,13}\\.\\d{2}$",
+                    "description": "Importe no negativo con exactamente dos decimales",
+                    "examples": [
+                      "1004.62"
+                    ]
+                  },
+                  "moneda": {
+                    "type": "string",
+                    "const": "GTQ"
+                  }
+                },
+                "required": [
+                  "valor",
+                  "moneda"
+                ],
+                "additionalProperties": false,
+                "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+              },
+              "variacion": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "string",
+                    "pattern": "^-?\\d{1,16}\\.\\d{2}$"
+                  },
+                  "moneda": {
+                    "type": "string",
+                    "const": "GTQ"
+                  }
+                },
+                "required": [
+                  "valor",
+                  "moneda"
+                ],
+                "additionalProperties": false
+              },
+              "saldoFinal": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "string",
+                    "pattern": "^\\d{1,13}\\.\\d{2}$",
+                    "description": "Importe no negativo con exactamente dos decimales",
+                    "examples": [
+                      "1004.62"
+                    ]
+                  },
+                  "moneda": {
+                    "type": "string",
+                    "const": "GTQ"
+                  }
+                },
+                "required": [
+                  "valor",
+                  "moneda"
+                ],
+                "additionalProperties": false,
+                "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+              },
+              "movimientos": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "creditoId": {
+                      "type": "string"
+                    },
+                    "periodo": {
+                      "type": "string"
+                    },
+                    "cierreId": {
+                      "type": "string"
+                    },
+                    "fechaContable": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "importe": {
+                      "type": "object",
+                      "properties": {
+                        "valor": {
+                          "type": "string",
+                          "pattern": "^-?\\d{1,16}\\.\\d{2}$"
+                        },
+                        "moneda": {
+                          "type": "string",
+                          "const": "GTQ"
+                        }
+                      },
+                      "required": [
+                        "valor",
+                        "moneda"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "concepto": {
+                      "type": "string",
+                      "enum": [
+                        "APERTURA",
+                        "CONSTITUCION",
+                        "REDUCCION"
+                      ]
+                    },
+                    "versionPolitica": {
+                      "type": "string"
+                    },
+                    "parametros": {
+                      "type": "object",
+                      "properties": {
+                        "version": {
+                          "type": "string"
+                        },
+                        "vigenteDesde": {
+                          "type": "string"
+                        },
+                        "vigenteHasta": {
+                          "type": "string"
+                        },
+                        "institucion": {
+                          "type": "string"
+                        },
+                        "autor": {
+                          "type": "string"
+                        },
+                        "motivo": {
+                          "type": "string"
+                        },
+                        "porcentajes": {
+                          "type": "object",
+                          "properties": {
+                            "AL_DIA": {
+                              "type": "string"
+                            },
+                            "MORA_1": {
+                              "type": "string"
+                            },
+                            "MORA_2": {
+                              "type": "string"
+                            },
+                            "MORA_3": {
+                              "type": "string"
+                            },
+                            "VENCIDO": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "AL_DIA",
+                            "MORA_1",
+                            "MORA_2",
+                            "MORA_3",
+                            "VENCIDO"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "minimoReestructurado": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "vigenteDesde",
+                        "institucion",
+                        "autor",
+                        "motivo",
+                        "porcentajes",
+                        "minimoReestructurado"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "usuario": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "creditoId",
+                    "periodo",
+                    "cierreId",
+                    "fechaContable",
+                    "importe",
+                    "concepto",
+                    "versionPolitica",
+                    "parametros",
+                    "usuario"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "apertura",
+              "saldoAnterior",
+              "variacion",
+              "saldoFinal",
+              "movimientos"
+            ],
+            "additionalProperties": false
+          },
           "provisiones": {
             "description": "Opcional para formatos históricos; su ausencia significa no disponible, nunca cero.",
             "oneOf": [
@@ -4381,6 +4798,353 @@
         ],
         "additionalProperties": false,
         "description": "PREVIA calculada sin escribir o EJECUTADO persistido e inmutable, idempotente por periodo"
+      },
+      "AperturaProvisionesBody": {
+        "type": "object",
+        "properties": {
+          "periodoCierre": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "periodoCierre",
+          "motivo"
+        ],
+        "additionalProperties": false
+      },
+      "AperturaProvision": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "const": "INICIAL"
+          },
+          "fechaContable": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          },
+          "cierreId": {
+            "type": "string"
+          },
+          "usuario": {
+            "type": "string",
+            "minLength": 1
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 1
+          },
+          "origen": {
+            "type": "string",
+            "enum": [
+              "CERO_SIN_HISTORICOS",
+              "CIERRE_HISTORICO"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "fechaContable",
+          "cierreId",
+          "usuario",
+          "motivo",
+          "origen"
+        ],
+        "additionalProperties": false
+      },
+      "RegistroProvisiones": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "estado": {
+                "type": "string",
+                "const": "DISPONIBLE"
+              },
+              "fechaCorte": {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              "apertura": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "const": "INICIAL"
+                  },
+                  "fechaContable": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "cierreId": {
+                    "type": "string"
+                  },
+                  "usuario": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "motivo": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "origen": {
+                    "type": "string",
+                    "enum": [
+                      "CERO_SIN_HISTORICOS",
+                      "CIERRE_HISTORICO"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "fechaContable",
+                  "cierreId",
+                  "usuario",
+                  "motivo",
+                  "origen"
+                ],
+                "additionalProperties": false
+              },
+              "total": {
+                "type": "object",
+                "properties": {
+                  "valor": {
+                    "type": "string",
+                    "pattern": "^\\d{1,13}\\.\\d{2}$",
+                    "description": "Importe no negativo con exactamente dos decimales",
+                    "examples": [
+                      "1004.62"
+                    ]
+                  },
+                  "moneda": {
+                    "type": "string",
+                    "const": "GTQ"
+                  }
+                },
+                "required": [
+                  "valor",
+                  "moneda"
+                ],
+                "additionalProperties": false,
+                "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+              },
+              "saldos": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "creditoId": {
+                      "type": "string"
+                    },
+                    "saldo": {
+                      "type": "object",
+                      "properties": {
+                        "valor": {
+                          "type": "string",
+                          "pattern": "^\\d{1,13}\\.\\d{2}$",
+                          "description": "Importe no negativo con exactamente dos decimales",
+                          "examples": [
+                            "1004.62"
+                          ]
+                        },
+                        "moneda": {
+                          "type": "string",
+                          "const": "GTQ"
+                        }
+                      },
+                      "required": [
+                        "valor",
+                        "moneda"
+                      ],
+                      "additionalProperties": false,
+                      "description": "Importe en quetzales expresado como texto para evitar punto flotante"
+                    }
+                  },
+                  "required": [
+                    "creditoId",
+                    "saldo"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "movimientos": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "creditoId": {
+                      "type": "string"
+                    },
+                    "periodo": {
+                      "type": "string"
+                    },
+                    "cierreId": {
+                      "type": "string"
+                    },
+                    "fechaContable": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "importe": {
+                      "type": "object",
+                      "properties": {
+                        "valor": {
+                          "type": "string",
+                          "pattern": "^-?\\d{1,16}\\.\\d{2}$"
+                        },
+                        "moneda": {
+                          "type": "string",
+                          "const": "GTQ"
+                        }
+                      },
+                      "required": [
+                        "valor",
+                        "moneda"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "concepto": {
+                      "type": "string",
+                      "enum": [
+                        "APERTURA",
+                        "CONSTITUCION",
+                        "REDUCCION"
+                      ]
+                    },
+                    "versionPolitica": {
+                      "type": "string"
+                    },
+                    "parametros": {
+                      "type": "object",
+                      "properties": {
+                        "version": {
+                          "type": "string"
+                        },
+                        "vigenteDesde": {
+                          "type": "string"
+                        },
+                        "vigenteHasta": {
+                          "type": "string"
+                        },
+                        "institucion": {
+                          "type": "string"
+                        },
+                        "autor": {
+                          "type": "string"
+                        },
+                        "motivo": {
+                          "type": "string"
+                        },
+                        "porcentajes": {
+                          "type": "object",
+                          "properties": {
+                            "AL_DIA": {
+                              "type": "string"
+                            },
+                            "MORA_1": {
+                              "type": "string"
+                            },
+                            "MORA_2": {
+                              "type": "string"
+                            },
+                            "MORA_3": {
+                              "type": "string"
+                            },
+                            "VENCIDO": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "AL_DIA",
+                            "MORA_1",
+                            "MORA_2",
+                            "MORA_3",
+                            "VENCIDO"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "minimoReestructurado": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "vigenteDesde",
+                        "institucion",
+                        "autor",
+                        "motivo",
+                        "porcentajes",
+                        "minimoReestructurado"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "usuario": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "creditoId",
+                    "periodo",
+                    "cierreId",
+                    "fechaContable",
+                    "importe",
+                    "concepto",
+                    "versionPolitica",
+                    "parametros",
+                    "usuario"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "estado",
+              "fechaCorte",
+              "apertura",
+              "total",
+              "saldos",
+              "movimientos"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "estado": {
+                "type": "string",
+                "const": "NO_DISPONIBLE"
+              },
+              "fechaCorte": {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              },
+              "motivo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "estado",
+              "fechaCorte",
+              "motivo"
+            ],
+            "additionalProperties": false
+          }
+        ]
       },
       "Solicitud": {
         "type": "object",

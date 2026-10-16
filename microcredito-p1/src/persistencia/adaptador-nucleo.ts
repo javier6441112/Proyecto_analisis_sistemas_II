@@ -26,7 +26,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { abrirBaseDatos } from './base-datos.js';
-import { asegurarCierres, guardarCierre, leerCierre } from './cierres-persistidos.js';
+import { asegurarCierres, leerCierre } from './cierres-persistidos.js';
+import { asegurarMovimientosProvisiones, abrirDesdeHistorico, guardarCierreConMovimientos,
+  consultarRegistroProvisiones, type ContabilizacionProvisiones } from './movimientos-provisiones.js';
 import { cargarPoliticaProvisiones } from '../configuracion/provisiones.js';
 import { calcularProvisiones, type PoliticaProvisiones } from '../dominio/provisiones.js';
 
@@ -97,6 +99,7 @@ export class ErrorIntegridadCartera extends Error {
 
 /** Lo mínimo que el adaptador necesita de una conexión (PGlite o un doble de prueba). */
 export interface ConexionSql {
+  transaction?<T>(fn: (tx: Pick<ConexionSql, 'query'>) => Promise<T>): Promise<T>;
   query<T>(sql: string, params?: unknown[]): Promise<{ rows: T[] }>;
   exec?(sql: string): Promise<unknown>;
   close(): Promise<void>;
@@ -247,6 +250,7 @@ export interface RecuperacionesPorConcepto {
 }
 
 export interface Cierre {
+  contabilizacionProvisiones?: ContabilizacionProvisiones;
   provisiones?: ProvisionesCierre;
   estado: 'PREVIA' | 'EJECUTADO';
   fechaCorte: string;
@@ -877,6 +881,7 @@ export class AdaptadorNucleo {
     const politicas = new ContextoPoliticas(await leerParametros(db, dataDir));
     await asegurarBitacora(db);
     await asegurarCierres(db);
+    await asegurarMovimientosProvisiones(db);
     return new AdaptadorNucleo(db, esquema, politicas, provisionesDir);
   }
 
@@ -1111,8 +1116,17 @@ export class AdaptadorNucleo {
       const guardado = await leerCierre(this.db, periodo);
       if (guardado) return guardado;
       const cierre = await this.calcularCierre(periodo);
-      return guardarCierre(this.db, { ...cierre, estado: 'EJECUTADO', ejecutadoPor: usuario.trim() });
+      return guardarCierreConMovimientos(this.db, { ...cierre, estado: 'EJECUTADO', ejecutadoPor: usuario.trim() });
     });
+  }
+
+  async abrirProvisionesDesdeHistorico(periodo: string, usuario: string, motivo: string) {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(periodo)) throw new ErrorNegocio('DATOS_INVALIDOS', 'La apertura requiere un período mensual');
+    return this.exclusivo(() => abrirDesdeHistorico(this.db, periodo, usuario, motivo));
+  }
+
+  async consultarRegistroProvisiones(fechaCorte: string) {
+    return consultarRegistroProvisiones(this.db, validarFecha(fechaCorte));
   }
 
   private async calcularCierre(periodo: string): Promise<Cierre> {

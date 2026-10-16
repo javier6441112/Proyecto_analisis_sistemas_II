@@ -79,7 +79,8 @@ describe('Cierres persistidos sobre una copia temporal', () => {
     const registros = await registrosFinancieros();
     const previa = await consultar('2026-10');
     mensual = await ejecutar('2026-10');
-    expect(mensual).toEqual({ ...previa, estado: 'EJECUTADO', ejecutadoPor: 'Elena Morales' });
+    expect(mensual).toEqual({ ...previa, estado: 'EJECUTADO', ejecutadoPor: 'Elena Morales', contabilizacionProvisiones: mensual.contabilizacionProvisiones });
+    expect(mensual.contabilizacionProvisiones?.saldoFinal).toEqual(mensual.provisiones?.estado === 'DISPONIBLE' ? mensual.provisiones.total : undefined);
     expect(mensual.politicasUtilizadas.versionParametros).toBe('1.0');
     expect(mensual.politicasUtilizadas.parametros).toEqual(adaptador.politicas.parametros);
     expect(mensual.politicasUtilizadas.huellaParametros).toBe(createHash('sha256').update(JSON.stringify(adaptador.politicas.parametros)).digest('hex'));

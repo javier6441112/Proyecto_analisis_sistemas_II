@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { DineroSchema, FechaISOSchema } from './comunes.js';
-import { ProvisionesCierreSchema } from './provisiones.js';
+import { ProvisionesCierreSchema, ContabilizacionProvisionesSchema } from './provisiones.js';
 
 const DesgloseTramoCierreSchema = z.object({
   tramo: z.enum(['AL_DIA', 'MORA_1', 'MORA_2', 'MORA_3', 'VENCIDO']),
@@ -33,6 +33,7 @@ export const GenerarCierreRequestSchema = z.object({
 }).strict().meta({ description: 'Datos para generar un cierre diario o mensual' });
 
 export const CierreResponseSchema = z.object({
+  contabilizacionProvisiones: ContabilizacionProvisionesSchema.optional(),
   periodo: PeriodoCierreSchema,
   fechaCorte: FechaISOSchema,
   carteraActiva: DineroSchema,

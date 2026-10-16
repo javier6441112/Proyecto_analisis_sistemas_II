@@ -285,6 +285,7 @@ export function crearServidorMcp(dep: DependenciasMcp): McpServer {
       tipo: c.tipo, periodo: c.periodo, desde: c.desde, hasta: c.hasta,
       estado: c.estado, fechaCorte: c.fechaCorte, politicasUtilizadas: c.politicasUtilizadas,
       provisiones: aJson(c.provisiones),
+      contabilizacionProvisiones: aJson(c.contabilizacionProvisiones),
       desembolsos: { cantidad: c.desembolsos.cantidad, monto: q(c.desembolsos.monto), creditos: c.desembolsos.creditos.map((d) => ({ idCredito: d.idCredito, fecha: d.fecha, capital: q(d.capital) })) },
       recuperaciones: {
         pagos: c.recuperaciones.pagos,

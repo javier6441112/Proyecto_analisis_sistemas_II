@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { ProvisionesCierre } from './ProvisionesCierre';
+import { MovimientosProvisiones } from './MovimientosProvisiones';
 import { EncabezadoPagina } from '../App';
-import { api, mensajeDeError, type TCierre } from '../api';
+import { api, mensajeDeError, type TCierre, type TRegistroProvisiones } from '../api';
 import { Q, fecha } from '../formato';
 import { useSesion } from '../sesion';
 import { Alert, Badge, BtnPrimary, BtnSecondary, DISPLAY, FOCO, Field, Ico, inputCls } from '../ui';
@@ -20,12 +21,15 @@ export default function Cierres() {
   const [verificacion, setVerificacion] = useState<'igual' | 'distinto' | null>(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
+  const [registro, setRegistro] = useState<TRegistroProvisiones | null>(null);
+  const [motivoApertura, setMotivoApertura] = useState('');
 
   // Al cambiar de tipo se limpian la selección y los resultados del cierre anterior.
   const cambiarTipo = (t: Tipo) => {
     setTipo(t);
     setPeriodo(t === 'diario' ? s.fecha : s.fecha.slice(0, 7));
     setCierre(null);
+    setRegistro(null);
     setVerificacion(null);
     setError('');
   };
@@ -36,6 +40,7 @@ export default function Cierres() {
     setVerificacion(null);
     try {
       setCierre(await api.cierre(periodo));
+      setRegistro(null);
     } catch (err) {
       setCierre(null);
       setError(mensajeDeError(err));
@@ -64,6 +69,7 @@ export default function Cierres() {
     setVerificacion(null);
     try {
       setCierre(await api.ejecutarCierre(periodo));
+      setRegistro(null);
     } catch (err) {
       setError(mensajeDeError(err));
     } finally {
@@ -92,7 +98,7 @@ export default function Cierres() {
         <Field id="periodo-cierre" label={tipo === 'diario' ? 'Fecha de corte' : 'Mes del cierre'}
           hint="Consultar muestra una vista previa o el resultado guardado. Ejecutar congela las cifras del período definitivamente.">
           <input id="periodo-cierre" type={tipo === 'diario' ? 'date' : 'month'} className={inputCls} value={periodo} disabled={cargando}
-            onChange={(e) => { setPeriodo(e.target.value); setCierre(null); setVerificacion(null); }} />
+            onChange={(e) => { setPeriodo(e.target.value); setCierre(null); setVerificacion(null); setRegistro(null); }} />
         </Field>
         <BtnSecondary label="Consultar período" onClick={() => void consultar()} disabled={cargando || !periodo} />
         <BtnPrimary label="Ejecutar cierre definitivo" onClick={() => void ejecutar()} busy={cargando} disabled={!periodo} />
@@ -149,6 +155,29 @@ export default function Cierres() {
           </div>
 
           <ProvisionesCierre provisiones={cierre.provisiones} />
+          <MovimientosProvisiones contabilizacion={cierre.contabilizacionProvisiones} />
+          {cierre.tipo === 'MENSUAL' && cierre.estado === 'EJECUTADO' && <section className="bg-white rounded-2xl border border-slate-200 p-5 text-sm">
+            <BtnSecondary label="Consultar registro de provisiones al corte" disabled={cargando} onClick={() => void (async () => {
+              setError(''); setCargando(true);
+              try { setRegistro(await api.registroProvisiones(cierre.fechaCorte)); } catch (err) { setError(mensajeDeError(err)); } finally { setCargando(false); }
+            })()} />
+            {registro?.estado === 'DISPONIBLE' && <>
+              <p>Saldo reconstruido al corte: {Q(registro.total)} · Apertura {registro.apertura.origen} desde {registro.apertura.cierreId}</p>
+              <p>{registro.apertura.motivo}</p>
+              <details><summary>Registro acumulativo ({registro.movimientos.length})</summary>{registro.movimientos.map(m =>
+                <p key={m.id}>{m.id} · {m.creditoId} · {m.fechaContable} · {m.concepto} · {Q(m.importe)} · {m.versionPolitica}</p>)}</details>
+            </>}
+            {registro?.estado === 'NO_DISPONIBLE' && <p>{registro.motivo}</p>}
+            {!cierre.contabilizacionProvisiones && cierre.provisiones?.estado === 'DISPONIBLE' && <>
+              <p>Si este es el último cierre mensual histórico y aún no existe apertura, Gerencia puede importar sus saldos congelados. Esta acción no modifica el cierre ni registra gasto.</p>
+              <Field id="motivo-apertura" label="Motivo de apertura histórica"><input id="motivo-apertura" className={inputCls} value={motivoApertura} onChange={e => setMotivoApertura(e.target.value)} /></Field>
+              <BtnSecondary label="Abrir provisiones desde este histórico" disabled={cargando || !motivoApertura.trim()} onClick={() => void (async () => {
+                setError(''); setCargando(true);
+                try { await api.abrirProvisiones(cierre.periodo, motivoApertura); setRegistro(await api.registroProvisiones(cierre.fechaCorte)); }
+                catch (err) { setError(mensajeDeError(err)); } finally { setCargando(false); }
+              })()} />
+            </>}
+          </section>}
 
           {cierre.desembolsos.creditos.length > 0 && (
             <details className="bg-white rounded-2xl border border-slate-200 p-4">

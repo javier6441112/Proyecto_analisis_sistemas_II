@@ -9,7 +9,8 @@
  */
 import { z } from 'zod';
 import { DineroSchema } from './comunes.js';
-import { ProvisionesCierreSchema } from './provisiones.js';
+import { ProvisionesCierreSchema, ContabilizacionProvisionesSchema } from './provisiones.js';
+import { AperturaProvisionesBodySchema, AperturaProvisionSchema, RegistroProvisionesSchema } from './provisiones.js';
 
 const CANALES = ['agencia', 'campo', 'transferencia'] as const;
 
@@ -366,6 +367,7 @@ const Recuperaciones = z.object({
 }).strict();
 
 export const Cierre = z.object({
+  contabilizacionProvisiones: ContabilizacionProvisionesSchema.optional(),
   provisiones: ProvisionesCierreSchema.optional().meta({ description: 'Opcional para formatos históricos; su ausencia significa no disponible, nunca cero.' }),
   estado: z.enum(['PREVIA', 'EJECUTADO']),
   fechaCorte: Fecha,
@@ -393,6 +395,12 @@ export const Cierre = z.object({
   }).strict(),
   cartera: CarteraConsolidada,
 }).strict().meta({ id: 'Cierre', description: 'PREVIA calculada sin escribir o EJECUTADO persistido e inmutable, idempotente por periodo' });
+
+export const AperturaProvisionesBody = AperturaProvisionesBodySchema.meta({ id: 'AperturaProvisionesBody' });
+export const AperturaProvision = AperturaProvisionSchema.meta({ id: 'AperturaProvision' });
+export const RegistroProvisiones = RegistroProvisionesSchema.meta({ id: 'RegistroProvisiones' });
+export type TRegistroProvisiones = z.infer<typeof RegistroProvisiones>;
+export type TAperturaProvision = z.infer<typeof AperturaProvision>;
 
 export const Solicitud = z.object({
   idSolicitud: z.string(),

@@ -199,6 +199,22 @@ export const documentoOpenAPI = {
         responses: { '201': ok('Solicitud registrada.', ref('SolicitudCreada')), '400': ERROR_400, '404': ERROR_404, '409': ERROR_409 },
       },
     },
+    '/api/provisiones': {
+      get: {
+        tags: ['Gerencia'], operationId: 'consultarRegistroProvisiones', summary: 'Saldos reconstruidos y movimientos de provisiones al corte explícito',
+        parameters: consulta(C.ConCorte),
+        responses: { '200': ok('Registro acumulativo; sin apertura se indica no disponible.', ref('RegistroProvisiones')), '400': ERROR_400 },
+      },
+    },
+    '/api/provisiones/apertura': {
+      post: {
+        tags: ['Gerencia'], operationId: 'abrirProvisionesHistoricas', summary: 'Apertura explícita desde el último cierre mensual histórico (Gerencia)',
+        description: 'Importa los saldos congelados por crédito, sin registrar gasto ni modificar el cierre. Requiere detalle histórico; no acepta saldos inventados.',
+        parameters: OPERADOR,
+        requestBody: cuerpo('AperturaProvisionesBody', { periodoCierre: '2026-10', motivo: 'Conciliación documentada del último cierre histórico' }),
+        responses: { '200': ok('Apertura trazable.', ref('AperturaProvision')), '400': ERROR_400, '403': problema('No autorizado', 'NO_AUTORIZADO', 403, 'Solo Gerencia puede abrir provisiones'), '409': ERROR_409 },
+      },
+    },
     '/api/solicitudes/{idSolicitud}/resolucion': {
       post: {
         tags: ['Originación'], operationId: 'resolverSolicitud', summary: 'Aprueba o rechaza una solicitud (solo gerencia)',

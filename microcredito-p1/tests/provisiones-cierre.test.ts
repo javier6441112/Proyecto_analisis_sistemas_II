@@ -89,6 +89,8 @@ it('API y MCP coinciden con el cálculo puro de la fotografía mensual y excluye
     }
   }
   expect((await a.db.query('SELECT * FROM cierres_ejecutados')).rows).toHaveLength(0);
+  expect((await a.db.query('SELECT * FROM movimientos_provisiones')).rows).toHaveLength(0);
+  expect((await a.db.query('SELECT * FROM aperturas_provisiones')).rows).toHaveLength(0);
 });
 
 it('errores de política impiden guardar un cierre nuevo', async () => {
@@ -103,7 +105,7 @@ it('guarda total, detalle y copia de política sin crear movimientos; repetir no
   const eventos = (await a.db.query('SELECT * FROM bitacora_operaciones')).rows;
   const previa = await api('2026-10');
   guardado = await api('2026-10', true);
-  expect(guardado).toEqual({ ...previa, estado: 'EJECUTADO', ejecutadoPor: headers['x-usuario'] });
+  expect(guardado).toEqual({ ...previa, estado: 'EJECUTADO', ejecutadoPor: headers['x-usuario'], contabilizacionProvisiones: guardado.contabilizacionProvisiones });
   expect(await api('2026-10', true)).toEqual(guardado);
   expect((await a.db.query('SELECT * FROM cierres_ejecutados')).rows).toHaveLength(1);
   expect((await a.db.query('SELECT * FROM bitacora_operaciones')).rows).toEqual(eventos);
@@ -131,6 +133,7 @@ it('un cierre anterior sin provisiones indica no disponible y conserva intacto s
   const filas = await a.db.query<{ resultado: Record<string, unknown> }>('SELECT resultado FROM cierres_ejecutados WHERE periodo=$1', ['2026-10']);
   const antiguo = { ...filas.rows[0].resultado, periodo: '2026-08', fechaCorte: '2026-08-31', desde: '2026-08-01', hasta: '2026-08-31' };
   delete (antiguo as Record<string, unknown>).provisiones;
+  delete (antiguo as Record<string, unknown>).contabilizacionProvisiones;
   await a.db.query('INSERT INTO cierres_ejecutados VALUES ($1,$2,$3)', ['2026-08', '2026-08-31', JSON.stringify(antiguo)]);
   const antes = (await a.db.query('SELECT * FROM cierres_ejecutados WHERE periodo=$1', ['2026-08'])).rows;
   const reconstruir = vi.spyOn(a, 'listarDetallesCreditos').mockRejectedValue(new Error('No recalcular histórico'));

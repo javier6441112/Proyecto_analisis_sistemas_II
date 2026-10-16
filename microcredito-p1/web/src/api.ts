@@ -7,6 +7,7 @@ import type {
   TAltaClienteBody, TAsesor, TCarteraTablero, TCierre, TCliente, TDesembolsoBody, TDetalleCredito,
   TExplicacionMora, TListadoCreditos, TListadoMora, TPagoAplicadoRespuesta, TPagoBody, TPagoDuplicadoRespuesta,
   TPlanBody, TPlanCredito, TPlanSimulado, TProblema, TPropuesta, TResolucionBody, TRespuestaChat, TSimulacionPago,
+  TRegistroProvisiones, TAperturaProvision,
   TSolicitud, TSolicitudBody, TSolicitudCreada, TVencimientos,
 } from '../../src/contratos/api';
 
@@ -100,6 +101,8 @@ export const api = {
   vencimientos: (fechaCorte: string, dias: number) => pedir<TVencimientos>('GET', `/api/vencimientos${q({ fechaCorte, dias })}`),
   cierre: (periodo: string) => pedir<TCierre>('GET', `/api/cierres/${e(periodo)}`),
   ejecutarCierre: (periodo: string) => pedir<TCierre>('POST', `/api/cierres/${e(periodo)}/ejecucion`),
+  registroProvisiones: (fechaCorte: string) => pedir<TRegistroProvisiones>('GET', `/api/provisiones?fechaCorte=${e(fechaCorte)}`),
+  abrirProvisiones: (periodoCierre: string, motivo: string) => pedir<TAperturaProvision>('POST', '/api/provisiones/apertura', { periodoCierre, motivo }),
 
   chat: (mensaje: string, fechaOperacion: string, sesionId?: string) =>
     pedir<TRespuestaChat>('POST', '/api/chat', { mensaje, fechaOperacion, ...(sesionId ? { sesionId } : {}) }),

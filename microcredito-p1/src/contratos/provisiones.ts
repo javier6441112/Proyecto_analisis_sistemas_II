@@ -40,3 +40,28 @@ export const ProvisionesCierreSchema = z.discriminatedUnion('estado', [
   }).strict(),
   z.object({ estado: z.literal('NO_DISPONIBLE'), motivo: z.string().min(1) }).strict(),
 ]).meta({ description: 'Reserva de capital al corte, separada de cobros y cartera bruta. NO_DISPONIBLE nunca representa cero.' });
+
+const DineroConSigno = z.object({ valor: z.string().regex(/^-?\d{1,16}\.\d{2}$/), moneda: z.literal('GTQ') }).strict();
+export const AperturaProvisionSchema = z.object({
+  id: z.literal('INICIAL'), fechaContable: z.iso.date(), cierreId: z.string(), usuario: z.string().min(1),
+  motivo: z.string().min(1), origen: z.enum(['CERO_SIN_HISTORICOS', 'CIERRE_HISTORICO']),
+}).strict();
+export const MovimientoProvisionSchema = z.object({
+  id: z.string(), creditoId: z.string(), periodo: z.string(), cierreId: z.string(), fechaContable: z.iso.date(),
+  importe: DineroConSigno, concepto: z.enum(['APERTURA', 'CONSTITUCION', 'REDUCCION']),
+  versionPolitica: z.string(), parametros: politicaProvisionesSchema, usuario: z.string(),
+}).strict();
+export const ContabilizacionProvisionesSchema = z.object({
+  apertura: AperturaProvisionSchema, saldoAnterior: DineroSchema, variacion: DineroConSigno,
+  saldoFinal: DineroSchema, movimientos: z.array(MovimientoProvisionSchema),
+}).strict();
+export const AperturaProvisionesBodySchema = z.object({
+  periodoCierre: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/), motivo: z.string().trim().min(1).max(1000),
+}).strict();
+export const RegistroProvisionesSchema = z.discriminatedUnion('estado', [
+  z.object({ estado: z.literal('DISPONIBLE'), fechaCorte: z.iso.date(), apertura: AperturaProvisionSchema,
+    total: DineroSchema, saldos: z.array(z.object({ creditoId: z.string(), saldo: DineroSchema }).strict()),
+    movimientos: z.array(MovimientoProvisionSchema),
+  }).strict(),
+  z.object({ estado: z.literal('NO_DISPONIBLE'), fechaCorte: z.iso.date(), motivo: z.string() }).strict(),
+]);
