@@ -184,3 +184,7 @@ La fecha de operación elegida en pantalla es el puerto Reloj: arranca en 2026-1
 - **qwen2.5:7b y bge-m3 (Ollama)**: modelos que usa el sistema en ejecución.
 
 El equipo revisó, probó y puede explicar todo lo entregado.
+
+## Política de provisiones
+
+El cálculo puro y la configuración versionada de reservas se describen en [Política de provisiones](docs/politica-provisiones.md). Son decisiones académicas del equipo para Crédito Vecino.
