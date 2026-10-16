@@ -1,9 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 import { Dinero } from '../src/dominio/dinero.js';
-import { calcularProvisiones, validarPoliticaProvisiones, type CreditoProvision } from '../src/dominio/provisiones.js';
+import { calcularProvisiones, type CreditoProvision } from '../src/dominio/provisiones.js';
+import { validarConfiguracionProvisiones } from '../src/contratos/provisiones.js';
+import { resumirCartera } from '../src/dominio/cartera.js';
 
-const politica = validarPoliticaProvisiones(JSON.parse(readFileSync(
+const politica = validarConfiguracionProvisiones(JSON.parse(readFileSync(
   new URL('../configuracion/provisiones/credito-vecino-v1.json', import.meta.url), 'utf8')));
 const credito = (c: Partial<CreditoProvision> = {}): CreditoProvision => ({
   id: 'C1', estado: 'VIGENTE', saldoCapital: Dinero.de('123.45'), diasAtraso: 0, dadoDeBaja: false, ...c,
@@ -32,15 +34,26 @@ it.each([[0, '24.69'], [1, '24.69'], [31, '24.69'], [61, '61.73'], [91, '123.45'
     expect(calcular([credito({ estado: 'REESTRUCTURADO', diasAtraso })]).total.formato()).toBe(esperado);
   });
 
-it('excluye cancelados y bajas pero conserva el incobrable activo', () => {
+it('excluye cancelados e incobrables con ambos indicadores de baja', () => {
   const r = calcular([
     credito({ id: 'cancelado', estado: 'CANCELADO' }),
     credito({ id: 'baja', estado: 'INCOBRABLE', dadoDeBaja: true, diasAtraso: 180 }),
-    credito({ id: 'activo', estado: 'INCOBRABLE', diasAtraso: 180 }),
+    credito({ id: 'sin-baja', estado: 'INCOBRABLE', diasAtraso: 180 }),
   ]);
   expect(r.detalles.map(d => [d.excluido, d.base.formato(), d.porcentaje.toString(), d.provision.formato()]))
-    .toEqual([[true, '0.00', '0', '0.00'], [true, '0.00', '0', '0.00'], [false, '123.45', '100', '123.45']]);
-  expect(r.total.formato()).toBe('123.45');
+    .toEqual([[true, '0.00', '0', '0.00'], [true, '0.00', '0', '0.00'], [true, '0.00', '0', '0.00']]);
+  expect(r.total.formato()).toBe('0.00');
+});
+
+it.each([false, true])('excluye Q1000 incobrables de cartera y provisiones con baja=%s', dadoDeBaja => {
+  const c = credito({ estado: 'INCOBRABLE', saldoCapital: Dinero.de('1000'), diasAtraso: 180, dadoDeBaja });
+  expect(resumirCartera([c]).carteraActiva.formato()).toBe('0.00');
+  const r = calcular([c]);
+  expect(r.detalles[0].excluido).toBe(true);
+  expect(r.detalles[0].base.formato()).toBe('0.00');
+  expect(r.detalles[0].porcentaje.toString()).toBe('0');
+  expect(r.detalles[0].provision.formato()).toBe('0.00');
+  expect(r.total.formato()).toBe('0.00');
 });
 
 it('redondea medio hacia arriba por crédito antes de sumar', () => {
@@ -64,16 +77,33 @@ it('recibe configuración alternativa y respeta ambas fechas inclusivas', () => 
 });
 
 it.each(['-1', '100.01', 'NaN', 'Infinity', '', '1e2'])('rechaza porcentaje %s', tasa => {
-  expect(() => validarPoliticaProvisiones({ ...politica, porcentajes: { ...politica.porcentajes, MORA_1: tasa } })).toThrow();
-  expect(() => validarPoliticaProvisiones({ ...politica, minimoReestructurado: tasa })).toThrow();
+  const p = { ...politica, porcentajes: { ...politica.porcentajes, MORA_1: tasa } };
+  expect(() => validarConfiguracionProvisiones(p)).toThrow();
+  expect(() => calcularProvisiones(p, '2026-10-15', [])).toThrow();
+  const minimo = { ...politica, minimoReestructurado: tasa };
+  expect(() => validarConfiguracionProvisiones(minimo)).toThrow();
+  expect(() => calcularProvisiones(minimo, '2026-10-15', [])).toThrow();
 });
 
 it('rechaza configuración incompleta, metadatos vacíos y fechas inválidas', () => {
   for (const cambio of [{ version: '' }, { autor: '' }, { institucion: '' }, { motivo: '' },
     { vigenteDesde: '2026-02-30' }, { vigenteHasta: '2025-01-01' }, { porcentajes: {} }]) {
-    expect(() => validarPoliticaProvisiones({ ...politica, ...cambio })).toThrow();
+    expect(() => validarConfiguracionProvisiones({ ...politica, ...cambio })).toThrow();
   }
   expect(() => calcularProvisiones(politica, '2026-02-30', [])).toThrow();
+});
+
+it('conserva validaciones de fechas y metadatos sin pasar por el contrato externo', () => {
+  for (const cambio of [{ version: '' }, { autor: '' }, { institucion: '' }, { motivo: '' },
+    { vigenteDesde: '2026-02-30' }, { vigenteHasta: '2025-01-01' }]) {
+    expect(() => calcularProvisiones({ ...politica, ...cambio }, '2026-10-15', [])).toThrow();
+  }
+});
+
+it('rechaza forma externa incompleta o campos desconocidos', () => {
+  expect(() => validarConfiguracionProvisiones({ ...politica, extra: true })).toThrow();
+  expect(() => validarConfiguracionProvisiones({ ...politica, porcentajes: { AL_DIA: '1' } })).toThrow();
+  expect(() => validarConfiguracionProvisiones({ ...politica, version: 1 })).toThrow();
 });
 
 it('rechaza datos al corte inválidos incluso si se excluirían', () => {
