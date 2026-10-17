@@ -7,16 +7,12 @@ import type {
   TAltaClienteBody, TAsesor, TCarteraTablero, TCierre, TCliente, TDesembolsoBody, TDetalleCredito,
   TExplicacionMora, TListadoCreditos, TListadoMora, TPagoAplicadoRespuesta, TPagoBody, TPagoDuplicadoRespuesta,
   TPlanBody, TPlanCredito, TPlanSimulado, TProblema, TPropuesta, TResolucionBody, TRespuestaChat, TSimulacionPago,
-  TRegistroProvisiones, TAperturaProvision,
+  TRegistroProvisiones, TAperturaProvision, TSesionIniciada, TUsuarioSistema,
   TSolicitud, TSolicitudBody, TSolicitudCreada, TVencimientos,
 } from '../../src/contratos/api';
 
 export type * from '../../src/contratos/api';
 
-export interface Operador {
-  perfil: 'asesor' | 'gerencia';
-  usuario: string;
-}
 
 /** Error de la API con el cuerpo RFC 9457 (`codigo`, `detail`, `errores`…). */
 export class ErrorApi extends Error {
@@ -26,18 +22,18 @@ export class ErrorApi extends Error {
   }
 }
 
-let operador: Operador | null = null;
-export function fijarOperador(o: Operador | null): void {
-  operador = o;
+let token: string | null = null;
+let alExpirar: (() => void) | null = null;
+/** Token de la sesión iniciada; `onExpirar` se invoca si la API responde 401 (sesión vencida o API reiniciada). */
+export function fijarToken(t: string | null, onExpirar?: () => void): void {
+  token = t;
+  alExpirar = onExpirar ?? null;
 }
 
 async function pedir<T>(metodo: 'GET' | 'POST' | 'DELETE', ruta: string, cuerpo?: unknown, extra: Record<string, string> = {}): Promise<T> {
   const cabeceras: Record<string, string> = { Accept: 'application/json', ...extra };
   if (cuerpo !== undefined) cabeceras['Content-Type'] = 'application/json';
-  if (operador) {
-    cabeceras['X-Perfil'] = operador.perfil;
-    cabeceras['X-Usuario'] = operador.usuario;
-  }
+  if (token) cabeceras.Authorization = `Bearer ${token}`;
   let respuesta: Response;
   try {
     respuesta = await fetch(ruta, { method: metodo, headers: cabeceras, body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo) });
@@ -51,6 +47,7 @@ async function pedir<T>(metodo: 'GET' | 'POST' | 'DELETE', ruta: string, cuerpo?
   const texto = await respuesta.text();
   const datos: unknown = texto ? JSON.parse(texto) : undefined;
   if (!respuesta.ok) {
+    if (respuesta.status === 401 && token && ruta !== '/api/sesion') alExpirar?.();
     const p = (datos ?? {}) as Partial<TProblema>;
     throw new ErrorApi(respuesta.status, {
       type: p.type ?? 'about:blank',
@@ -73,6 +70,10 @@ const q = (params: Record<string, string | number | undefined>): string => {
 const e = encodeURIComponent;
 
 export const api = {
+  usuarios: () => pedir<TUsuarioSistema[]>('GET', '/api/usuarios'),
+  iniciarSesion: (usuario: string, clave: string) => pedir<TSesionIniciada>('POST', '/api/sesion', { usuario, clave }),
+  cerrarSesion: () => pedir<void>('DELETE', '/api/sesion'),
+
   asesores: () => pedir<TAsesor[]>('GET', '/api/asesores'),
   clientes: (texto?: string) => pedir<TCliente[]>('GET', `/api/clientes${q({ q: texto })}`),
   registrarCliente: (b: TAltaClienteBody) => pedir<TCliente>('POST', '/api/clientes', b),

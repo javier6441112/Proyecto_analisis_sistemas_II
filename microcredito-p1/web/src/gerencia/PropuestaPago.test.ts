@@ -11,6 +11,7 @@ import { conectarClienteLocal, type ClienteMcpLocal } from '../../../src/mcp/cli
 import { PropuestaPagoChat, type TPropuestaPagoChat } from '../../../src/contratos/api.js';
 import { api } from '../api';
 import { PropuestaPago, Respuesta } from './Asistente';
+import { conversacion } from './conversacion';
 import { OrquestadorChat } from '../../../src/chat/orquestador.js';
 
 // Estado controlado para inspeccionar los botones reales sin agregar un DOM de pruebas.
@@ -47,7 +48,8 @@ afterAll(async () => {
   await adaptador?.cerrar();
   if (directorio) rmSync(directorio, { recursive: true, force: true });
 });
-beforeEach(() => { estado.valores = []; estado.indice = 0; vi.restoreAllMocks(); });
+// La decisión sobre cada propuesta se recuerda en la conversación: cada prueba parte de una vacía.
+beforeEach(() => { estado.valores = []; estado.indice = 0; vi.restoreAllMocks(); conversacion.descartar(); });
 
 function tarjeta() {
   estado.indice = 0;
@@ -99,6 +101,16 @@ it.each([true, false])('muestra errores al decidir aprobar=%s y conserva los bot
   await vi.waitFor(() => expect(estado.valores[1]).toBe('No se pudo registrar el pago'));
   expect(renderToStaticMarkup(tarjeta())).toContain('No se pudo registrar el pago');
   expect(botones(tarjeta())).toHaveLength(2);
+});
+
+it('la decisión se conserva al volver a la pantalla del asistente', async () => {
+  vi.spyOn(api, 'rechazarPropuesta').mockResolvedValue({} as never);
+  botones(tarjeta())[0].props.onClick();
+  await vi.waitFor(() => expect(conversacion.decision(propuesta.propuestaId)).toBe('rechazada'));
+  estado.valores = []; // la pantalla se desmonta y se vuelve a montar
+  const html = renderToStaticMarkup(tarjeta());
+  expect(html).toContain('Propuesta rechazada');
+  expect(botones(tarjeta())).toHaveLength(0);
 });
 
 it('muestra el error de proponer_pago en la respuesta del chat', () => {

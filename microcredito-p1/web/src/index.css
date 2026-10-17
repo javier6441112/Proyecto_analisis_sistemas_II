@@ -17,3 +17,14 @@ body {
   background: #e2e8f0;
   color: #0f172a;
 }
+
+/* PWA instalada: el contenido no queda bajo la barra de estado ni el indicador de inicio. */
+@media (display-mode: standalone) {
+  body {
+    background: #0f172a;
+  }
+  #root {
+    box-sizing: border-box;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+}

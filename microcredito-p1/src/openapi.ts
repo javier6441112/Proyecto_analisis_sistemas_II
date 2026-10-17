@@ -94,12 +94,15 @@ export const documentoOpenAPI = {
       '',
       '- Toda lectura exige `fechaCorte` explícita; la API nunca lee el reloj.',
       '- El dinero viaja como texto (`{ valor: "1004.62", moneda: "GTQ" }`), nunca como número.',
-      '- Las operaciones exigen las cabeceras `X-Perfil` (asesor | gerencia) y `X-Usuario`.',
+      '- Con `npm run api` toda ruta `/api` (salvo salud, usuarios y sesión) exige `Authorization: Bearer <token>`',
+      '  obtenido en `POST /api/sesion`; el perfil y el usuario de auditoría salen del token.',
+      '- En las pruebas de integración (sin sesiones) el operador viaja en `X-Perfil` (asesor | gerencia) y `X-Usuario`.',
       '- Registrar un pago exige `Idempotency-Key` y aprobación humana explícita.',
     ].join('\n'),
   },
   servers: [{ url: 'http://127.0.0.1:3000', description: 'Servidor local (npm run api)' }],
   tags: [
+    { name: 'Sesión', description: 'Usuarios, inicio y cierre de sesión' },
     { name: 'Catálogos', description: 'Asesores, políticas y clientes' },
     { name: 'Créditos', description: 'Consulta de créditos, planes y mora' },
     { name: 'Originación', description: 'Solicitudes, comité y desembolso' },
@@ -112,6 +115,31 @@ export const documentoOpenAPI = {
       get: {
         tags: ['Catálogos'], operationId: 'salud', summary: 'Estado del servicio y auditoría de pagos',
         responses: { '200': ok('Servicio disponible.', { type: 'object', properties: { estado: { const: 'ok' }, pagos: {} }, required: ['estado'] }) },
+      },
+    },
+    '/api/usuarios': {
+      get: {
+        tags: ['Sesión'], operationId: 'listarUsuarios', summary: 'Usuarios activos con su rol (gerente o asesor), sin datos de la clave',
+        responses: { '200': ok('Usuarios.', { type: 'array', items: ref('UsuarioSistema') },
+          [{ usuario: 'emorales', nombreCompleto: 'Elena Morales', rol: 'gerente', idAsesor: null }]) },
+      },
+    },
+    '/api/sesion': {
+      post: {
+        tags: ['Sesión'], operationId: 'iniciarSesion', summary: 'Inicia sesión con usuario y clave',
+        description: 'Devuelve un token opaco válido 12 horas. Tras 5 intentos fallidos el usuario queda bloqueado un minuto.',
+        requestBody: cuerpo('InicioSesionBody', { usuario: 'as-01', clave: '********' }),
+        responses: { '201': ok('Sesión iniciada.', ref('SesionIniciada')), '400': ERROR_400,
+          '401': problema('Usuario o clave incorrectos', 'NO_AUTENTICADO', 401, 'Usuario o clave incorrectos') },
+      },
+      get: {
+        tags: ['Sesión'], operationId: 'consultarSesion', summary: 'Sesión del token enviado',
+        responses: { '200': ok('Sesión activa.', ref('SesionIniciada')),
+          '401': problema('Sesión requerida', 'NO_AUTENTICADO', 401, 'Inicie sesión para continuar') },
+      },
+      delete: {
+        tags: ['Sesión'], operationId: 'cerrarSesion', summary: 'Invalida el token enviado',
+        responses: { '204': { description: 'Sesión cerrada.' } },
       },
     },
     '/api/asesores': {
@@ -344,5 +372,8 @@ export const documentoOpenAPI = {
       },
     },
   },
-  components: { schemas: componentes() },
+  components: {
+    schemas: componentes(),
+    securitySchemes: { sesion: { type: 'http', scheme: 'bearer', description: 'Token de POST /api/sesion' } },
+  },
 };

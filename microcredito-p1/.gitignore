@@ -1,0 +1,3 @@
+
+# Script PostgreSQL generado (npm run db:exportar): contiene datos y hashes de claves
+db/postgres/*.sql

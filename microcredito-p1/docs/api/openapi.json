@@ -3,7 +3,7 @@
   "info": {
     "title": "SGMC - API de Crédito Vecino, S. A.",
     "version": "2.0.0",
-    "description": "API REST del Sistema de Gestión de Microcrédito. Contrato generado desde los esquemas Zod de\n`src/contratos/api.ts`, que también valida el servidor: el contrato y la validación comparten una única fuente de verdad.\n\n- Toda lectura exige `fechaCorte` explícita; la API nunca lee el reloj.\n- El dinero viaja como texto (`{ valor: \"1004.62\", moneda: \"GTQ\" }`), nunca como número.\n- Las operaciones exigen las cabeceras `X-Perfil` (asesor | gerencia) y `X-Usuario`.\n- Registrar un pago exige `Idempotency-Key` y aprobación humana explícita."
+    "description": "API REST del Sistema de Gestión de Microcrédito. Contrato generado desde los esquemas Zod de\n`src/contratos/api.ts`, que también valida el servidor: el contrato y la validación comparten una única fuente de verdad.\n\n- Toda lectura exige `fechaCorte` explícita; la API nunca lee el reloj.\n- El dinero viaja como texto (`{ valor: \"1004.62\", moneda: \"GTQ\" }`), nunca como número.\n- Con `npm run api` toda ruta `/api` (salvo salud, usuarios y sesión) exige `Authorization: Bearer <token>`\n  obtenido en `POST /api/sesion`; el perfil y el usuario de auditoría salen del token.\n- En las pruebas de integración (sin sesiones) el operador viaja en `X-Perfil` (asesor | gerencia) y `X-Usuario`.\n- Registrar un pago exige `Idempotency-Key` y aprobación humana explícita."
   },
   "servers": [
     {
@@ -12,6 +12,10 @@
     }
   ],
   "tags": [
+    {
+      "name": "Sesión",
+      "description": "Usuarios, inicio y cierre de sesión"
+    },
     {
       "name": "Catálogos",
       "description": "Asesores, políticas y clientes"
@@ -64,6 +68,156 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/usuarios": {
+      "get": {
+        "tags": [
+          "Sesión"
+        ],
+        "operationId": "listarUsuarios",
+        "summary": "Usuarios activos con su rol (gerente o asesor), sin datos de la clave",
+        "responses": {
+          "200": {
+            "description": "Usuarios.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UsuarioSistema"
+                  }
+                },
+                "example": [
+                  {
+                    "usuario": "emorales",
+                    "nombreCompleto": "Elena Morales",
+                    "rol": "gerente",
+                    "idAsesor": null
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sesion": {
+      "post": {
+        "tags": [
+          "Sesión"
+        ],
+        "operationId": "iniciarSesion",
+        "summary": "Inicia sesión con usuario y clave",
+        "description": "Devuelve un token opaco válido 12 horas. Tras 5 intentos fallidos el usuario queda bloqueado un minuto.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InicioSesionBody"
+              },
+              "example": {
+                "usuario": "as-01",
+                "clave": "********"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Sesión iniciada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SesionIniciada"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                },
+                "example": {
+                  "type": "https://creditovecino.local/problemas/datos-invalidos",
+                  "title": "Datos inválidos",
+                  "status": 400,
+                  "detail": "La solicitud no cumple el esquema",
+                  "codigo": "DATOS_INVALIDOS"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Usuario o clave incorrectos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                },
+                "example": {
+                  "type": "https://creditovecino.local/problemas/no-autenticado",
+                  "title": "Usuario o clave incorrectos",
+                  "status": 401,
+                  "detail": "Usuario o clave incorrectos",
+                  "codigo": "NO_AUTENTICADO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Sesión"
+        ],
+        "operationId": "consultarSesion",
+        "summary": "Sesión del token enviado",
+        "responses": {
+          "200": {
+            "description": "Sesión activa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SesionIniciada"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesión requerida",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problema"
+                },
+                "example": {
+                  "type": "https://creditovecino.local/problemas/no-autenticado",
+                  "title": "Sesión requerida",
+                  "status": 401,
+                  "detail": "Inicie sesión para continuar",
+                  "codigo": "NO_AUTENTICADO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Sesión"
+        ],
+        "operationId": "cerrarSesion",
+        "summary": "Invalida el token enviado",
+        "responses": {
+          "204": {
+            "description": "Sesión cerrada."
           }
         }
       }
@@ -2389,6 +2543,27 @@
         "additionalProperties": false,
         "description": "Registro de un pago; exige aprobación humana explícita"
       },
+      "InicioSesionBody": {
+        "type": "object",
+        "properties": {
+          "usuario": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "clave": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "usuario",
+          "clave"
+        ],
+        "additionalProperties": false,
+        "description": "Usuario y clave de la tabla usuarios"
+      },
       "PreguntaChatBody": {
         "type": "object",
         "properties": {
@@ -2492,6 +2667,78 @@
           "nombreCompleto"
         ],
         "additionalProperties": false
+      },
+      "Rol": {
+        "type": "string",
+        "enum": [
+          "asesor",
+          "gerente"
+        ],
+        "description": "Rol del usuario: gerente o asesor de crédito"
+      },
+      "UsuarioSistema": {
+        "type": "object",
+        "properties": {
+          "usuario": {
+            "type": "string"
+          },
+          "nombreCompleto": {
+            "type": "string"
+          },
+          "rol": {
+            "$ref": "#/components/schemas/Rol"
+          },
+          "idAsesor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "usuario",
+          "nombreCompleto",
+          "rol",
+          "idAsesor"
+        ],
+        "additionalProperties": false,
+        "description": "Usuario que puede iniciar sesión (sin datos de la clave)"
+      },
+      "SesionIniciada": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "perfil": {
+            "type": "string",
+            "enum": [
+              "asesor",
+              "gerencia"
+            ]
+          },
+          "usuario": {
+            "type": "string",
+            "description": "Nombre completo que queda en la auditoría"
+          },
+          "cuenta": {
+            "type": "string"
+          },
+          "idAsesor": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "perfil",
+          "usuario"
+        ],
+        "additionalProperties": false,
+        "description": "Sesión activa; el token solo viaja al iniciarla"
       },
       "Politicas": {
         "type": "object",
@@ -6415,6 +6662,13 @@
         ],
         "additionalProperties": false,
         "description": "Propuesta de pago del chat pendiente de aprobación humana"
+      }
+    },
+    "securitySchemes": {
+      "sesion": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Token de POST /api/sesion"
       }
     }
   }

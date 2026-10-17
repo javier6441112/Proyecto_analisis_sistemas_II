@@ -4,8 +4,9 @@
  * - Toda lectura exige `fechaCorte` explícita; la API nunca lee el reloj.
  * - Las cifras salen del adaptador → núcleo; aquí solo se valida y serializa.
  * - Registrar un pago exige `Idempotency-Key` y `aprobacion.aprobado = true`.
- * - Perfiles mínimos (enunciado 3.1): cabecera `X-Perfil: asesor | gerencia` y
- *   `X-Usuario`. Resolver solicitudes (comité) es solo de gerencia.
+ * - Perfiles: con `sesiones` (npm run api) el perfil y el usuario salen del token de inicio de
+ *   sesión (`Authorization: Bearer`); sin ellas (pruebas) de las cabeceras `X-Perfil` y
+ *   `X-Usuario`. Resolver solicitudes (comité) y ejecutar cierres es solo de gerencia.
  */
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import { z } from 'zod';
@@ -15,6 +16,7 @@ import { ServicioOperaciones } from '../persistencia/servicio-operaciones.js';
 import type { TramoMora } from '../dominio/politica-mora/politica-mora.js';
 import { aJson } from './serializacion.js';
 import { aProblema } from './errores.js';
+import { operadorDe, registrarAutenticacion, type ServicioSesiones } from './autenticacion.js';
 import {
   AltaClienteBody, AperturaProvisionesBody, BusquedaQuery, CarteraMoraQuery, ConCorte, CreditosQuery, DesembolsoBody, PagoBody, PeriodoCierre,
   Perfil, PlanBody, ResolucionBody, SimulacionPagoBody, SolicitudBody, VencimientosQuery,
@@ -23,17 +25,18 @@ import {
 export interface OpcionesServidor {
   adaptador: AdaptadorNucleo;
   servicio?: ServicioOperaciones;
+  /** Inicio de sesión con usuario y clave; si se omite, el operador viaja en cabeceras. */
+  sesiones?: ServicioSesiones;
   registrar?: (app: FastifyInstance) => Promise<void> | void;
   logger?: boolean;
 }
 
 function quien(req: FastifyRequest): { perfil: z.infer<typeof Perfil>; usuario: string } {
-  const perfil = Perfil.safeParse(req.headers['x-perfil']);
-  const usuario = String(req.headers['x-usuario'] ?? '').trim();
-  if (!perfil.success || !usuario) {
+  const o = operadorDe(req);
+  if (!o?.perfil) {
     throw new ErrorNegocio('DATOS_INVALIDOS', 'Las operaciones requieren las cabeceras X-Perfil (asesor|gerencia) y X-Usuario');
   }
-  return { perfil: perfil.data, usuario };
+  return { perfil: o.perfil, usuario: o.usuario };
 }
 
 function soloGerencia(req: FastifyRequest, accion = 'resolver solicitudes'): string {
@@ -59,6 +62,7 @@ export async function construirServidor(opciones: OpcionesServidor): Promise<Fas
   });
 
   const ok = (reply: FastifyReply, cuerpo: unknown, status = 200) => reply.status(status).send(aJson(cuerpo));
+  if (opciones.sesiones) registrarAutenticacion(app, opciones.sesiones);
 
   // ---------------- Catálogos ----------------
   app.get('/api/salud', async (_req, reply) => ok(reply, { estado: 'ok', pagos: await adaptador.auditarPagos() }));

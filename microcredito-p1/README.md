@@ -44,6 +44,7 @@ docs/api/          Contratos OpenAPI y documentacion de API.
 - [Diagramas y trazabilidad](docs/README.md)
 - [Resultados de pruebas](RESULTADOS-PRUEBAS.md)
 - [Contrato OpenAPI en YAML](docs/api/openapi.yaml)
+- [Base de datos relacional en PostgreSQL / Amazon RDS](docs/base-datos-postgresql.md)
 - [Decisiones de arquitectura](docs/adr/ADR-001.md), [ADR-002](docs/adr/ADR-002.md) y [ADR-003: cierres persistidos](docs/adr/ADR-003.md)
 
 Los diagramas Mermaid pueden visualizarse en la vista previa Markdown de VS Code, en GitHub o en Mermaid Live Editor.
@@ -62,7 +63,7 @@ La aplicación integra el núcleo de cálculo (P1/P2), persistencia (E2), API, i
 | Interfaz (E1) | `web/` (proyecto con su propio `package.json`) | React 19 + Vite + Tailwind; replica el prototipo de Figma; tipos del contrato `src/contratos/api.ts` |
 | Servidor MCP (E3) | `src/mcp/` | SDK oficial; solo lectura por defecto; pago con aprobación humana |
 | RAG (E4) | `src/rag/` | Fragmentos por sección, `bge-m3`, pgvector, citación por `doc_id` |
-| Chat (E5) | `src/chat/`, `web/src/gerencia/Asistente.tsx` | `qwen2.5:7b` local; guardias en código |
+| Chat (E5) | `src/chat/`, `web/src/gerencia/Asistente.tsx` | `qwen3.5:9b` local; guardias en código |
 | Pruebas (E6) | `tests/` | `npm test` (incluye el contrato OpenAPI) y `npm run evals` |
 
 Detalle técnico del asistente, la seguridad y los resultados de las evals: [docs/asistente-ia.md](docs/asistente-ia.md).
@@ -80,7 +81,7 @@ Guía de la carga canónica (E2): [docs/E2-persistencia-carga.md](docs/E2-persis
 ```powershell
 cd microcredito-p1       # desde la raíz del repositorio; omitir si ya está en esta carpeta
 npm install
-ollama pull qwen2.5:7b
+ollama pull qwen3.5:9b   # ~6.6 GB
 ollama pull bge-m3
 npm run web:install   # dependencias de la interfaz (web/)
 ```
@@ -100,6 +101,52 @@ npm run api              # http://127.0.0.1:3000  (API + interfaz + /mcp + chat)
 
 O todo de una vez: `.\iniciar.ps1` (verifica Ollama, modelos y base, y arranca).
 
+### Inicio de sesión (usuarios y claves)
+
+La pantalla de inicio lista los usuarios de la tabla `usuarios`, separados por rol: **Gerencia** (gerentes) y **Asesor de crédito** (un usuario por asesor de la cartera). Ambos roles deben escribir su clave; la API la verifica (hash scrypt con sal) y entrega un token de sesión válido 12 horas. El perfil y el nombre que quedan en la auditoría salen de ese token, no de lo que envíe el navegador: un asesor no puede ejecutar cierres ni resolver el comité aunque altere las cabeceras. Tras 5 claves erróneas el usuario queda bloqueado un minuto.
+
+Usuarios iniciales (se crean la primera vez que se abre la base):
+
+| Rol | Usuario | Clave inicial |
+|---|---|---|
+| Gerente | `emorales` (Elena Morales), `gerente` (Gerencia General) | `gerente2026` |
+| Asesor | `as-01` … `as-06` (uno por asesor de `asesores.csv`) | `asesor2026` |
+
+Las claves iniciales pueden cambiarse antes de la primera apertura con `CV_CLAVE_INICIAL_GERENTE` y `CV_CLAVE_INICIAL_ASESOR`, y los gerentes iniciales en `configuracion/usuarios/gerentes.json`. Con la API detenida:
+
+```powershell
+npm run usuarios                                   # lista usuarios, rol y estado
+npm run usuarios -- clave emorales "NuevaClave2026"  # cambia una clave (mínimo 8 caracteres)
+npm run usuarios -- agregar jlopez gerente "Julia López" "Clave2026!"
+npm run usuarios -- agregar as07 asesor "Nombre Asesor" "Clave2026!" AS-07
+npm run usuarios -- desactivar gerente
+```
+
+Al reiniciar la API las sesiones abiertas se invalidan y la interfaz vuelve a pedir la clave.
+
+### Aplicación instalable (PWA)
+
+La interfaz compilada (`npm run web:build`) es una PWA: tiene manifiesto, iconos y service worker, y puede instalarse como aplicación en Windows, Android e iOS.
+
+- **Escritorio (Chrome / Edge):** abra http://127.0.0.1:3000 y use el botón **Instalar aplicación** de la pantalla de inicio, o el icono de instalar de la barra de direcciones.
+- **Android:** menú ⋮ → *Instalar aplicación*. **iPhone / iPad (Safari):** Compartir → *Agregar a inicio*.
+- Los navegadores solo permiten instalar desde `localhost`/`127.0.0.1` o desde un sitio **HTTPS**. Para usarla desde un celular, publique la API detrás de HTTPS (proxy inverso o túnel) y arránquela con `HOST=0.0.0.0`.
+- El service worker guarda la aplicación (HTML, JS, CSS, iconos y fuentes) para que abra rápido y sin conexión, pero **nunca guarda respuestas de `/api`**: las cifras siempre vienen del servidor. Sin conexión la interfaz lo indica con un aviso.
+- En desarrollo (`npm run web:dev`) el service worker no se registra; para probar la PWA use `npm run web:build` y `npm run api`.
+- Los iconos se generan con `node web/scripts/generar-iconos.mjs` a partir del logo de la interfaz.
+
+### Base de datos relacional en PostgreSQL / Amazon RDS
+
+La aplicación trabaja con PGlite (PostgreSQL embebido en `.cv-db`). Para revisar los datos en un PostgreSQL real, por ejemplo una instancia de Amazon RDS usada en pruebas, se exporta la base completa (esquema relacional con PK, FK, CHECK, índices, triggers y datos) a un script SQL estándar:
+
+```powershell
+npm run db:exportar                    # → db/postgres/microcredito.sql (ejecutable con psql, pgAdmin o DBeaver)
+$env:CV_POSTGRES_URL = 'postgres://usuario:clave@mi-base.xxxx.us-east-1.rds.amazonaws.com:5432/microcredito'
+npm run db:publicar                    # exporta y ejecuta el script en esa base (esquema "microcredito")
+```
+
+Detalles, diagrama entidad-relación y pasos para crear la instancia RDS en [docs/base-datos-postgresql.md](docs/base-datos-postgresql.md).
+
 > Un solo proceso puede abrir `.cv-db`: no ejecute `cargar:datos` ni `rag:ingestar` con la API encendida. `npm test` y `npm run evals` trabajan sobre copias y no modifican la base.
 
 Para desarrollar la interfaz con recarga en caliente: `npm run api` en una terminal y `npm run web:dev` en otra (http://localhost:5173, redirige `/api` al puerto 3000).
@@ -118,7 +165,7 @@ Ejecute primero la instalación de dependencias del servidor y de `web/`, y la c
 npm test            # Bloque 0: suite del P1/P2 + carga + adaptador + API + MCP + RAG + chat
 npm run typecheck   # TypeScript estricto del servidor (la interfaz se revisa en npm run web:build)
 npm run web:build   # verifica tipos de la interfaz y genera web/dist
-npm run evals       # evals del asistente contra qwen2.5:7b real → tests/evals/resultados.md
+npm run evals       # evals del asistente contra qwen3.5:9b real → tests/evals/resultados.md
 ```
 
 Otros comandos de documentación: `npm run generar` actualiza OpenAPI desde Zod y `npm run validar` valida la especificación. `npm run build` equivale a `npm run typecheck`; para compilar la interfaz se usa `npm run web:build`. No existe un script `npm run web`.
@@ -130,8 +177,15 @@ Otros comandos de documentación: `npm run generar` actualiza OpenAPI desde Zod 
 | `CV_DATA_DIR` | — | Ruta del paquete canónico para la carga y respaldo de lectura de `politicas.json` si la base no contiene parámetros |
 | `CV_DB_DIR` | `./.cv-db` | Base PGlite |
 | `PORT` | `3000` | Puerto de la API y la interfaz |
+| `HOST` | `127.0.0.1` | Interfaz de red de la API (`0.0.0.0` para abrirla desde otros equipos) |
+| `CV_CLAVE_INICIAL_GERENTE` | `gerente2026` | Clave de los gerentes creados en la primera apertura |
+| `CV_CLAVE_INICIAL_ASESOR` | `asesor2026` | Clave de los asesores creados en la primera apertura |
+| `CV_GERENTES` | `configuracion/usuarios/gerentes.json` | Gerentes iniciales |
+| `CV_POSTGRES_URL` | — | Base PostgreSQL / RDS destino de `npm run db:publicar` |
+| `CV_POSTGRES_CA` | — | Bundle de certificados de RDS para verificar TLS en `db:publicar` |
 | `OLLAMA_URL` | `http://127.0.0.1:11434` | Ollama local |
-| `CV_LLM_MODELO` | `qwen2.5:7b` | Modelo de chat |
+| `CV_LLM_MODELO` | `qwen3.5:9b` | Modelo de chat |
+| `CV_LLM_PENSAR` | `0` | `1` activa el modo de razonamiento («thinking») de Qwen 3.5 |
 | `CV_EMBEDDINGS` | `bge-m3` | Modelo de embeddings |
 | `CV_LLM_CONTEXTO` | `8192` | Contexto del modelo (4096 con 8 GB de RAM) |
 | `CV_LLM_MAX_TOKENS` | `600` | Máximo de tokens generados por respuesta del modelo |
@@ -140,7 +194,7 @@ Otros comandos de documentación: `npm run generar` actualiza OpenAPI desde Zod 
 
 ### Modelo de lenguaje
 
-`qwen2.5:7b` vía Ollama, local. Se eligió midiendo: con las 7 herramientas reales y las preguntas del guion, `qwen2.5:7b` acertó herramienta y argumentos en 6/6 y `mistral` 7B en 0/5 (describía la función en vez de llamarla e inventaba cifras). Embeddings: `bge-m3` (multilingüe, buen español).
+`qwen3.5:9b` vía Ollama, local, con el modo de razonamiento desactivado (`think: false`) para no gastar el límite de tokens ni tiempo de CPU; las cifras las calcula el núcleo, no el modelo. Las evals registradas en `tests/evals/resultados.md` corresponden al modelo anterior y deben repetirse con `npm run evals`. Selección anterior, medida: con las 7 herramientas reales y las preguntas del guion, `qwen2.5:7b` acertó herramienta y argumentos en 6/6 y `mistral` 7B en 0/5 (describía la función en vez de llamarla e inventaba cifras). Embeddings: `bge-m3` (multilingüe, buen español). `bge-m3` sigue siendo necesario: genera los vectores de los documentos para la búsqueda del RAG en pgvector; Qwen es un modelo de chat y no produce esos vectores.
 
 Para una solicitud concreta de propuesta de pago, el chat ejecuta `calcular_deuda_cuota` y después `proponer_pago` con el crédito y la fecha indicados. Si no se indicó monto, lo obtiene el núcleo; si se indicó uno, se valida sin sustituirlo silenciosamente. Los ejemplos del corpus y los importes de respuestas anteriores no determinan la deuda. La propuesta válida muestra el desglose y el botón **Aprobar**; consultar documentos solo muestra fuentes. Proponer no registra un pago: sigue siendo necesaria la aprobación humana en la interfaz.
 
@@ -155,7 +209,7 @@ Comprobación con Ollama real: `node --import tsx tests/evals/propuestas-ollama.
 
 ### Tabla pantalla ↔ caso de uso (sección 6.1)
 
-Al entrar se elige el perfil (asesor con su nombre, o gerencia). El asesor ve la versión móvil con pestañas; la gerencia, la de escritorio.
+Al entrar se elige el rol (asesor o gerencia), el usuario de la lista y su clave. El asesor ve la versión móvil con pestañas; la gerencia, la de escritorio.
 
 | Pantalla (pestaña) | Perfil · formato | Casos de uso | Operaciones / consultas del video |
 |---|---|---|---|
@@ -169,6 +223,8 @@ Al entrar se elige el perfil (asesor con su nombre, o gerencia). El asesor ve la
 | Cierres (diario / mensual) | Gerencia · escritorio | UC-07 Generar cierre | G-2, G-3 |
 | Asistente (chat) | Gerencia · escritorio | UC-05 a UC-08 vía MCP | G-1 a G-8, OP-7 |
 
+La conversación del Asistente se conserva al cambiar de pantalla (Tablero, Comité, Cierres) y al recargar: preguntas, respuestas con sus tarjetas del núcleo, propuestas ya aprobadas o rechazadas y el texto a medio escribir. Si una respuesta llega mientras se está en otra pantalla, se agrega igual al historial. **Nueva conversación** la reinicia y **Cerrar sesión** la borra del navegador y del servidor.
+
 Flujos navegables: **originación** (Clientes → Solicitudes → Comité → Desembolso), **cobro en campo** (Créditos → Detalle → Mora → Pagos) y **consulta gerencial** (Tablero → cartera en riesgo por tramo → créditos).
 
 En Gerencia → Cierres, **Consultar período** obtiene una vista previa o un cierre ya guardado. **Ejecutar cierre definitivo** congela las cifras y políticas del período; **Reejecutar comprobación** devuelve ese mismo resultado mediante POST. Los cierres se conservan al reiniciar. La migración añade `cierres_ejecutados` al abrir la base, sin reconstruir datos. Véase [ADR-003](docs/adr/ADR-003.md) para el contrato y el comportamiento ante operaciones posteriores en períodos cerrados.
@@ -181,7 +237,7 @@ La fecha de operación elegida en pantalla es el puerto Reloj: arranca en 2026-1
 - **Claude (Anthropic)**: apoyo en arquitectura, implementación de API, MCP, RAG, chat e interfaz, pruebas y documentación.
 - **Gemini (Google)**: borradores iniciales del cargador y del adaptador.
 - **Codex (OpenAI)**: revisión de requisitos y código, correcciones de políticas configurables y propuestas de pago, pruebas de regresión, comprobaciones con Ollama real y actualización de documentación.
-- **qwen2.5:7b y bge-m3 (Ollama)**: modelos que usa el sistema en ejecución.
+- **qwen3.5:9b y bge-m3 (Ollama)**: modelos que usa el sistema en ejecución (antes `qwen2.5:7b`).
 
 El equipo revisó, probó y puede explicar todo lo entregado.
 

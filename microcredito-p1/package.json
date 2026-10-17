@@ -10,6 +10,9 @@
     "validar": "tsx src/validar.ts",
     "typecheck": "tsc --noEmit",
     "cargar:datos": "node --import tsx src/persistencia/cargar.ts",
+    "usuarios": "node --import tsx src/persistencia/usuarios-cli.ts",
+    "db:exportar": "node --import tsx src/persistencia/postgres-cli.ts exportar",
+    "db:publicar": "node --import tsx src/persistencia/postgres-cli.ts publicar",
     "rag:ingestar": "node --import tsx src/rag/ingestar.ts",
     "api": "node --import tsx src/api/main.ts",
     "evals": "node --import tsx tests/evals/ejecutar.ts",
@@ -27,11 +30,13 @@
     "date-fns": "^4.1.0",
     "decimal.js": "^10.4.3",
     "fastify": "^5.12.5",
+    "pg": "^8.13.1",
     "yaml": "^2.7.0",
     "zod": "^4.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.10",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"

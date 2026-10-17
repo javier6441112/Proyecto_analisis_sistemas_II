@@ -103,6 +103,11 @@ export const PagoBody = z.object({
   aprobacion: z.object({ aprobado: z.boolean(), aprobadoPor: z.string().trim().min(1) }).strict().optional(),
 }).strict().meta({ id: 'PagoBody', description: 'Registro de un pago; exige aprobación humana explícita' });
 
+export const InicioSesionBody = z.object({
+  usuario: z.string().trim().min(1).max(40),
+  clave: z.string().min(1).max(200),
+}).strict().meta({ id: 'InicioSesionBody', description: 'Usuario y clave de la tabla usuarios' });
+
 export const PreguntaChatBody = z.object({
   sesionId: z.string().uuid().optional(),
   mensaje: z.string().trim().min(1).max(2000),
@@ -125,6 +130,18 @@ export const Problema = z.object({
 }).catchall(z.unknown()).meta({ id: 'Problema', description: 'Error uniforme RFC 9457 con la extensión `codigo`' });
 
 export const Asesor = z.object({ idAsesor: z.string(), nombreCompleto: z.string() }).strict().meta({ id: 'Asesor' });
+
+export const Rol = z.enum(['asesor', 'gerente']).meta({ id: 'Rol', description: 'Rol del usuario: gerente o asesor de crédito' });
+export const UsuarioSistema = z.object({
+  usuario: z.string(), nombreCompleto: z.string(), rol: Rol, idAsesor: z.string().nullable(),
+}).strict().meta({ id: 'UsuarioSistema', description: 'Usuario que puede iniciar sesión (sin datos de la clave)' });
+export const SesionIniciada = z.object({
+  token: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  perfil: Perfil,
+  usuario: z.string().meta({ description: 'Nombre completo que queda en la auditoría' }),
+  cuenta: z.string().optional(),
+  idAsesor: z.string().optional(),
+}).strict().meta({ id: 'SesionIniciada', description: 'Sesión activa; el token solo viaja al iniciarla' });
 
 export const Politicas = z.object({
   moneda: z.string(),
@@ -525,6 +542,9 @@ export type TEstadoCredito = z.infer<typeof EstadoCredito>;
 export type TCanal = z.infer<typeof Canal>;
 export type TProblema = z.infer<typeof Problema>;
 export type TAsesor = z.infer<typeof Asesor>;
+export type TUsuarioSistema = z.infer<typeof UsuarioSistema>;
+export type TSesionIniciada = z.infer<typeof SesionIniciada>;
+export type TInicioSesionBody = z.infer<typeof InicioSesionBody>;
 export type TCliente = z.infer<typeof Cliente>;
 export type TCreditoResumen = z.infer<typeof CreditoResumen>;
 export type TListadoCreditos = z.infer<typeof ListadoCreditos>;

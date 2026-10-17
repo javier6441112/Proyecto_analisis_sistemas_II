@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import { abrirBaseDatos } from './base-datos.js';
 import { cargarCanonico } from './carga-canonica.js';
+import { asegurarUsuarios } from './usuarios.js';
 
 async function main(): Promise<void> {
  const ruta = process.env.CV_DATA_DIR;
@@ -15,6 +16,9 @@ async function main(): Promise<void> {
    "SELECT count(*) FILTER (WHERE aplicado)::int AS aplicados, count(*) FILTER (WHERE NOT aplicado)::int AS ignorados FROM pagos WHERE carga_id=$1",
    ['CV-PF-2026-10-31']);
   console.table(efectivos.rows);
+  await asegurarUsuarios(db);
+  const usuarios = await db.query<{rol:string;cantidad:number}>('SELECT rol, count(*)::int AS cantidad FROM usuarios GROUP BY rol ORDER BY rol');
+  console.table(usuarios.rows);
  } finally {await db.close();}
 }
 main().catch(error=>{console.error(error instanceof Error?error.message:String(error));process.exitCode=1;});

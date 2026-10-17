@@ -1,7 +1,9 @@
 /**
- * Cliente del modelo de lenguaje local (Ollama, offline). Por defecto `qwen2.5:7b`:
- * en nuestras pruebas eligió herramienta y argumentos correctos en 6 de 6 consultas del
- * guion, mientras que `mistral` (7B) no emitió ninguna llamada de herramienta.
+ * Cliente del modelo de lenguaje local (Ollama, offline). Por defecto `qwen3.5:9b`.
+ * Qwen 3.5 razona («thinking») por defecto: se desactiva (`think: false`) porque el
+ * razonamiento consumiría el límite de tokens y multiplicaría el tiempo de respuesta en CPU;
+ * las cifras no las calcula el modelo sino las herramientas del núcleo.
+ * `CV_LLM_PENSAR=1` lo reactiva.
  */
 import { urlOllama } from '../rag/embeddings.js';
 import { postJson } from '../rag/http-local.js';
@@ -51,9 +53,14 @@ export function llamadasEnTexto(texto: string): LlamadaHerramienta[] {
   }
 }
 
+/** Quita los bloques `<think>…</think>` que algunos modelos dejan en la respuesta. */
+export function sinRazonamiento(texto: string): string {
+  return texto.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/^[\s\S]*?<\/think>/i, '').trim();
+}
+
 export class ModeloOllama implements ModeloLenguaje {
   constructor(
-    readonly nombre = process.env.CV_LLM_MODELO ?? 'qwen2.5:7b',
+    readonly nombre = process.env.CV_LLM_MODELO ?? 'qwen3.5:9b',
     private readonly url = urlOllama(),
     private readonly contexto = Number(process.env.CV_LLM_CONTEXTO ?? 8192),
   ) {}
@@ -63,11 +70,13 @@ export class ModeloOllama implements ModeloLenguaje {
       model: this.nombre,
       stream: false,
       keep_alive: '30m',
+      think: process.env.CV_LLM_PENSAR === '1',
       options: { temperature: 0, num_ctx: this.contexto, num_predict: Number(process.env.CV_LLM_MAX_TOKENS ?? 600) },
       messages: mensajes,
       tools: herramientas,
     });
-    const texto = cuerpo.message?.content ?? '';
+    // Por si una versión de Ollama sin soporte de `think` devuelve el razonamiento en el texto.
+    const texto = sinRazonamiento(cuerpo.message?.content ?? '');
     const nativas = (cuerpo.message?.tool_calls ?? []).map((t) => ({
       nombre: t.function.name,
       argumentos: typeof t.function.arguments === 'string' ? (JSON.parse(t.function.arguments) as Record<string, unknown>) : t.function.arguments,

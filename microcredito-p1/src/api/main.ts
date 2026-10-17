@@ -2,7 +2,7 @@
  * Punto de entrada: `npm run api`.
  * Un solo proceso abre `.cv-db` (PGlite no admite varios procesos sobre la misma base):
  * API REST, servidor MCP (/mcp y cliente en memoria para el chat), RAG, chat y aprobaciones.
- * Requiere Ollama local con qwen2.5:7b y bge-m3 (ver README).
+ * Requiere Ollama local con qwen3.5:9b y bge-m3 (ver README).
  */
 import { AdaptadorNucleo } from '../persistencia/adaptador-nucleo.js';
 import { ServicioOperaciones } from '../persistencia/servicio-operaciones.js';
@@ -13,6 +13,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import fastifyStatic from '@fastify/static';
 import { construirServidor } from './servidor.js';
+import { ServicioSesiones } from './autenticacion.js';
 import { registrarRutasPropuestas } from './rutas-propuestas.js';
 import { EmbebedorOllama } from '../rag/embeddings.js';
 import { BuscadorCorpus } from '../rag/buscador.js';
@@ -34,9 +35,12 @@ modelo.precalentar().then(
   (e: Error) => console.warn(`Aviso: ${e.message}. El chat no responderá hasta que Ollama esté disponible.`),
 );
 
+const sesiones = await ServicioSesiones.crear(adaptador.db);
+
 const app = await construirServidor({
   adaptador,
   servicio,
+  sesiones,
   logger: true,
   registrar: (instancia) => {
     registrarMcpHttp(instancia, dependencias);
@@ -57,4 +61,5 @@ const cerrar = async (): Promise<void> => {
 process.on('SIGINT', () => void cerrar());
 process.on('SIGTERM', () => void cerrar());
 
-await app.listen({ port: puerto, host: '127.0.0.1' });
+// HOST=0.0.0.0 expone la API en la red local (p. ej. para abrir la PWA desde un celular).
+await app.listen({ port: puerto, host: process.env.HOST ?? '127.0.0.1' });

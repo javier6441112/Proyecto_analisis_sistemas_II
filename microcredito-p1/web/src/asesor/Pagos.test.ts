@@ -7,7 +7,7 @@ import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AdaptadorNucleo } from '../../../src/persistencia/adaptador-nucleo.js';
 import { construirServidor } from '../../../src/api/servidor.js';
-import { api, fijarOperador, type TPagoAplicadoRespuesta } from '../api';
+import { api, type TPagoAplicadoRespuesta } from '../api';
 import { RegistrarPago } from './Pagos';
 import { ConCarga } from '../ui';
 
@@ -49,14 +49,14 @@ afterAll(async () => {
 beforeEach(() => {
   estado.valores = []; estado.indice = 0; estado.usuario = 'Byron Chacón';
   vi.restoreAllMocks(); vi.unstubAllGlobals();
-  fijarOperador({ perfil: 'asesor', usuario: estado.usuario });
   vi.stubGlobal('fetch', async (url: string, opciones: RequestInit) => {
     const r = await app.inject({ method: opciones.method as 'POST', url,
-      headers: opciones.headers as Record<string, string>, payload: opciones.body as string });
+      // Servidor sin sesiones (modo de pruebas): el operador viaja en cabeceras.
+      headers: { ...opciones.headers as Record<string, string>, 'x-perfil': 'asesor', 'x-usuario': 'Byron Chacón' }, payload: opciones.body as string });
     return new Response(r.body, { status: r.statusCode, headers: { 'Content-Type': 'application/json' } });
   });
 });
-afterAll(() => { vi.unstubAllGlobals(); fijarOperador(null); });
+afterAll(() => { vi.unstubAllGlobals(); });
 
 type Elemento = ReactElement<Record<string, unknown>>;
 function pantalla(id = ID): Elemento {

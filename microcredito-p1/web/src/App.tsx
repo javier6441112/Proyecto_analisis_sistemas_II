@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { api, fijarOperador } from './api';
+import { api, fijarToken, mensajeDeError, type TSesionIniciada } from './api';
 import { ContextoSesion, FECHA_INICIAL, useSesion, type Sesion } from './sesion';
 import { Alert, DISPLAY, FOCO, Ico, useCarga } from './ui';
 import Inicio from './asesor/Inicio';
@@ -11,6 +11,8 @@ import Tablero from './gerencia/Tablero';
 import Comite from './gerencia/Comite';
 import Cierres from './gerencia/Cierres';
 import Asistente from './gerencia/Asistente';
+import { conversacion } from './gerencia/conversacion';
+import { instalar, useEnLinea, usePuedeInstalar } from './pwa';
 
 // ── Navegación ───────────────────────────────────────────────────────────
 /** Destino al que una pantalla puede enviar a otra (con el registro ya seleccionado). */
@@ -24,13 +26,15 @@ export type Ir = (d: Destino) => void;
 
 type TabGerencia = 'tablero' | 'comite' | 'cierres' | 'asistente';
 
-interface Credenciales { perfil: 'asesor' | 'gerencia'; usuario: string; idAsesor?: string }
+/** Sesión devuelta por POST /api/sesion: el perfil y el nombre de auditoría los decide el servidor. */
+type Credenciales = Required<Pick<TSesionIniciada, 'token' | 'perfil' | 'usuario' | 'cuenta'>> & { idAsesor?: string };
 
 const CLAVE_SESION = 'cv-sesion';
 function leerSesion(): Credenciales | null {
   try {
     const t = sessionStorage.getItem(CLAVE_SESION);
-    return t ? (JSON.parse(t) as Credenciales) : null;
+    const c = t ? (JSON.parse(t) as Partial<Credenciales>) : null;
+    return c?.token && c.cuenta ? (c as Credenciales) : null; // una sesión guardada sin token no vale
   } catch {
     return null;
   }
@@ -39,92 +43,146 @@ function leerSesion(): Credenciales | null {
 export default function App() {
   const [cred, setCred] = useState<Credenciales | null>(leerSesion);
   const [fecha, setFecha] = useState(FECHA_INICIAL);
+  const [aviso, setAviso] = useState('');
 
-  // El operador viaja en X-Perfil / X-Usuario en cada operación.
-  fijarOperador(cred ? { perfil: cred.perfil, usuario: cred.usuario } : null);
+  const olvidar = () => { try { sessionStorage.removeItem(CLAVE_SESION); } catch { /* sin almacenamiento */ } setCred(null); };
+
+  // El token viaja en Authorization; si la API lo rechaza (vencido o API reiniciada) se vuelve al inicio.
+  fijarToken(cred?.token ?? null, () => {
+    conversacion.descartar();
+    olvidar();
+    setAviso('Tu sesión expiró. Vuelve a iniciar sesión.');
+  });
+  if (cred?.perfil === 'gerencia') conversacion.abrir(cred.cuenta);
 
   const sesion = useMemo<Sesion | null>(() => cred && {
-    ...cred,
+    perfil: cred.perfil,
+    usuario: cred.usuario,
+    cuenta: cred.cuenta,
+    ...(cred.idAsesor ? { idAsesor: cred.idAsesor } : {}),
     fecha,
     cambiarFecha: (f: string) => { if (/^\d{4}-\d{2}-\d{2}$/.test(f)) setFecha(f); },
-    salir: () => { try { sessionStorage.removeItem(CLAVE_SESION); } catch { /* sin almacenamiento */ } setCred(null); },
+    salir: () => {
+      conversacion.descartar();
+      api.cerrarSesion().catch(() => undefined);
+      olvidar();
+    },
   }, [cred, fecha]);
 
   if (!sesion) {
-    return <Login onEntrar={(c) => { try { sessionStorage.setItem(CLAVE_SESION, JSON.stringify(c)); } catch { /* sin almacenamiento */ } setCred(c); }} />;
+    return <><SinConexion /><Login aviso={aviso} onEntrar={(c) => {
+      try { sessionStorage.setItem(CLAVE_SESION, JSON.stringify(c)); } catch { /* sin almacenamiento */ }
+      setAviso('');
+      setCred(c);
+    }} /></>;
   }
   return (
     <ContextoSesion.Provider value={sesion}>
+      <SinConexion />
       {sesion.perfil === 'asesor' ? <ShellAsesor /> : <ShellGerencia />}
     </ContextoSesion.Provider>
   );
 }
 
-// ── Login ────────────────────────────────────────────────────────────────
-function Login({ onEntrar }: { onEntrar: (c: Credenciales) => void }) {
-  const [perfil, setPerfil] = useState<'asesor' | 'gerencia'>('asesor');
-  const [idAsesor, setIdAsesor] = useState('');
-  const [nombre, setNombre] = useState('');
-  const [error, setError] = useState('');
-  const asesores = useCarga(() => api.asesores(), []);
+/** Aviso flotante cuando el dispositivo pierde la conexión (la PWA abre, pero los datos vienen de la API). */
+function SinConexion() {
+  if (useEnLinea()) return null;
+  return (
+    <div role="status" className="fixed top-[calc(env(safe-area-inset-top)+0.5rem)] left-1/2 -translate-x-1/2 z-50 bg-amber-100 border border-amber-300 text-amber-900 text-xs font-semibold rounded-full px-4 py-2 shadow">
+      Sin conexión: las cifras se actualizarán al reconectar.
+    </div>
+  );
+}
 
-  const entrar = () => {
-    if (perfil === 'asesor') {
-      const a = asesores.datos?.find((x) => x.idAsesor === idAsesor);
-      if (!a) return setError('Selecciona tu nombre de asesor.');
-      onEntrar({ perfil, usuario: a.nombreCompleto, idAsesor: a.idAsesor });
-    } else {
-      if (nombre.trim().length < 3) return setError('Escribe tu nombre (mínimo 3 letras).');
-      onEntrar({ perfil, usuario: nombre.trim() });
+// ── Login ────────────────────────────────────────────────────────────────
+function Login({ onEntrar, aviso }: { onEntrar: (c: Credenciales) => void; aviso: string }) {
+  const [rol, setRol] = useState<'asesor' | 'gerente'>('asesor');
+  const [cuenta, setCuenta] = useState('');
+  const [clave, setClave] = useState('');
+  const [verClave, setVerClave] = useState(false);
+  const [error, setError] = useState('');
+  const [entrando, setEntrando] = useState(false);
+  const usuarios = useCarga(() => api.usuarios(), []);
+  const delRol = usuarios.datos?.filter((u) => u.rol === rol) ?? [];
+  const puedeInstalar = usePuedeInstalar();
+
+  const entrar = async () => {
+    if (!cuenta) return setError(rol === 'gerente' ? 'Selecciona tu usuario de gerencia.' : 'Selecciona tu usuario de asesor.');
+    if (!clave) return setError('Escribe tu clave.');
+    setEntrando(true);
+    setError('');
+    try {
+      const r = await api.iniciarSesion(cuenta, clave);
+      onEntrar({ token: r.token!, perfil: r.perfil, usuario: r.usuario, cuenta: r.cuenta ?? cuenta, ...(r.idAsesor ? { idAsesor: r.idAsesor } : {}) });
+    } catch (err) {
+      setClave('');
+      setError(mensajeDeError(err));
+    } finally {
+      setEntrando(false);
     }
   };
 
+  const campo = 'w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-400';
+
   return (
     <div className="min-h-full bg-[#0f172a] flex flex-col">
-      <form className="flex-1 flex flex-col justify-center px-6 py-12 w-full max-w-md mx-auto" onSubmit={(e) => { e.preventDefault(); entrar(); }}>
+      <form className="flex-1 flex flex-col justify-center px-6 py-12 w-full max-w-md mx-auto" onSubmit={(e) => { e.preventDefault(); void entrar(); }}>
         <div className="w-12 h-12 rounded-2xl bg-teal-400 flex items-center justify-center mb-5">{Ico.logo()}</div>
         <h1 className="text-3xl font-extrabold text-white mb-1" style={DISPLAY}>Crédito Vecino</h1>
         <p className="text-slate-400 text-sm mb-8">Sistema de Gestión de Microcrédito</p>
 
+        {aviso && <div className="mb-4"><Alert type="warning">{aviso}</Alert></div>}
+
         <fieldset className="mb-5">
           <legend className="text-xs font-semibold text-slate-400 mb-2">Ingresar como</legend>
           <div className="grid grid-cols-2 gap-2">
-            {([['asesor', 'Asesor de crédito'], ['gerencia', 'Gerencia']] as const).map(([p, l]) => (
-              <button key={p} type="button" onClick={() => { setPerfil(p); setError(''); }} aria-pressed={perfil === p}
-                className={`py-3 rounded-xl text-sm font-semibold border ${perfil === p ? 'bg-teal-400 text-[#0f172a] border-teal-400' : 'bg-white/5 text-slate-300 border-white/20'} ${FOCO}`}>
+            {([['asesor', 'Asesor de crédito'], ['gerente', 'Gerencia']] as const).map(([r, l]) => (
+              <button key={r} type="button" onClick={() => { setRol(r); setCuenta(''); setClave(''); setError(''); }} aria-pressed={rol === r}
+                className={`py-3 rounded-xl text-sm font-semibold border ${rol === r ? 'bg-teal-400 text-[#0f172a] border-teal-400' : 'bg-white/5 text-slate-300 border-white/20'} ${FOCO}`}>
                 {l}
               </button>
             ))}
           </div>
         </fieldset>
 
-        {perfil === 'asesor' ? (
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="asesor" className="text-xs font-semibold text-slate-400">Asesor</label>
-            <select id="asesor" value={idAsesor} onChange={(e) => { setIdAsesor(e.target.value); setError(''); }}
-              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 [&>option]:text-[#0f172a]">
-              <option value="">{asesores.cargando ? 'Cargando asesores…' : 'Seleccionar…'}</option>
-              {asesores.datos?.map((a) => <option key={a.idAsesor} value={a.idAsesor}>{a.nombreCompleto} · {a.idAsesor}</option>)}
-            </select>
+        <div className="flex flex-col gap-1.5 mb-4">
+          <label htmlFor="cuenta" className="text-xs font-semibold text-slate-400">{rol === 'gerente' ? 'Usuario de gerencia' : 'Asesor'}</label>
+          <select id="cuenta" value={cuenta} onChange={(e) => { setCuenta(e.target.value); setError(''); }} autoComplete="username"
+            className={`${campo} [&>option]:text-[#0f172a]`}>
+            <option value="">{usuarios.cargando ? 'Cargando usuarios…' : 'Seleccionar…'}</option>
+            {delRol.map((u) => <option key={u.usuario} value={u.usuario}>{u.nombreCompleto} · {u.idAsesor ?? u.usuario}</option>)}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="clave" className="text-xs font-semibold text-slate-400">Clave</label>
+          <div className="relative">
+            <input id="clave" type={verClave ? 'text' : 'password'} value={clave} onChange={(e) => { setClave(e.target.value); setError(''); }}
+              autoComplete="current-password" className={`${campo} pr-20`} />
+            <button type="button" onClick={() => setVerClave((v) => !v)} aria-pressed={verClave}
+              className={`absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-slate-400 hover:text-white px-2 py-1 rounded-lg ${FOCO}`}>
+              {verClave ? 'Ocultar' : 'Mostrar'}
+            </button>
           </div>
-        ) : (
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="nombre" className="text-xs font-semibold text-slate-400">Nombre de quien opera</label>
-            <input id="nombre" value={nombre} onChange={(e) => { setNombre(e.target.value); setError(''); }} placeholder="Ej. Elena Morales" autoComplete="name"
-              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400" />
-            <p className="text-[11px] text-slate-500">Queda registrado en la auditoría de cada aprobación.</p>
-          </div>
-        )}
+          <p className="text-[11px] text-slate-500">
+            {rol === 'gerente' ? 'Tu nombre queda registrado en la auditoría de cada aprobación y cierre.' : 'Tu nombre queda registrado en cada operación que realices.'}
+          </p>
+        </div>
 
         {error && <p className="text-xs text-red-400 mt-2 flex items-center gap-1" role="alert">{Ico.alert('#f87171')} {error}</p>}
-        {asesores.error !== undefined && perfil === 'asesor' && (
+        {usuarios.error !== undefined && (
           <div className="mt-3"><Alert type="error">No se pudo contactar la API. Inicie el servidor con <code>npm run api</code>.</Alert></div>
         )}
 
-        <button type="submit" className={`w-full bg-teal-400 text-[#0f172a] font-bold py-4 rounded-xl text-sm mt-6 active:bg-teal-300 ${FOCO}`} style={DISPLAY}>
-          Iniciar sesión
+        <button type="submit" disabled={entrando} className={`w-full bg-teal-400 text-[#0f172a] font-bold py-4 rounded-xl text-sm mt-6 active:bg-teal-300 disabled:opacity-60 ${FOCO}`} style={DISPLAY}>
+          {entrando ? 'Verificando…' : 'Iniciar sesión'}
         </button>
       </form>
+      {puedeInstalar && (
+        <button type="button" onClick={() => void instalar()} className={`mx-auto mb-3 text-xs font-semibold text-teal-300 border border-teal-400/40 rounded-full px-4 py-2 hover:bg-white/5 ${FOCO}`}>
+          Instalar aplicación
+        </button>
+      )}
       <p className="text-[11px] text-slate-600 text-center pb-6">SGMC · Crédito Vecino, S. A. · 2026</p>
     </div>
   );

@@ -1,6 +1,6 @@
 /**
  * `npm run evals` — corre CASOS contra el modelo real (Ollama) sobre una copia de .cv-db y
- * deja el informe en tests/evals/resultados.md. Requiere Ollama con qwen2.5:7b y bge-m3.
+ * deja el informe en tests/evals/resultados.md. Requiere Ollama con qwen3.5:9b y bge-m3.
  */
 import { cpSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

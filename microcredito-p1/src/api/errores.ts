@@ -10,7 +10,7 @@ export interface Problema {
   title: string;
   status: number;
   detail: string;
-  codigo: CodigoError | 'ERROR_INTERNO' | 'INTEGRIDAD_CARTERA' | 'NO_AUTORIZADO';
+  codigo: CodigoError | 'ERROR_INTERNO' | 'INTEGRIDAD_CARTERA' | 'NO_AUTORIZADO' | 'NO_AUTENTICADO';
   errores?: Array<{ campo: string; mensaje: string }>;
   [extra: string]: unknown;
 }
@@ -84,7 +84,10 @@ export function aProblema(error: unknown): Problema {
     return { type: tipo('INTEGRIDAD_CARTERA'), title: 'Integridad de la cartera', status: 500, detail: error.message, codigo: 'INTEGRIDAD_CARTERA' };
   }
   const statusFastify = (error as { statusCode?: number }).statusCode;
-  if (statusFastify && statusFastify >= 400 && statusFastify < 500) {
+  if (statusFastify === 401) {
+    return { type: tipo('NO_AUTENTICADO'), title: 'Sesión requerida', status: 401, detail: (error as Error).message, codigo: 'NO_AUTENTICADO' };
+  }
+  if (statusFastify &&statusFastify >= 400 && statusFastify < 500) {
     return { type: tipo('DATOS_INVALIDOS'), title: TITULO.DATOS_INVALIDOS, status: statusFastify, detail: (error as Error).message, codigo: 'DATOS_INVALIDOS' };
   }
   return { type: tipo('ERROR_INTERNO'), title: 'Error interno', status: 500, detail: 'Ocurrió un error inesperado', codigo: 'ERROR_INTERNO' };

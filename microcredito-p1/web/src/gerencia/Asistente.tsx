@@ -4,11 +4,7 @@ import { api, mensajeDeError, type TRespuestaChat, type TPropuestaPagoChat } fro
 import { Q, fecha } from '../formato';
 import { useSesion } from '../sesion';
 import { Alert, DISPLAY, FOCO, Ico } from '../ui';
-
-type Mensaje =
-  | { de: 'persona'; texto: string }
-  | { de: 'asistente'; r: TRespuestaChat }
-  | { de: 'error'; texto: string };
+import { conversacion, useConversacion } from './conversacion';
 
 const SUGERENCIAS = [
   '¿Cuál es la cartera en riesgo?',
@@ -17,39 +13,19 @@ const SUGERENCIAS = [
   '¿Cómo se calcula la mora escalonada?',
 ];
 
-/** Asistente gerencial: las cifras salen de herramientas del núcleo (tarjetas), nunca del modelo. */
+/**
+ * Asistente gerencial: las cifras salen de herramientas del núcleo (tarjetas), nunca del modelo.
+ * La conversación vive en `conversacion.ts`, así que se conserva al cambiar de pantalla.
+ */
 export default function Asistente() {
   const s = useSesion();
-  const [mensajes, setMensajes] = useState<Mensaje[]>([]);
-  const [texto, setTexto] = useState('');
-  const [sesionId, setSesionId] = useState<string | undefined>();
-  const [pensando, setPensando] = useState(false);
+  const { mensajes, pensando, borrador: texto } = useConversacion();
   const fin = useRef<HTMLDivElement>(null);
 
   useEffect(() => { fin.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [mensajes, pensando]);
 
-  const enviar = async (pregunta: string) => {
-    const t = pregunta.trim();
-    if (!t || pensando) return;
-    setTexto('');
-    setMensajes((m) => [...m, { de: 'persona', texto: t }]);
-    setPensando(true);
-    try {
-      const r = await api.chat(t, s.fecha, sesionId);
-      setSesionId(r.sesionId);
-      setMensajes((m) => [...m, { de: 'asistente', r }]);
-    } catch (err) {
-      setMensajes((m) => [...m, { de: 'error', texto: mensajeDeError(err) }]);
-    } finally {
-      setPensando(false);
-    }
-  };
-
-  const nueva = () => {
-    if (sesionId) api.olvidarChat(sesionId).catch(() => undefined); // el servidor descarta el historial
-    setSesionId(undefined);
-    setMensajes([]);
-  };
+  const enviar = (pregunta: string) => conversacion.enviar(pregunta, s.fecha);
+  const nueva = () => conversacion.nueva();
 
   return (
     <div className="p-4 md:p-8 flex flex-col gap-4 max-w-4xl h-full min-h-0">
@@ -82,7 +58,7 @@ export default function Asistente() {
 
       <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); void enviar(texto); }}>
         <label htmlFor="pregunta" className="sr-only">Pregunta</label>
-        <input id="pregunta" value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={2000} placeholder="Escribe tu pregunta…"
+        <input id="pregunta" value={texto} onChange={(e) => conversacion.escribir(e.target.value)} maxLength={2000} placeholder="Escribe tu pregunta…"
           className="flex-1 border border-slate-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-teal-400" />
         <button type="submit" disabled={pensando || !texto.trim()} className={`bg-[#0f172a] text-white rounded-xl px-5 text-sm font-bold disabled:opacity-50 ${FOCO}`} style={DISPLAY}>Enviar</button>
       </form>
@@ -111,7 +87,7 @@ export function Respuesta({ r }: { r: TRespuestaChat }) {
 /** Propuesta de pago del chat: solo una persona puede aprobarla (emite el token que exige el registro). */
 export function PropuestaPago({ datos: p }: { datos: TPropuestaPagoChat }) {
   const s = useSesion();
-  const [estado, setEstado] = useState<'pendiente' | 'aprobada' | 'rechazada'>('pendiente');
+  const [estado, setEstado] = useState<'pendiente' | 'aprobada' | 'rechazada'>(conversacion.decision(p.propuestaId) ?? 'pendiente');
   const [error, setError] = useState('');
   const [ocupado, setOcupado] = useState(false);
 
@@ -122,6 +98,7 @@ export function PropuestaPago({ datos: p }: { datos: TPropuestaPagoChat }) {
       if (aprobar) await api.aprobarPropuesta(p.propuestaId);
       else await api.rechazarPropuesta(p.propuestaId);
       setEstado(aprobar ? 'aprobada' : 'rechazada');
+      conversacion.decidir(p.propuestaId, aprobar ? 'aprobada' : 'rechazada'); // se conserva al volver a la pantalla
     } catch (err) {
       setError(mensajeDeError(err));
     } finally {
