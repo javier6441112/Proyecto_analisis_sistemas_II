@@ -1,5 +1,6 @@
 /** Componentes visuales del prototipo de Figma (colores, tipografía y formas originales). */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { BotonAyuda } from './Ayuda';
 import { mensajeDeError } from './api';
 import type { ColorInsignia } from './formato';
 
@@ -76,6 +77,7 @@ export function TopBar({ title, onBack, children }: { title: string; onBack?: ()
       )}
       <h1 className="text-white font-bold text-lg flex-1 leading-tight" style={DISPLAY}>{title}</h1>
       {children}
+      <BotonAyuda />
     </div>
   );
 }

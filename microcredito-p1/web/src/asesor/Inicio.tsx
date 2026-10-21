@@ -1,4 +1,5 @@
 import type { Ir } from '../App';
+import { BotonAyuda } from '../Ayuda';
 import { FechaOperacion } from '../App';
 import { api } from '../api';
 import { ETIQUETA_TRAMO, Q, fecha } from '../formato';
@@ -32,9 +33,12 @@ export default function Inicio({ ir }: { ir: Ir }) {
             <h2 className="text-white text-xl font-bold truncate" style={DISPLAY}>{s.usuario}</h2>
             <p className="text-slate-500 text-[11px] font-mono">{s.idAsesor}</p>
           </div>
-          <button onClick={s.salir} className={`flex items-center gap-1.5 text-[11px] text-slate-300 px-3 py-1.5 rounded-full border border-white/20 shrink-0 ${FOCO}`}>
-            {Ico.logout()} Salir
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <BotonAyuda />
+            <button onClick={s.salir} className={`flex items-center gap-1.5 text-[11px] text-slate-300 px-3 py-1.5 rounded-full border border-white/20 shrink-0 ${FOCO}`}>
+              {Ico.logout()} Salir
+            </button>
+          </div>
         </div>
         <div className="mb-4"><FechaOperacion sesion={s} /></div>
         <div className="grid grid-cols-3 gap-2">

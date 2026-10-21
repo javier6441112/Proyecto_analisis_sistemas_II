@@ -13,6 +13,7 @@ import Cierres from './gerencia/Cierres';
 import Asistente from './gerencia/Asistente';
 import { conversacion } from './gerencia/conversacion';
 import { instalar, useEnLinea, usePuedeInstalar } from './pwa';
+import { BotonAyuda, useSeccionAyuda } from './Ayuda';
 
 // ── Navegación ───────────────────────────────────────────────────────────
 /** Destino al que una pantalla puede enviar a otra (con el registro ya seleccionado). */
@@ -105,6 +106,7 @@ function Login({ onEntrar, aviso }: { onEntrar: (c: Credenciales) => void; aviso
   const usuarios = useCarga(() => api.usuarios(), []);
   const delRol = usuarios.datos?.filter((u) => u.rol === rol) ?? [];
   const puedeInstalar = usePuedeInstalar();
+  useSeccionAyuda('login');
 
   const entrar = async () => {
     if (!cuenta) return setError(rol === 'gerente' ? 'Selecciona tu usuario de gerencia.' : 'Selecciona tu usuario de asesor.');
@@ -127,7 +129,10 @@ function Login({ onEntrar, aviso }: { onEntrar: (c: Credenciales) => void; aviso
   return (
     <div className="min-h-full bg-[#0f172a] flex flex-col">
       <form className="flex-1 flex flex-col justify-center px-6 py-12 w-full max-w-md mx-auto" onSubmit={(e) => { e.preventDefault(); void entrar(); }}>
-        <div className="w-12 h-12 rounded-2xl bg-teal-400 flex items-center justify-center mb-5">{Ico.logo()}</div>
+        <div className="flex items-start justify-between mb-5">
+          <div className="w-12 h-12 rounded-2xl bg-teal-400 flex items-center justify-center">{Ico.logo()}</div>
+          <BotonAyuda />
+        </div>
         <h1 className="text-3xl font-extrabold text-white mb-1" style={DISPLAY}>Crédito Vecino</h1>
         <p className="text-slate-400 text-sm mb-8">Sistema de Gestión de Microcrédito</p>
 
@@ -204,6 +209,7 @@ function ShellAsesor() {
   const [destino, setDestino] = useState<Destino>({ tab: 'inicio' });
   const [clave, setClave] = useState(0); // remonta la pestaña al navegar con un destino nuevo
   const ir: Ir = (d) => { setDestino(d); setClave((k) => k + 1); };
+  useSeccionAyuda(destino.tab);
 
   const tabs: Array<{ id: Destino['tab']; label: string; icon: (c: string) => ReactNode }> = [
     { id: 'inicio', label: 'Inicio', icon: Ico.home },
@@ -245,6 +251,7 @@ function ShellGerencia() {
   const [tab, setTab] = useState<TabGerencia>('tablero');
   const [clave, setClave] = useState(0);
   const ir = (t: TabGerencia) => { setTab(t); setClave((k) => k + 1); };
+  useSeccionAyuda(tab);
   const tabs: Array<{ id: TabGerencia; label: string; icon: (c: string) => ReactNode }> = [
     { id: 'tablero', label: 'Tablero', icon: Ico.barChart },
     { id: 'comite', label: 'Comité', icon: Ico.clipboard },
@@ -281,7 +288,10 @@ function ShellGerencia() {
 
           <header className="md:hidden bg-[#0f172a] px-4 pt-4 pb-3 flex items-center justify-between gap-2 shrink-0">
             <span className="text-white font-bold text-sm" style={DISPLAY}>Crédito Vecino · Gerencia</span>
-            <button onClick={sesion.salir} aria-label="Cerrar sesión" className={`text-slate-400 p-2 ${FOCO}`}>{Ico.logout()}</button>
+            <div className="flex items-center gap-1">
+              <BotonAyuda />
+              <button onClick={sesion.salir} aria-label="Cerrar sesión" className={`text-slate-400 p-2 ${FOCO}`}>{Ico.logout()}</button>
+            </div>
           </header>
           <div className="md:hidden bg-[#0f172a] px-4 pb-3 shrink-0"><FechaOperacion sesion={sesion} /></div>
 
@@ -313,7 +323,10 @@ export function EncabezadoPagina({ titulo, sub, children }: { titulo: string; su
         <h2 className="text-2xl font-bold text-[#0f172a]" style={DISPLAY}>{titulo}</h2>
         {sub && <p className="text-slate-500 text-sm mt-0.5">{sub}</p>}
       </div>
-      {children}
+      <div className="flex items-center gap-2 flex-wrap">
+        {children}
+        <BotonAyuda oscuro={false} />
+      </div>
     </div>
   );
 }
