@@ -57,10 +57,11 @@ export function Field({ id, label, hint, error, children }: { id: string; label:
   );
 }
 
-export function Alert({ type, children }: { type: 'info' | 'warning' | 'error' | 'success'; children: ReactNode }) {
+export function Alert({ type, children }: { type: 'info' | 'warning' | 'notice' | 'error' | 'success'; children: ReactNode }) {
   const m = {
     info: 'bg-blue-50 border-blue-200 text-blue-800',
     warning: 'bg-amber-50 border-amber-200 text-amber-800',
+    notice: 'bg-orange-50 border-orange-200 text-orange-800',
     error: 'bg-red-50 border-red-200 text-red-700',
     success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
   };

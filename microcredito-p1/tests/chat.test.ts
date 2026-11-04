@@ -59,6 +59,33 @@ afterAll(async () => {
 const preguntar = (modelo: ModeloLenguaje, mensaje: string, sesionId?: string) =>
   new OrquestadorChat(mcp, modelo).preguntar({ mensaje, fechaOperacion: F, ...(sesionId ? { sesionId } : {}) });
 
+it('consulta estado y mora de la cuota indicada y conserva crédito y fecha al responder solo 3', async () => {
+  const modelo = new ModeloGuionado([], 'Estos son los datos consultados.');
+  const chat = new OrquestadorChat(mcp, modelo);
+  const primero = await chat.preguntar({
+    mensaje: 'Dame el estado del crédito CV-2026-0030 al 31 de octubre de 2026 y explícame cómo se formó la mora de su cuota 3',
+    fechaOperacion: '2026-11-03',
+  });
+  expect(primero.tarjetas.map(t => t.herramienta)).toEqual(['consultar_credito', 'explicar_mora']);
+  expect(primero.tarjetas.every(t => !t.error)).toBe(true);
+  const segundo = await chat.preguntar({ sesionId: primero.sesionId, mensaje: '3', fechaOperacion: '2026-11-03' });
+  expect(segundo.tarjetas[0]).toMatchObject({ herramienta: 'explicar_mora', error: false,
+    argumentos: { idCredito: 'CV-2026-0030', numeroCuota: 3, fechaCorte: F } });
+  expect(segundo.respuesta).not.toBe(MENSAJE_FUERA_DE_ALCANCE);
+  expect(modelo.recibidos.at(-1)?.some(m => m.role === 'user' && m.content.includes('cuota 3'))).toBe(true);
+  await chat.olvidar(primero.sesionId);
+  const nueva = await chat.preguntar({ sesionId: primero.sesionId, mensaje: '3', fechaOperacion: F });
+  expect(nueva.tarjetas).toEqual([]);
+});
+
+it('interpreta un número solo como cuota en el seguimiento de explicar_mora', () => {
+  expect(inferirSeguimiento('3', { herramienta: 'explicar_mora', argumentos: {
+    idCredito: 'CV-2026-0030', numeroCuota: 2, fechaCorte: F,
+  } })).toEqual({ herramienta: 'explicar_mora', argumentos: {
+    idCredito: 'CV-2026-0030', numeroCuota: 3, fechaCorte: F,
+  } });
+});
+
 describe('Cifras: siempre del núcleo', () => {
   it('G-1 · una respuesta con las cifras de la herramienta se muestra tal cual, con su tarjeta', async () => {
     const r = await preguntar(new ModeloGuionado([{ nombre: 'consultar_cartera', argumentos: { fechaCorte: F } }],

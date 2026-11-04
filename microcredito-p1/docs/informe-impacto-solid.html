@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Informe de Impacto y Evolución del Núcleo</title>
+    <style>
+      :root {
+        --primary: #0b3d73;
+        --primary-2: #145aa8;
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --text: #1f2937;
+        --muted: #5b6475;
+        --border: #dfe6f1;
+        --ok: #146c43;
+        --code-bg: #111827;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Arial, Helvetica, sans-serif;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 32px auto;
+        padding: 0 18px 40px;
+      }
+      .header {
+        background: linear-gradient(135deg, var(--primary), var(--primary-2));
+        color: white;
+        border-radius: 16px;
+        padding: 26px 28px;
+        box-shadow: 0 10px 25px rgba(11, 61, 115, 0.18);
+      }
+      h1, h2, h3 {
+        color: var(--primary);
+      }
+      .header h1 {
+        color: white;
+        margin: 0;
+        font-size: 2rem;
+      }
+      .header .meta {
+        margin-top: 10px;
+        opacity: 0.95;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 22px 20px;
+        margin-top: 22px;
+        box-shadow: 0 4px 16px rgba(17, 24, 39, 0.03);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+      }
+      th, td {
+        border: 1px solid var(--border);
+        padding: 10px 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: var(--primary);
+        color: white;
+      }
+      code, pre {
+        font-family: Consolas, monospace;
+      }
+      pre {
+        background: var(--code-bg);
+        color: #e5e7eb;
+        padding: 14px;
+        border-radius: 10px;
+        overflow-x: auto;
+      }
+      ul {
+        margin-top: 10px;
+        padding-left: 22px;
+      }
+      li {
+        margin-bottom: 6px;
+      }
+      .small {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+      .ok {
+        color: var(--ok);
+        font-weight: bold;
+      }
+      hr {
+        border: 0;
+        border-top: 1px solid var(--border);
+        margin: 24px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Informe de Impacto y Evolución del Núcleo</h1>
+        <div class="meta">
+          <strong>Sistema:</strong> Crédito Vecino, S. A.<br />
+          <strong>Curso:</strong> Análisis de Sistemas II<br />
+          <strong>Proyecto:</strong> Proyecto 2 – Evolución del Núcleo (Entregable E6)<br />
+          <strong>Fecha:</strong> Septiembre 2026
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>1. Punto de Partida</h2>
+        <ul>
+          <li><strong>Primera versión base / entrega Proyecto 1:</strong> 398353e626acd1f9c5b8c3829b8cf2231a3b6c19</li>
+          <li><strong>Nueva versión de referencia / entrega actual:</strong> d46ac30299b28c8a6c5f5ad0128ddc35056e8b6e</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>2. Métricas del Cambio</h2>
+        <p>Resume las métricas cuantitativas obtenidas del repositorio tras aplicar la evolución:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Métrica</th>
+              <th>Valor Obtenido</th>
+              <th>Interpretación / Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Archivos del núcleo creados</td>
+              <td>9</td>
+              <td>Se añadieron 9 módulos del dominio para política, clasificación, catálogo y cálculo de gasto.</td>
+            </tr>
+            <tr>
+              <td>Archivos del núcleo modificados</td>
+              <td>2</td>
+              <td><code>credito.ts</code> y <code>cartera.ts</code> integran la nueva lógica sin tocar la base de cálculo original.</td>
+            </tr>
+            <tr>
+              <td>¿Se modificó el motor de cálculo de mora?</td>
+              <td>NO</td>
+              <td>Se conserva el contrato base y se extiende por composición de políticas.</td>
+            </tr>
+            <tr>
+              <td>Pruebas del P1 que dejaron de pasar</td>
+              <td>0</td>
+              <td>La suite heredada sigue en verde.</td>
+            </tr>
+            <tr>
+              <td>Pruebas del P1 reescritas</td>
+              <td>0</td>
+              <td>No fue necesario reformular la suite base.</td>
+            </tr>
+            <tr>
+              <td>Líneas netas añadidas al núcleo (lógica del dominio)</td>
+              <td>+219</td>
+              <td>Cambio de dominio concentrado y extensible.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Evidencia de Git Diff real (<code>git diff --stat</code> entre la base y la versión actual)</h3>
+        <pre>microcredito-p1/docs/informe-impacto-solid.md      | 140 +++++++++++++++++++++
+microcredito-p1/package-lock.json                  |   3 -
+microcredito-p1/src/dominio/cartera.ts             |  37 ++++++
+microcredito-p1/src/dominio/credito.ts             |  15 +++
+.../dominio/politica-mora/catalogo-politicas.ts    |  17 +++
+.../dominio/politica-mora/clasificacion-tramo.ts   |  30 +++++
+.../dominio/politica-mora/gasto-gestion-cobro.ts    |  27 ++++
+.../dominio/politica-mora/politica-escalonada.ts   |  47 +++++++
+.../src/dominio/politica-mora/politica-mora.ts     |  16 +++
+.../src/dominio/politica-mora/politica-plana.ts    |  18 +++
+.../dominio/politica-mora/politica-retroactiva.ts |  13 ++
+microcredito-p1/tests/cartera-por-tramo-v2.test.ts |  42 +++++++
+.../tests/cartera-por-tramo.test.ts               |  21 ++++
+.../tests/contrato-politica.test.ts               |  47 +++++++
+.../tests/credito-v2.test.ts                      |  77 ++++++++++++
+.../tests/politica-mora.test.ts                   |  39 ++++++
+.../tests/regresion-p1.test.ts                   |  13 ++
+17 files changed, 599 insertions(+), 3 deletions(-)</pre>
+        <p><strong>Nota:</strong> el alcance real del repositorio incluye pruebas y documentación adicionales, además del dominio. La parte de dominio mantiene la afirmación central: la evolución fue extensiva y sin modificar el motor base de cálculo.</p>
+      </div>
+
+      <div class="card">
+        <h2>3. Resumen del Cambio Arquitectónico</h2>
+        <p>
+          La evolución del núcleo de dominio se organizó alrededor de una estrategia de políticas moratorias con catálogo versionado y clasificación de tramos. En lugar de introducir lógica condicional dentro del motor de cálculo, el dominio se separó en componentes con responsabilidades estrechas:
+        </p>
+        <ul>
+          <li>clasificación de días de atraso y tramo;</li>
+          <li>definición de la política de mora;</li>
+          <li>resolución de política por fecha de otorgamiento;</li>
+          <li>cálculo de gasto de gestión;</li>
+          <li>integración mínima con el crédito y la cartera.</li>
+        </ul>
+        <p>
+          Este enfoque mantiene la cohesión del dominio y reduce el riesgo de acoplamiento funcional. La calculadora base del moratorio se preserva como contrato estable, mientras que el comportamiento cambia por composición de estrategias.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>4. Impacto sobre SOLID</h2>
+
+        <h3>4.1 Principio de Responsabilidad Única (SRP)</h3>
+        <p>Se logró una distribución más clara del dominio:</p>
+        <ul>
+          <li>la clasificación del tramo quedó aislada en el componente de especificación;</li>
+          <li>la política moratoria quedó separada por estrategia concreta;</li>
+          <li>el cálculo de gasto de gestión quedó encapsulado en su propio servicio/lógica;</li>
+          <li>la cartera y el crédito mantuvieron responsabilidades distintas en su propio dominio.</li>
+        </ul>
+        <p>Esto redujo la probabilidad de que una clase acumule responsabilidades mezcladas de cálculo, validación y clasificación.</p>
+
+        <h3>4.2 Principio Abierto/Cerrado (OCP)</h3>
+        <p>La evolución cumple el objetivo central de OCP:</p>
+        <ul>
+          <li>el motor de cálculo de mora no fue alterado para incorporar la política escalonada;</li>
+          <li>la nueva regla se incorpora mediante una implementación que sustituye la estrategia, sin romper la API existente;</li>
+          <li>la nueva lógica es extensible para futuras políticas sin tocar la base del dominio.</li>
+        </ul>
+
+        <h3>4.3 Principio de Sustitución de Liskov (LSP)</h3>
+        <p>La creación de políticas concretas bajo un contrato común permite sustituir una implementación por otra sin cambiar el comportamiento esperable del cliente. Esto es una mejora relevante respecto al diseño monolítico previo, ya que la lógica de negocio puede extenderse con nuevas políticas sin afectar la abstracción del contrato.</p>
+
+        <h3>4.4 Principio de Inversión de Dependencias (DIP)</h3>
+        <p>El dominio se orientó a dependencias de interfaces y contratos en vez de clases concretas. La resolución de la estrategia se hace mediante un catálogo, permitiendo que el crédito dependa de la abstracción de política y no de una implementación puntual. Esto facilita la prueba del comportamiento y reduce el acoplamiento directo a configuraciones específicas.</p>
+      </div>
+
+      <div class="card">
+        <h2>5. Impacto sobre GRASP</h2>
+
+        <h3>5.1 Alta cohesión</h3>
+        <p>Cada componente quedó enfocado en una responsabilidad técnica específica: cálculo, clasificación, catalogación, evaluación de gastos y monitoreo de cartera. La cohesión aumentó porque cada unidad de código expresa un único propósito.</p>
+
+        <h3>5.2 Bajo acoplamiento</h3>
+        <p>La lógica de la política moratoria quedó desacoplada de la lógica del crédito. La integración se realiza a través de contratos y resolución por fecha, evitando acoplamientos rígidos entre módulos del dominio.</p>
+
+        <h3>5.3 Experto</h3>
+        <p>La lógica de cálculo moratorio quedó en la estrategia correspondiente, que es el lugar natural donde se conoce la tasa y la regla de tramo. La cartera y el crédito consumen esa decisión sin necesidad de duplicar reglas.</p>
+
+        <h3>5.4 Fabricador / creador</h3>
+        <p>La resolución de política por fecha funciona como un punto centralizador para crear la estrategia correcta según la vigencia del crédito. Esto evita que el cliente tenga que decidir implícitamente la política a aplicar.</p>
+      </div>
+
+      <div class="card">
+        <h2>6. Verificación de Regresión y Cobertura de Casos</h2>
+        <p>La suite de pruebas del proyecto validó que la evolución no rompió el comportamiento heredado. Se conservaron las reglas del Proyecto 1 y se añadieron pruebas específicas para cubrir la nueva policy de mora escalonada y la coexistencia de políticas.</p>
+
+        <p><strong>Principales validaciones:</strong></p>
+        <ul>
+          <li>cálculo de mora plana para 15 días continúa dando el valor original del Proyecto 1;</li>
+          <li>cálculo de mora escalonada por tramos con acumulado por días en cada tramo;</li>
+          <li>regla de gasto de gestión en el día 31 con idempotencia;</li>
+          <li>resolución de política según fecha de otorgamiento;</li>
+          <li>cálculo de cartera por tramo y diferenciación entre mora y riesgo.</li>
+        </ul>
+
+        <p>La evidencia real de ejecución fue la siguiente:</p>
+        <pre>RUN  v2.1.9 ... /microcredito-p1
+✓ tests/calculadora-mora.test.ts (6)
+✓ tests/cartera-por-tramo.test.ts (1)
+✓ tests/cartera.test.ts (3)
+✓ tests/contrato-politica.test.ts (1)
+✓ tests/contratos.test.ts (9)
+✓ tests/credito.test.ts (13)
+✓ tests/plan-amortizacion.test.ts (1)
+✓ tests/politica-mora.test.ts (3)
+✓ tests/prelacion-pago.test.ts (5)
+✓ tests/regresion-p1.test.ts (1)
+
+Test Files  10 passed (10)
+Tests       43 passed (43)</pre>
+      </div>
+
+      <div class="card">
+        <h2>7. Conclusión</h2>
+        <p>
+          La evolución del núcleo mejoró la arquitectura de dominio respecto al estado inicial del Proyecto 1. La separación por política, estrategia, catálogo y clasificación de tramo logró un diseño más mantenible, extensible y alineado con los principios SOLID y GRASP.
+        </p>
+        <p>
+          El resultado evidencia que la refactorización no fue un cambio aislado de reglas empresariales, sino una evolución estructural del dominio: se ampliaron los comportamientos sin violar el OCP ni introducir regresiones sobre el sistema anterior.
+        </p>
+        <p>
+          En consecuencia, la solución obtenida cumple la finalidad de la entrega del Proyecto 2: ampliar el dominio sin romper la base funcional y dejando un núcleo preparado para futuras políticas y cambios regulatorios.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

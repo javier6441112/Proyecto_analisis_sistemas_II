@@ -36,7 +36,7 @@ function BuscarCredito({ elegir, ir }: { elegir: (id: string) => void; ir: Ir })
       <ConCarga carga={carga}>
         {({ creditos }) => {
           const lista = creditos
-            .filter((c) => c.estado !== 'CANCELADO' && c.estado !== 'INCOBRABLE')
+            .filter((c) => c.estado !== 'CANCELADO')
             .sort((a, b) => b.diasAtraso - a.diasAtraso);
           return (
             <Seccion titulo={buscando ? `${lista.length} resultado${lista.length === 1 ? '' : 's'}` : 'Mis créditos por cobrar'}>
@@ -56,10 +56,11 @@ function BuscarCredito({ elegir, ir }: { elegir: (id: string) => void; ir: Ir })
 }
 
 function FilaCobro({ c, onClick }: { c: TCreditoResumen; onClick: () => void }) {
+  const incobrable = c.estado === 'INCOBRABLE';
   const mora = c.diasAtraso > 0;
   const badge = !mora ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : c.diasAtraso > 90 ? 'bg-red-100 text-red-800 border-red-300' : 'bg-red-50 text-red-700 border-red-200';
   return (
-    <button onClick={onClick} className="w-full flex items-center gap-3 px-4 py-4 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-teal-400 active:bg-slate-50">
+    <button disabled={incobrable} onClick={onClick} className="w-full flex items-center gap-3 px-4 py-4 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-teal-400 active:bg-slate-50 disabled:bg-slate-50 disabled:cursor-default">
       <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${mora ? 'bg-red-500' : 'bg-emerald-400'}`} aria-hidden="true" />
       <span className="flex-1 min-w-0">
         <span className="flex items-center gap-2 flex-wrap">
@@ -73,8 +74,9 @@ function FilaCobro({ c, onClick }: { c: TCreditoResumen; onClick: () => void }) 
           </span>
           {c.proximaCuota && !mora && <span className="text-xs text-slate-600">Cuota {Q(c.proximaCuota.monto)}</span>}
         </span>
+        {incobrable && <span className="block text-xs font-semibold text-slate-600 mt-1">Incobrable · Solo consulta. No admite pagos.</span>}
       </span>
-      <span className="text-slate-300 shrink-0">{Ico.chevRight()}</span>
+      {!incobrable && <span className="text-slate-300 shrink-0">{Ico.chevRight()}</span>}
     </button>
   );
 }
@@ -290,7 +292,7 @@ function Comprobante({ r, d, fechaPago, canal, ir, reenviar, ocupado, error }: {
   const cr = r.credito;
   return (
     <Pantalla barra={<TopBar title="Comprobante de pago" />}>
-      {duplicado && <Alert type="info">Este pago ya fue procesado. No se realizó un segundo cobro; se muestra el registro original.</Alert>}
+      {duplicado && <Alert type="notice">Este pago ya fue procesado. No se realizó un segundo cobro; se muestra el registro original.</Alert>}
       <Exito titulo="Pago registrado">
         <p className="text-slate-500 text-sm">{d.nombreCliente} · {d.idCredito}</p>
       </Exito>
@@ -310,7 +312,7 @@ function Comprobante({ r, d, fechaPago, canal, ir, reenviar, ocupado, error }: {
           <Prelacion g={aplicado.gastos.valor} m={aplicado.interesMoratorio.valor} i={aplicado.interesCorriente.valor} k={aplicado.capital.valor} total={monto.valor} />
         </Seccion>
       )}
-      <Alert type="success"><span className="flex items-center gap-1.5">Registrado en el servidor con la clave de idempotencia mostrada.</span></Alert>
+      <Alert type={duplicado ? 'notice' : 'success'}><span className="flex items-center gap-1.5">Registrado en el servidor con la clave de idempotencia mostrada.</span></Alert>
       {error && <Alert type="error">{error}</Alert>}
       <BtnSecondary label={ocupado ? 'Reenviando…' : 'Reenviar el mismo pago'} onClick={reenviar} disabled={ocupado} />
       <BtnPrimary label="Ver crédito" onClick={() => ir({ tab: 'creditos', idCredito: d.idCredito })} />

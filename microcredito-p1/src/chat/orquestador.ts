@@ -90,7 +90,7 @@ export function inferirSeguimiento(
   if (fechas.length === 1 && 'fechaCorte' in args) { args.fechaCorte = fechas[0]; cambios++; }
   const camposEnteros = Object.entries(args).filter(([k, v]) => typeof v === 'number' && k !== 'numeroCuota');
   if (enteros.length === 1 && camposEnteros.length === 1) { args[camposEnteros[0][0]] = Number(enteros[0]); cambios++; }
-  else if (enteros.length === 1 && 'numeroCuota' in args && /cuota/i.test(mensaje)) { args.numeroCuota = Number(enteros[0]); cambios++; }
+  else if (enteros.length === 1 && 'numeroCuota' in args && (/cuota/i.test(mensaje) || /^\s*\d+[.!]?\s*$/.test(mensaje))) { args.numeroCuota = Number(enteros[0]); cambios++; }
   return cambios > 0 ? { herramienta: previa.herramienta, argumentos: args } : undefined;
 }
 
@@ -141,6 +141,7 @@ export function promptDelSistema(fechaOperacion: string): string {
     '4. Solo atiendes temas de Crédito Vecino: créditos, mora, pagos, cartera, cierres, vencimientos y políticas. Rechaza con cortesía cualquier otro tema.',
     '5. Para proponer el pago de una cuota consulta calcular_deuda_cuota y completa proponer_pago. Los ejemplos documentales y los montos de turnos anteriores nunca son la deuda real. Omite monto en proponer_pago si el usuario no indicó uno: el núcleo obtiene el exigible exacto. El pago solo se registra cuando una persona lo aprueba en la interfaz; no digas que ya está registrado.',
     '6. En una pregunta de seguimiento («¿y en 30 días?», «¿y el otro crédito?») vuelve a llamar la herramienta con los nuevos parámetros; nunca respondas cifras de memoria.',
+    'Una respuesta breve como "3" puede completar el número de cuota solicitado en el turno anterior. Usa el historial para conservar el crédito y la fecha explícita del usuario. "Cuota 3" ya significa numeroCuota=3: no pidas de nuevo ese dato. Para el estado de un crédito usa consultar_credito; para explicar la mora de una cuota usa explicar_mora. Si piden ambos, consulta ambas herramientas.',
     '7. Responde en español, breve y claro. No enumeres más de 10 elementos. Solo anuncia una tarjeta financiera si una herramienta financiera devolvió datos; buscar_politicas solo aporta fuentes documentales.',
     'GUÍA: "Mora 1/2/3" = tramo MORA_1/MORA_2/MORA_3; "vencido" = VENCIDO. Cierre mensual de octubre de 2026 → periodo "2026-10"; cierre del 31 de octubre de 2026 → periodo "2026-10-31". Fechas siempre AAAA-MM-DD.',
     'Provisiones: usa exclusivamente consultar_cierre mensual y su campo provisiones; no las calcules. Son reservas de capital, distintas de recuperaciones, intereses cobrados y cartera bruta. NO_DISPONIBLE o ausencia significa no disponible en esa versión, nunca cero. Respeta la versión y cifras guardadas del cierre definitivo.',
@@ -217,6 +218,20 @@ export class OrquestadorChat {
     let reintentado = false;
     let seguimientoInferido = false;
     const solicitudPago = solicitudDePago(entrada.mensaje, fechaOperacion, this.ultimaSolicitudPago.get(sesionId));
+    // Completa consultas explícitas de mora aunque el modelo omita una de sus partes.
+    // Para una respuesta numérica solo reutilizamos el último mensaje del usuario.
+    const numeroBreve = entrada.mensaje.trim().match(/^(\d{1,3})[.!]?$/);
+    const anteriorUsuario = [...historial].reverse().find(m => m.role === 'user')?.content ?? '';
+    const consultaMora = numeroBreve ? anteriorUsuario : entrada.mensaje;
+    const idsMora = [...consultaMora.toUpperCase().matchAll(/\bCV-\d{4}-\d{4}\b/g)];
+    const cuotaMora = numeroBreve?.[1] ?? consultaMora.match(/\bcuota\s+(\d{1,3})\b/i)?.[1];
+    const fechasMora = [
+      ...(consultaMora.match(/\b\d{4}-\d{2}-\d{2}\b/g) ?? []),
+      ...[...consultaMora.toLowerCase().matchAll(/\b(\d{1,2}) de ([a-z]+) de (\d{4})\b/g)]
+        .filter(m => MESES[m[2]]).map(m => `${m[3]}-${MESES[m[2]]}-${m[1].padStart(2, '0')}`),
+    ];
+    const moraExplicita = !solicitudPago && /mora/i.test(consultaMora) && idsMora.length === 1 && cuotaMora && Number(cuotaMora) > 0 && fechasMora.length <= 1
+      ? { idCredito: idsMora[0][0], numeroCuota: Number(cuotaMora), fechaCorte: fechasMora[0] ?? fechaOperacion } : undefined;
     if (solicitudPago) {
       this.ultimaSolicitudPago.set(sesionId, { idCredito: solicitudPago.idCredito, fechaPago: solicitudPago.fechaPago });
       mensajes.push({ role: 'system', content: 'Solicitud de propuesta de pago: consulta primero calcular_deuda_cuota y después proponer_pago. No busques ejemplos documentales para determinar el importe. No registres pagos.' });
@@ -225,6 +240,13 @@ export class OrquestadorChat {
     for (let ronda = 0; ronda < MAX_RONDAS; ronda++) {
       const disponibles = solicitudPago ? herramientas.filter(t => ['calcular_deuda_cuota', 'proponer_pago'].includes(t.name)) : herramientas;
       const r = await this.modelo.conversar(mensajes, disponibles.map(aDefinicion));
+      if (ronda === 0 && moraExplicita) {
+        r.llamadas = [
+          ...(!numeroBreve && /estado/i.test(consultaMora) ? [{ nombre: 'consultar_credito', argumentos: { idCredito: moraExplicita.idCredito, fechaCorte: moraExplicita.fechaCorte } }] : []),
+          { nombre: 'explicar_mora', argumentos: moraExplicita },
+        ];
+        if (numeroBreve) seguimientoInferido = true;
+      }
       if (solicitudPago) {
         // La transición no depende de que el modelo recuerde completar la propuesta.
         // Los argumentos identificativos proceden del usuario y el monto automático del núcleo.
