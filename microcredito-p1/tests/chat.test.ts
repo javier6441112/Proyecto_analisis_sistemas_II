@@ -13,7 +13,7 @@ import { ServicioAprobaciones } from '../src/mcp/aprobaciones.js';
 import { conectarClienteLocal, type ClienteMcpLocal } from '../src/mcp/cliente-local.js';
 import { EmbebedorDePrueba } from '../src/rag/embeddings.js';
 import { BuscadorCorpus, ingestarCorpus } from '../src/rag/buscador.js';
-import { OrquestadorChat, inferirSeguimiento, esConsultaDePoliticas } from '../src/chat/orquestador.js';
+import { OrquestadorChat, inferirSeguimiento, esConsultaDePoliticas, periodoDeConsultaCierre } from '../src/chat/orquestador.js';
 import { MENSAJE_CANARIO, MENSAJE_CIFRAS_NO_VERIFICADAS, MENSAJE_FUERA_DE_ALCANCE, cifrasNoVerificadas, filtrarSalida } from '../src/chat/guardias.js';
 import { llamadasEnTexto, type LlamadaHerramienta, type MensajeChat, type ModeloLenguaje, type RespuestaModelo } from '../src/chat/modelo.js';
 
@@ -58,6 +58,30 @@ afterAll(async () => {
 
 const preguntar = (modelo: ModeloLenguaje, mensaje: string, sesionId?: string) =>
   new OrquestadorChat(mcp, modelo).preguntar({ mensaje, fechaOperacion: F, ...(sesionId ? { sesionId } : {}) });
+
+it('consulta el cierre diario ejecutado aunque el modelo lo rechace o elija otro período', async () => {
+  const cierre = await adaptador.ejecutarCierre(F, 'Prueba de chat');
+  const antes = await adaptador.leerEventosBitacora();
+  for (const mensaje of ['Dame el cierre del dia 31 de octubre de 2026', 'dame el cierre del dia de 31 de octubre de 2026', 'Consulta el cierre 2026-10-31']) {
+    for (const llamadas of [[], [{ nombre: 'consultar_cierre', argumentos: { periodo: '2026-10' } }]]) {
+      const r = await preguntar(new ModeloGuionado(llamadas, MENSAJE_FUERA_DE_ALCANCE), mensaje);
+      expect(r.tarjetas).toHaveLength(1);
+      expect(r.tarjetas[0]).toMatchObject({ herramienta: 'consultar_cierre', argumentos: { periodo: F }, error: false,
+        datos: { estado: 'EJECUTADO', tipo: 'DIARIO', periodo: F, recuperaciones: { total: cierre.recuperaciones.total.formato() } } });
+      expect(r.respuesta).toContain('Cierre diario 2026-10-31');
+      expect(r.respuesta).toContain('EJECUTADO');
+      expect(r.respuesta).not.toContain(MENSAJE_FUERA_DE_ALCANCE);
+    }
+  }
+  expect(await adaptador.leerEventosBitacora()).toEqual(antes);
+});
+
+it('distingue consultas mensuales, políticas y órdenes de ejecución de cierre', () => {
+  expect(periodoDeConsultaCierre('Dame el cierre mensual de octubre de 2026')).toBe('2026-10');
+  expect(periodoDeConsultaCierre('Ejecuta el cierre del 31 de octubre de 2026')).toBeUndefined();
+  expect(periodoDeConsultaCierre('Política de cierre del 31 de octubre de 2026')).toBeUndefined();
+  expect(periodoDeConsultaCierre('Compara el cierre 2026-10-30 y 2026-10-31')).toBeUndefined();
+});
 
 it('consulta estado y mora de la cuota indicada y conserva crédito y fecha al responder solo 3', async () => {
   const modelo = new ModeloGuionado([], 'Estos son los datos consultados.');

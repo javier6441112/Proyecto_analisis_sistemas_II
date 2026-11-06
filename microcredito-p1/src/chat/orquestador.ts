@@ -108,6 +108,24 @@ interface SolicitudPago {
   canal?: string;
 }
 
+/** Consulta explícita de un cierre; nunca autoriza ejecutarlo ni interpreta políticas. */
+export function periodoDeConsultaCierre(mensaje: string): string | undefined {
+  if (!/\bcierre\b/i.test(mensaje) || esConsultaDePoliticas(mensaje)
+    || /\b(ejecuta|ejecutar|genera|generar|realiza|realizar|registra|registrar)\b/i.test(mensaje)) return undefined;
+  const texto = mensaje.toLowerCase();
+  const periodos = [
+    ...(texto.match(/\b\d{4}-\d{2}(?:-\d{2})?\b/g) ?? []),
+    ...[...texto.matchAll(/\b(\d{1,2}) de ([a-z]+) de (\d{4})\b/g)]
+      .filter(m => MESES[m[2]]).map(m => `${m[3]}-${MESES[m[2]]}-${m[1].padStart(2, '0')}`),
+  ];
+  if (periodos.length === 0 && /\bmensual\b/.test(texto)) {
+    for (const m of texto.matchAll(/\b([a-z]+) de (\d{4})\b/g)) {
+      if (MESES[m[1]]) periodos.push(`${m[2]}-${MESES[m[1]]}`);
+    }
+  }
+  return periodos.length === 1 ? periodos[0] : undefined;
+}
+
 /** Solo extrae datos del usuario: jamás del corpus, del texto del modelo o de importes previos. */
 function solicitudDePago(mensaje: string, fechaOperacion: string, anterior?: SolicitudPago): SolicitudPago | undefined {
   const propone = /\bpropuest[ao]|\bprop[oó]n|\bproponer|\b(?:prepara|genera|crea|registra|registrar|cobra|cobrar|paga|pagar)\b.*\b(?:pago|cuota|cobro)\b|\b(?:quiero|necesito|puedes|podr[ií]as|ay[uú]dame)\b.*\b(?:pagar|cobrar)\b/i.test(mensaje);
@@ -218,6 +236,7 @@ export class OrquestadorChat {
     let reintentado = false;
     let seguimientoInferido = false;
     const solicitudPago = solicitudDePago(entrada.mensaje, fechaOperacion, this.ultimaSolicitudPago.get(sesionId));
+    const periodoCierre = periodoDeConsultaCierre(entrada.mensaje);
     // Completa consultas explícitas de mora aunque el modelo omita una de sus partes.
     // Para una respuesta numérica solo reutilizamos el último mensaje del usuario.
     const numeroBreve = entrada.mensaje.trim().match(/^(\d{1,3})[.!]?$/);
@@ -240,6 +259,9 @@ export class OrquestadorChat {
     for (let ronda = 0; ronda < MAX_RONDAS; ronda++) {
       const disponibles = solicitudPago ? herramientas.filter(t => ['calcular_deuda_cuota', 'proponer_pago'].includes(t.name)) : herramientas;
       const r = await this.modelo.conversar(mensajes, disponibles.map(aDefinicion));
+      if (ronda === 0 && periodoCierre && !solicitudPago) {
+        r.llamadas = [{ nombre: 'consultar_cierre', argumentos: { periodo: periodoCierre } }];
+      }
       if (ronda === 0 && moraExplicita) {
         r.llamadas = [
           ...(!numeroBreve && /estado/i.test(consultaMora) ? [{ nombre: 'consultar_credito', argumentos: { idCredito: moraExplicita.idCredito, fechaCorte: moraExplicita.fechaCorte } }] : []),
@@ -328,6 +350,14 @@ export class OrquestadorChat {
           texto = `Propuesta pendiente para ${p.idCredito} al ${p.fechaPago}: Q${p.cuota.totalExigible}. Revise el desglose y pulse «Aprobar» en la tarjeta para registrar el pago. Todavía no se ha registrado.`;
           break;
         }
+      }
+      if (periodoCierre && !solicitudPago) {
+        const cierre = tarjetas.find(t => t.herramienta === 'consultar_cierre');
+        const error = cierre?.datos.error as { mensaje?: string } | undefined;
+        texto = cierre?.error
+          ? error?.mensaje ?? 'No se pudo consultar el cierre solicitado.'
+          : `${String(cierre?.datos.resumen ?? 'Estos son los datos del cierre consultado.')} Estado: ${String(cierre?.datos.estado ?? 'no disponible')}.`;
+        break;
       }
       if (ronda === MAX_RONDAS - 1) texto = '';
     }
