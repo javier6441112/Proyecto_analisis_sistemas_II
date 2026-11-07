@@ -38,6 +38,11 @@ sequenceDiagram
     participant Congelador as Cierre congelado
 
     Gerente->>Cierre: generar(periodo, fechaCorte)
+    Cierre->>Congelador: buscarPorPeriodo(periodo)
+    alt Ya ejecutado
+        Congelador-->>Cierre: resultado guardado, corte y políticas
+        Cierre-->>Gerente: mismo cierre sin recalcular ni escribir
+    else Sin cierre ejecutado
     Cierre->>Repo: obtenerCreditosActivos(fechaCorte)
     Repo-->>Cierre: creditos y movimientos del periodo
     loop Cada cuota vencida
@@ -46,7 +51,10 @@ sequenceDiagram
     end
     Cierre->>Cartera: resumirCartera(creditos)
     Cartera-->>Cierre: carteraActiva, saldoEnRiesgo, porcentajeRiesgo, incobrable
-    Cierre->>Congelador: guardar resultado idempotente por periodo
+    Cierre->>Congelador: guardar resultado, corte y políticas (único por período)
     Congelador-->>Cierre: cierre consolidado
     Cierre-->>Gerente: cifras congeladas y auditables
+    end
 ```
+
+La ejecución corresponde a `POST /api/cierres/{periodo}/ejecucion`. La consulta por GET no guarda: devuelve el cierre existente o calcula una vista previa. El corte conserva la regla actual del último día del período. Véase [ADR-003](../adr/ADR-003.md) para la persistencia y la decisión pendiente sobre operaciones posteriores.

@@ -7,6 +7,10 @@ export interface PoliticaMora {
   readonly id: string;
   readonly nombre: string;
   readonly vigenteDesde: string;
+  readonly version?: string;
+  readonly autor?: string;
+  readonly motivo?: string;
+  readonly vigencia_otorgamiento?: { desde?: string; hasta?: string };
   desglosar(capitalEnMora: Dinero, diasAtraso: number): DesgloseMora;
   calcular(capitalEnMora: Dinero, diasAtraso: number): Dinero;
   clasificar?(diasAtraso: number): string;

@@ -22,3 +22,6 @@ pnpm-debug.log*
 Thumbs.db
 # Base de datos local
 .cv-db/
+
+# Proyecto Final: capturas del ensayo automatico del video
+ensayo-capturas/

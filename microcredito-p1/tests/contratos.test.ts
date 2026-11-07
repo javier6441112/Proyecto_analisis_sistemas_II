@@ -19,11 +19,11 @@ describe('contratos Zod del SGMC', () => {
     expect(documentoOpenAPI.openapi).toBe('3.1.0');
   });
 
-  it('conserva los tipos nulos de JSON Schema 2020-12', () => {
-    const pagoRegistrado = documentoOpenAPI.components.schemas.PagoRegistrado as { properties: Record<string, unknown> };
-    const destinoExcedente = pagoRegistrado.properties.destinoExcedente;
-    expect(destinoExcedente).toMatchObject({ anyOf: expect.arrayContaining([{ type: 'null' }]) });
-    expect(destinoExcedente).not.toHaveProperty('nullable');
+  it('documenta las rutas reales /api con componentes reutilizables de JSON Schema 2020-12', () => {
+    expect(Object.keys(documentoOpenAPI.paths).every((ruta) => ruta.startsWith('/api/'))).toBe(true);
+    const detalle = documentoOpenAPI.components.schemas.DetalleCredito as { properties: Record<string, unknown> };
+    expect(detalle.properties.saldoCapital).toEqual({ $ref: '#/components/schemas/Dinero' });
+    expect(JSON.stringify(documentoOpenAPI.components.schemas)).not.toContain('"nullable"');
   });
 
   it('acepta un cliente valido y rechaza datos incompletos', () => {
@@ -54,11 +54,15 @@ describe('contratos Zod del SGMC', () => {
     expect(GenerarCierreRequestSchema.safeParse({ periodo: '2026-08-22', fechaCorte: '2026-08-22' }).success).toBe(true);
     expect(GenerarCierreRequestSchema.safeParse({ periodo: '2026-13', fechaCorte: '2026-08-22' }).success).toBe(false);
     expect(GenerarCierreRequestSchema.safeParse({ periodo: '2026-08-32', fechaCorte: '2026-08-22' }).success).toBe(false);
-    expect(CierreResponseSchema.safeParse({ periodo: '2026-08', fechaCorte: '2026-08-22', carteraActiva: { valor: '800000.00', moneda: 'GTQ' }, saldoEnRiesgo: { valor: '56000.00', moneda: 'GTQ' }, incobrable: { valor: '15000.00', moneda: 'GTQ' }, recuperaciones: [], interesesDevengados: { valor: '12000.00', moneda: 'GTQ' }, porTramo: [], provisiones: { valor: '18000.00', moneda: 'GTQ' }, creditosActivos: 20, proximosVencimientos: [], montoDeclaradoIncobrableEnElPeriodo: { valor: '5000.00', moneda: 'GTQ' } }).success).toBe(true);
-    const respuestasCierre = documentoOpenAPI.paths['/cierres'].post.responses;
-    expect(respuestasCierre['201'].description).toBe('Cierre mensual generado.');
-    expect(respuestasCierre['200'].description).toBe('Cierre mensual existente reproducido sin duplicarlo.');
-    expect('409' in respuestasCierre).toBe(false);
+    expect(CierreResponseSchema.safeParse({ periodo: '2026-08', fechaCorte: '2026-08-22', carteraActiva: { valor: '800000.00', moneda: 'GTQ' }, saldoEnRiesgo: { valor: '56000.00', moneda: 'GTQ' }, incobrable: { valor: '15000.00', moneda: 'GTQ' }, recuperaciones: [], interesesDevengados: { valor: '12000.00', moneda: 'GTQ' }, porTramo: [], provisiones: { estado: 'NO_DISPONIBLE', motivo: 'Formato histórico sin provisiones calculadas' }, creditosActivos: 20, proximosVencimientos: [], montoDeclaradoIncobrableEnElPeriodo: { valor: '5000.00', moneda: 'GTQ' } }).success).toBe(true);
+    const cierre = documentoOpenAPI.paths['/api/cierres/{periodo}'].get;
+    expect(cierre.description).toContain('No ejecuta el cierre');
+    expect(cierre.description).toContain('PREVIA');
+    expect(cierre.description).toContain('EJECUTADO');
+    expect('409' in cierre.responses).toBe(false);
+    const ejecucion = documentoOpenAPI.paths['/api/cierres/{periodo}/ejecucion'].post;
+    expect(ejecucion.description).toContain('Idempotente por periodo');
+    expect('403' in ejecucion.responses).toBe(true);
   });
 
   it('acepta un pago valido y rechaza importes no positivos', () => {

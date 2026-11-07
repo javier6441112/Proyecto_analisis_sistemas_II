@@ -6,7 +6,11 @@ export class PoliticaPlana implements PoliticaMora {
   readonly id: string = 'POL-2024-01';
   readonly nombre: string = 'Plana 24%';
   readonly vigenteDesde: string = '2024-01-01';
-  readonly tasaDiaria = new Decimal('0.24').div(360);
+  readonly tasaDiaria: Decimal;
+
+  constructor(readonly tasaNominalAnual = new Decimal('0.24')) {
+    this.tasaDiaria = tasaNominalAnual.div(360);
+  }
 
   calcular(capitalEnMora: Dinero, diasAtraso: number): Dinero {
     return this.desglosar(capitalEnMora, diasAtraso).totalMoratorio;
@@ -20,7 +24,7 @@ export class PoliticaPlana implements PoliticaMora {
     const tramos = diasEfectivos === 0 ? [] : [{
       tramo: 'PLANA',
       dias: diasEfectivos,
-      tasaNominalAnual: new Decimal('0.24'),
+      tasaNominalAnual: this.tasaNominalAnual,
       tasaDiaria: this.tasaDiaria,
       importeSinRedondear,
     }];

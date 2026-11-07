@@ -1,0 +1,15 @@
+{
+  "version": "CV-PROV-1.0",
+  "vigenteDesde": "2026-01-01",
+  "institucion": "Crédito Vecino (institución ficticia)",
+  "autor": "Equipo del proyecto académico",
+  "motivo": "Decisión institucional académica del equipo para P1 §6 y §6.1; no constituye una regla del docente ni una regulación",
+  "porcentajes": {
+    "AL_DIA": "1",
+    "MORA_1": "5",
+    "MORA_2": "20",
+    "MORA_3": "50",
+    "VENCIDO": "100"
+  },
+  "minimoReestructurado": "20"
+}

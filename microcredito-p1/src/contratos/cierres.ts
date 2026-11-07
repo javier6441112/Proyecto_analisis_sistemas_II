@@ -1,5 +1,7 @@
 import { z } from 'zod';
+import { DevengoCierreSchema } from './devengo.js';
 import { DineroSchema, FechaISOSchema } from './comunes.js';
+import { ProvisionesCierreSchema, ContabilizacionProvisionesSchema } from './provisiones.js';
 
 const DesgloseTramoCierreSchema = z.object({
   tramo: z.enum(['AL_DIA', 'MORA_1', 'MORA_2', 'MORA_3', 'VENCIDO']),
@@ -32,6 +34,8 @@ export const GenerarCierreRequestSchema = z.object({
 }).strict().meta({ description: 'Datos para generar un cierre diario o mensual' });
 
 export const CierreResponseSchema = z.object({
+  devengo: DevengoCierreSchema.optional(),
+  contabilizacionProvisiones: ContabilizacionProvisionesSchema.optional(),
   periodo: PeriodoCierreSchema,
   fechaCorte: FechaISOSchema,
   carteraActiva: DineroSchema,
@@ -40,7 +44,7 @@ export const CierreResponseSchema = z.object({
   recuperaciones: z.array(RecuperacionCierreSchema),
   interesesDevengados: DineroSchema,
   porTramo: z.array(DesgloseTramoCierreSchema),
-  provisiones: DineroSchema,
+  provisiones: ProvisionesCierreSchema.optional(),
   creditosActivos: z.number().int().nonnegative(),
   proximosVencimientos: z.array(ProximoVencimientoSchema),
   montoDeclaradoIncobrableEnElPeriodo: DineroSchema,

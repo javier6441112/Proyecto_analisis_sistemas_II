@@ -1,0 +1,9 @@
+{
+  "version": "CV-DEV-1.0",
+  "vigenteDesde": "2020-01-01",
+  "autor": "Equipo del proyecto académico",
+  "motivo": "Decisión académica institucional de Crédito Vecino: interés contractual distribuido por días reales, acumulados por cuota redondeados medio hacia arriba; no es una fórmula impuesta por el docente",
+  "convencion": "CONTRACTUAL_DIAS_REALES",
+  "suspensionDesdeDias": 91,
+  "bajaDesdeDias": 121
+}
