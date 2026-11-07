@@ -244,3 +244,9 @@ El equipo revisó, probó y puede explicar todo lo entregado.
 ## Política de provisiones
 
 El cálculo puro, la configuración versionada de reservas y su integración en el cierre mensual se describen en [Política de provisiones](docs/politica-provisiones.md). Son decisiones académicas del equipo para Crédito Vecino. Los cierres definitivos registran solo la variación de reserva en un [registro acumulativo de movimientos](docs/movimientos-provisiones.md), con apertura trazable y control cronológico; conservan su resultado y parámetros originales. Los cierres diarios y mensuales incorporan además [devengo corriente versionado](docs/devengo-corriente.md), con apertura histórica, suspenso y regularización separados de los cobros, sin duplicar movimientos entre períodos superpuestos.
+
+
+
+
+## Link del video
+https://drive.google.com/file/d/1IKEJS_2ep6Vo6zo2N7JK97eEiNFiEF7q/view?usp=sharing
